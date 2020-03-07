@@ -17,7 +17,7 @@ struct ContentView: View {
     VStack {
       Spacer()
       HStack {
-        Image("A").resizable().aspectRatio(contentMode: .fit)
+        Image("B").resizable().aspectRatio(contentMode: .fit)
       }
       .padding(.horizontal, 100)
       Spacer()
