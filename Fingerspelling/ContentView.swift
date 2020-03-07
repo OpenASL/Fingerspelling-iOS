@@ -6,56 +6,29 @@
 //
 
 import SwiftUI
-import Combine
 
-func renderWord(_ w: Array<String>) -> UIImage {
-  var images = [UIImage]()
-  for letter in w {
-    images.append(UIImage(named: letter)!)
+struct AnimatedImage: UIViewRepresentable {
+  private var word: String
+  
+  init (_ word: String) {
+    self.word = word
   }
-  return UIImage.animatedImage(with: images, duration: 1.0)!
-}
-
-
-class LoadingTimer {
-  
-  let publisher = Timer.publish(every: 0.1, on: .main, in: .default)
-  private var timerCancellable: Cancellable?
-  
-  init () {
-    self.timerCancellable = nil
+  func makeUIView(context: Self.Context) -> UIImageView {
+    let imageView = UIImageView(image: renderWord(word))
+    imageView.animationRepeatCount = 1
+    return imageView
   }
   
-  func start() {
-    self.timerCancellable = publisher.connect()
+  func renderWord(_ word: String) -> UIImage {
+    var images = [UIImage]()
+    for letter in Array(word) {
+      let image = UIImage(named: String(letter).uppercased())!
+      images.append(image)
+    }
+    return UIImage.animatedImage(with: images, duration: 5.0)!
   }
   
-  func cancel() {
-    self.timerCancellable?.cancel()
-  }
-}
-
-struct LoadingView: View {
-  
-  @State private var index = 0
-  
-  private let images = ["S", "T", "E", "V", "E"].map { UIImage(named: $0)! }
-  private var timer = LoadingTimer()
-  
-  var body: some View {
-    
-    return Image(uiImage: images[index])
-      .resizable()
-      .frame(width: 100, height: 100, alignment: .center)
-      .onReceive(
-        timer.publisher,
-        perform: { _ in
-          self.index = self.index + 1
-          if self.index >= self.images.count { self.index = 0 }
-      }
-    )
-      .onAppear { self.timer.start() }
-      .onDisappear { self.timer.cancel() }
+  func updateUIView(_ uiView: UIImageView, context: UIViewRepresentableContext<AnimatedImage>) {
   }
 }
 
@@ -69,7 +42,7 @@ struct ContentView: View {
     VStack {
       Spacer()
       HStack {
-        LoadingView()
+        AnimatedImage("LAUREN")
       }
       .padding(.horizontal, 100)
       Spacer()
