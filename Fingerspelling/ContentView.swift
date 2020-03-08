@@ -22,17 +22,20 @@ class LoadingTimer {
   }
 }
 
-// private let words: Array<String> = [
-//  "lauren",
-//  "steve"
-// ]
+struct IconButton: ViewModifier {
+  func body(content: Content) -> some View {
+    content
+      .padding()
+      .font(.system(size: 36))
+  }
+}
 
 private var words = [String]()
 
 struct ContentView: View {
   @State private var alertIsVisible: Bool = false
   @State private var speed = 6.0
-  @State private var wordFinished = false
+  @State private var wordFinished = true
   @State private var letterIndex = 0
   @State private var answer: String = ""
   @State private var timer: LoadingTimer = LoadingTimer(every: 0.5)
@@ -103,6 +106,12 @@ struct ContentView: View {
   private func handleResetSpeed() {
     self.speed = (self.maxSpeed + self.minSpeed) / 2
   }
+  
+  private func handleStop() {
+    self.resetWord()
+    self.wordFinished = true
+    self.resetTimer()
+  }
 
   func handleCheck() {
     self.alertIsVisible = true
@@ -114,11 +123,6 @@ struct ContentView: View {
 
   var body: some View {
     VStack {
-      /* Score */
-      HStack {
-        Text(String(self.score))
-        Spacer()
-      }
       Spacer()
       /* Letter display */
       HStack {
@@ -141,14 +145,35 @@ struct ContentView: View {
             .onDisappear { self.resetTimer() }
         }
       }
-      .padding(.horizontal, 100)
       Spacer()
+
+      /* Speed control */
+      VStack {
+        HStack {
+          Text("Slow").font(.system(size: 12))
+          Slider(value: self.$speed, in: self.minSpeed ... self.maxSpeed)
+            .disabled(!self.wordFinished)
+          Text("Fast").font(.system(size: 12))
+        }
+        HStack {
+          Text("Speed: \(String(Int(self.speed.rounded())))")
+          Spacer()
+          Text("Score: \(String(self.score))")
+        }
+        
+        HStack {
+          Button(action: self.handleResetSpeed) {
+            Text("Reset speed").font(.system(size: 14))
+          }.disabled(!self.wordFinished)
+        }
+      }.padding(.top, 30)
+      
       /* Answer input */
       HStack {
-        TextField("Answer", text: $answer)
+        TextField("Answer", text: $answer).textFieldStyle(RoundedBorderTextFieldStyle() )
         Spacer()
         Button(action: self.handleCheck) {
-          Text("Check")
+          Text("Check").fontWeight(.semibold)
         }
         .alert(isPresented: $alertIsVisible) { () -> Alert in
           Alert(
@@ -158,34 +183,25 @@ struct ContentView: View {
           )
         }
       }.padding(.top, 20)
-      /* Speed control */
-      VStack {
-        Text(String(Int(self.speed.rounded())))
-        HStack {
-          Text("Slow")
-          Slider(value: self.$speed, in: self.minSpeed ... self.maxSpeed)
-          Text("Fast")
-        }
-        HStack {
-          Button(action: self.handleResetSpeed) {
-            Text("Reset speed")
-          }
-        }
-      }.padding(.vertical, 30)
+      
       /* Word controls */
+
       HStack {
         if self.wordFinished {
+          // TODO: Figure out a better way to center the play button
+          Button(action: {}) { Image(systemName: "gobackward")}.modifier(IconButton()).hidden()
+          Spacer()
           Button(action: self.handleReplay) {
-            Text("Replay")
-          }
+            Image(systemName: "play.fill").modifier(IconButton())
+          }.offset(x: 0)
           Spacer()
           Button(action: self.handleNextWord) {
-            Text("Skip")
+            Image(systemName: "forward.end").modifier(IconButton())
           }
 
         } else {
           // Placeholder to maintain spacing while buttons are hidden
-          Button(action: {}) { Text("Replay") }.hidden()
+          Button(action: self.handleStop) { Image(systemName: "stop.fill").modifier(IconButton()).foregroundColor(.red) }
         }
       }
     }
