@@ -32,18 +32,25 @@ class LoadingTimer {
 }
 
 struct ContentView: View {
-  @State var alertIsVisible: Bool = false
-  @State var speed = 5.0
-  @State var wordFinished = false
-  @State var letterIndex = 0
-  @State var timer: LoadingTimer = LoadingTimer(every: 0.5)
+  @State private var alertIsVisible: Bool = false
+  @State private var speed = 5.0
+  @State private var wordFinished = false
+  @State private var letterIndex = 0
+  @State private var answer: String = ""
+  @State private var showValidation: Bool = false
+  @State private var timer: LoadingTimer = LoadingTimer(every: 0.5)
+  @ObservedObject private var keyboard = KeyboardResponder()
   
-  var images: [UIImage]
+  private var images: [UIImage]
+  private let numerator = 2.0
+  private let minSpeed = 0.0
+  private let maxSpeed = 10.0
+  
+  private var isAnswerValid: Bool {
+    let trimmedString = self.answer.trimmingCharacters(in: .whitespaces).lowercased()
+    return trimmedString == "test"
+  }
 
-  let numerator = 2.0
-  let minSpeed = 0.0
-  let maxSpeed = 10.0
-  
   init() {
     let letters = Array("lauren").map { String($0).uppercased() }
     self.images = letters.map { UIImage(named: $0)! }
@@ -82,6 +89,20 @@ struct ContentView: View {
       }
       .padding(.horizontal, 100)
       Spacer()
+      HStack {
+        if self.showValidation {
+          TextField("Answer", text: $answer).border(self.isAnswerValid ? Color.green : Color.red)
+        } else {
+          TextField("Answer", text: $answer)
+        }
+        Spacer()
+        Button(action: {
+          self.showValidation = true
+        }) {
+          Text("Check")
+        }
+      }.padding(.top, 20)
+      
       VStack {
         HStack {
           Text("Slow")
@@ -93,9 +114,7 @@ struct ContentView: View {
         }) {
           Text("Reset speed")
         }
-      }
-      .padding(.horizontal, 40)
-      .padding(.vertical, 30)
+      }.padding(.vertical, 30)
       
       HStack {
         if self.wordFinished {
@@ -105,8 +124,16 @@ struct ContentView: View {
           }) {
             Text("Replay")
           }
+          .alert(isPresented: $alertIsVisible) { () -> Alert in
+            return Alert(
+              title: Text("TODO"),
+              message: Text("show next word")
+            )
+          }
           Button(action: {
             self.alertIsVisible = true
+            self.showValidation = false
+            self.answer = ""
           }) {
             Text("Next word")
           }
@@ -117,12 +144,16 @@ struct ContentView: View {
             )
           }
         } else {
-          // Placeholder to maintain spacing
+          // Placeholder to maintain spacing while buttons are hidden
           Button(action: {}) { Text("Replay")}.hidden()
         }
       }
-      .padding(.bottom, 20)
     }
+    // Move the current UI up when the keyboard is active
+    .padding(.bottom, keyboard.currentHeight)
+    .padding(.vertical, 20)
+    .padding(.horizontal, 40)
+
   }
 }
 
