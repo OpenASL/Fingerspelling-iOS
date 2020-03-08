@@ -35,7 +35,7 @@ private var words = [String]()
 struct ContentView: View {
   @State private var alertIsVisible: Bool = false
   @State private var speed = 6.0
-  @State private var wordFinished = false
+  @State private var wordFinished = true
   @State private var letterIndex = 0
   @State private var answer: String = ""
   @State private var timer: LoadingTimer = LoadingTimer(every: 0.5)
@@ -183,11 +183,15 @@ struct ContentView: View {
         }.padding(.top, 15)
       }.padding(.top, 30)
       /* Word controls */
+
       HStack {
         if self.wordFinished {
+          // TODO: Figure out a better way to center the play button
+          Button(action: {}) { Image(systemName: "gobackward")}.modifier(IconButton()).hidden()
+          Spacer()
           Button(action: self.handleReplay) {
-            Image(systemName: "gobackward").modifier(IconButton())
-          }
+            Image(systemName: "play.fill").modifier(IconButton())
+          }.offset(x: 0)
           Spacer()
           Button(action: self.handleNextWord) {
             Image(systemName: "forward.end").modifier(IconButton())
