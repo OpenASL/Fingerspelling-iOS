@@ -125,7 +125,8 @@ struct ContentView: View {
         if !self.wordFinished {
           Image(uiImage: self.images[self.letterIndex])
             .resizable()
-            .frame(width: 100, height: 100)
+            .frame(width: 100, height: 150)
+            .scaledToFit()
             .offset(x: self.letterIndex > 0 && Array(self.currentWord)[self.letterIndex - 1] == Array(self.currentWord)[self.letterIndex] ? -20 : 0)
             .onReceive(
               self.timer.publisher,
