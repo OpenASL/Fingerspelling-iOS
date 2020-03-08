@@ -6,35 +6,70 @@
 //
 
 import SwiftUI
+import Combine
 
-struct AnimatedImage: UIViewRepresentable {
-  private var word: String
+
+// XXX: Complicated implementation of an animated image
+//   since there doesn't seem to be a better way to do this in
+//   SwiftUI yet: https://stackoverflow.com/a/57749621/1157536
+class LoadingTimer {
   
-  init (_ word: String) {
-    self.word = word
-  }
-  func makeUIView(context: Self.Context) -> UIImageView {
-    let imageView = UIImageView(image: renderWord(word))
-    imageView.animationRepeatCount = 1
-    return imageView
-  }
+  var publisher: Timer.TimerPublisher
+  private var timerCancellable: Cancellable?
   
-  func renderWord(_ word: String) -> UIImage {
-    var images = [UIImage]()
-    for letter in Array(word) {
-      let image = UIImage(named: String(letter).uppercased())!
-      images.append(image)
-    }
-    return UIImage.animatedImage(with: images, duration: 5.0)!
+  init (every: Double) {
+    self.publisher = Timer.publish(every: every, on: .main, in: .default)
+    self.timerCancellable = nil
   }
   
-  func updateUIView(_ uiView: UIImageView, context: UIViewRepresentableContext<AnimatedImage>) {
+  func start() {
+    self.timerCancellable = publisher.connect()
+  }
+  
+  func cancel() {
+    self.timerCancellable?.cancel()
+  }
+}
+
+struct WordView: View {
+  
+  @State private var index = 0
+  @State private var done = false
+  private var timer: LoadingTimer
+  private var images: [UIImage]
+  private var onFinish: () -> Void
+  
+  init(_ word: String, onFinish: @escaping () -> Void, every: Double = 0.5) {
+    let letters = Array(word).map { String($0).uppercased() }
+    self.timer = LoadingTimer(every: every)
+    self.images = letters.map { UIImage(named: $0)! }
+    self.onFinish = onFinish
+  }
+  
+  var body: some View {
+    return Image(uiImage: self.images[index])
+      .resizable()
+      .frame(width: 100, height: 100, alignment: .center)
+      .onReceive(
+        self.timer.publisher,
+        perform: { _ in
+          self.index = self.index + 1
+          if self.index >= self.images.count {
+            self.timer.cancel()
+            self.index = 0
+            self.onFinish()
+          }
+      }
+    )
+      .onAppear { self.timer.start() }
+      .onDisappear { self.timer.cancel() }
   }
 }
 
 struct ContentView: View {
   @State var alertIsVisible: Bool = false
   @State var speed = 5.0
+  @State var wordFinished = false
   let minSpeed = 0.0
   let maxSpeed = 10.0
   
@@ -42,7 +77,12 @@ struct ContentView: View {
     VStack {
       Spacer()
       HStack {
-        AnimatedImage("LAUREN")
+        if !self.wordFinished {
+          WordView("lauren",
+                   onFinish: {() -> Void in
+                    self.wordFinished = true
+          })
+        }
       }
       .padding(.horizontal, 100)
       Spacer()
