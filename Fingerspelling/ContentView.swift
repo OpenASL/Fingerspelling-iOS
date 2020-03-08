@@ -35,7 +35,7 @@ private var words = [String]()
 struct ContentView: View {
   @State private var alertIsVisible: Bool = false
   @State private var speed = 6.0
-  @State private var wordFinished = true
+  @State private var wordFinished = false
   @State private var letterIndex = 0
   @State private var answer: String = ""
   @State private var timer: LoadingTimer = LoadingTimer(every: 0.5)
@@ -106,6 +106,12 @@ struct ContentView: View {
   private func handleResetSpeed() {
     self.speed = (self.maxSpeed + self.minSpeed) / 2
   }
+  
+  private func handleStop() {
+    self.resetWord()
+    self.wordFinished = true
+    self.resetTimer()
+  }
 
   func handleCheck() {
     self.alertIsVisible = true
@@ -174,7 +180,7 @@ struct ContentView: View {
           Button(action: self.handleResetSpeed) {
             Text("Reset speed").font(.system(size: 14))
           }.disabled(!self.wordFinished)
-        }
+        }.padding(.top, 15)
       }.padding(.top, 30)
       /* Word controls */
       HStack {
@@ -189,7 +195,7 @@ struct ContentView: View {
 
         } else {
           // Placeholder to maintain spacing while buttons are hidden
-          Button(action: {}) { Text("Replay") }.hidden()
+          Button(action: self.handleStop) { Image(systemName: "stop.fill").modifier(IconButton()).foregroundColor(.red) }
         }
       }
     }
