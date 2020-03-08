@@ -56,6 +56,25 @@ struct ContentView: View {
     self.timer.cancel()
     self.timer = self.getTimer()
   }
+  
+  func handleReplay() {
+    self.letterIndex = 0
+    self.wordFinished = false
+  }
+  
+  func handleNextWord() {
+    self.alertIsVisible = true
+    self.showValidation = false
+    self.answer = ""
+  }
+  
+  func handleResetSpeed() {
+    self.speed = (self.maxSpeed - self.minSpeed) / 2
+  }
+  
+  func handleCheck() {
+    self.showValidation = true
+  }
 
   var body: some View {
     VStack {
@@ -87,9 +106,7 @@ struct ContentView: View {
           TextField("Answer", text: $answer)
         }
         Spacer()
-        Button(action: {
-          self.showValidation = true
-        }) {
+        Button(action: self.handleCheck) {
           Text("Check")
         }
       }.padding(.top, 20)
@@ -100,19 +117,14 @@ struct ContentView: View {
           Slider(value: self.$speed, in: self.minSpeed ... self.maxSpeed)
           Text("Fast")
         }
-        Button(action: {
-          self.speed = (self.maxSpeed - self.minSpeed) / 2
-        }) {
+        Button(action: self.handleResetSpeed) {
           Text("Reset speed")
         }
       }.padding(.vertical, 30)
 
       HStack {
         if self.wordFinished {
-          Button(action: {
-            self.letterIndex = 0
-            self.wordFinished = false
-          }) {
+          Button(action: self.handleReplay) {
             Text("Replay")
           }
           .alert(isPresented: $alertIsVisible) { () -> Alert in
@@ -121,11 +133,7 @@ struct ContentView: View {
               message: Text("show next word")
             )
           }
-          Button(action: {
-            self.alertIsVisible = true
-            self.showValidation = false
-            self.answer = ""
-          }) {
+          Button(action: self.handleNextWord) {
             Text("Next word")
           }
           .alert(isPresented: $alertIsVisible) { () -> Alert in
