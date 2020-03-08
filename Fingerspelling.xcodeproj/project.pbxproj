@@ -15,6 +15,7 @@
 		43D6108D2413D8680089DE4D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 43D6108B2413D8680089DE4D /* LaunchScreen.storyboard */; };
 		43D610982413D8690089DE4D /* FingerspellingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43D610972413D8690089DE4D /* FingerspellingTests.swift */; };
 		43D610A3241490130089DE4D /* KeyboardResponder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43D610A2241490130089DE4D /* KeyboardResponder.swift */; };
+		43D9D89324156EB400D345D2 /* words.json in Resources */ = {isa = PBXBuildFile; fileRef = 43D9D89224156EB400D345D2 /* words.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -40,6 +41,7 @@
 		43D610972413D8690089DE4D /* FingerspellingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FingerspellingTests.swift; sourceTree = "<group>"; };
 		43D610992413D8690089DE4D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		43D610A2241490130089DE4D /* KeyboardResponder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardResponder.swift; sourceTree = "<group>"; };
+		43D9D89224156EB400D345D2 /* words.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = words.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,6 +83,7 @@
 		43D6107F2413D8640089DE4D /* Fingerspelling */ = {
 			isa = PBXGroup;
 			children = (
+				43D9D89224156EB400D345D2 /* words.json */,
 				43D610802413D8640089DE4D /* AppDelegate.swift */,
 				43D610822413D8640089DE4D /* SceneDelegate.swift */,
 				43D610842413D8640089DE4D /* ContentView.swift */,
@@ -191,6 +194,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				43D6108D2413D8680089DE4D /* LaunchScreen.storyboard in Resources */,
+				43D9D89324156EB400D345D2 /* words.json in Resources */,
 				43D6108A2413D8680089DE4D /* Preview Assets.xcassets in Resources */,
 				43D610872413D8680089DE4D /* Assets.xcassets in Resources */,
 			);
