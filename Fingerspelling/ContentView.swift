@@ -22,17 +22,20 @@ class LoadingTimer {
   }
 }
 
-// private let words: Array<String> = [
-//  "lauren",
-//  "steve"
-// ]
+struct IconButton: ViewModifier {
+  func body(content: Content) -> some View {
+    content
+      .padding()
+      .font(.system(size: 36))
+  }
+}
 
 private var words = [String]()
 
 struct ContentView: View {
   @State private var alertIsVisible: Bool = false
   @State private var speed = 6.0
-  @State private var wordFinished = false
+  @State private var wordFinished = true
   @State private var letterIndex = 0
   @State private var answer: String = ""
   @State private var timer: LoadingTimer = LoadingTimer(every: 0.5)
@@ -145,10 +148,10 @@ struct ContentView: View {
       Spacer()
       /* Answer input */
       HStack {
-        TextField("Answer", text: $answer)
+        TextField("Answer", text: $answer).textFieldStyle(RoundedBorderTextFieldStyle() )
         Spacer()
         Button(action: self.handleCheck) {
-          Text("Check")
+          Text("Check").fontWeight(.semibold)
         }
         .alert(isPresented: $alertIsVisible) { () -> Alert in
           Alert(
@@ -164,23 +167,24 @@ struct ContentView: View {
         HStack {
           Text("Slow")
           Slider(value: self.$speed, in: self.minSpeed ... self.maxSpeed)
+            .disabled(!self.wordFinished)
           Text("Fast")
         }
         HStack {
           Button(action: self.handleResetSpeed) {
-            Text("Reset speed")
-          }
+            Text("Reset speed").font(.system(size: 14))
+          }.disabled(!self.wordFinished)
         }
-      }.padding(.vertical, 30)
+      }.padding(.top, 30)
       /* Word controls */
       HStack {
         if self.wordFinished {
           Button(action: self.handleReplay) {
-            Text("Replay")
+            Image(systemName: "gobackward").modifier(IconButton())
           }
           Spacer()
           Button(action: self.handleNextWord) {
-            Text("Skip")
+            Image(systemName: "forward.end").modifier(IconButton())
           }
 
         } else {
