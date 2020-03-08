@@ -150,7 +150,6 @@ struct ContentView: View {
             .onDisappear { self.resetTimer() }
         }
       }
-      .padding(.horizontal, 100)
       Spacer()
       /* Answer input */
       HStack {
