@@ -14,6 +14,7 @@
 		43D6108A2413D8680089DE4D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 43D610892413D8680089DE4D /* Preview Assets.xcassets */; };
 		43D6108D2413D8680089DE4D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 43D6108B2413D8680089DE4D /* LaunchScreen.storyboard */; };
 		43D610982413D8690089DE4D /* FingerspellingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43D610972413D8690089DE4D /* FingerspellingTests.swift */; };
+		43D610A3241490130089DE4D /* KeyboardResponder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43D610A2241490130089DE4D /* KeyboardResponder.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,6 +39,7 @@
 		43D610932413D8690089DE4D /* FingerspellingTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FingerspellingTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		43D610972413D8690089DE4D /* FingerspellingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FingerspellingTests.swift; sourceTree = "<group>"; };
 		43D610992413D8690089DE4D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		43D610A2241490130089DE4D /* KeyboardResponder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardResponder.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -82,6 +84,7 @@
 				43D610802413D8640089DE4D /* AppDelegate.swift */,
 				43D610822413D8640089DE4D /* SceneDelegate.swift */,
 				43D610842413D8640089DE4D /* ContentView.swift */,
+				43D610A2241490130089DE4D /* KeyboardResponder.swift */,
 				43D610862413D8680089DE4D /* Assets.xcassets */,
 				43D6108B2413D8680089DE4D /* LaunchScreen.storyboard */,
 				43D6108E2413D8680089DE4D /* Info.plist */,
@@ -207,6 +210,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				43D610A3241490130089DE4D /* KeyboardResponder.swift in Sources */,
 				43D610812413D8640089DE4D /* AppDelegate.swift in Sources */,
 				43D610832413D8640089DE4D /* SceneDelegate.swift in Sources */,
 				43D610852413D8640089DE4D /* ContentView.swift in Sources */,
@@ -363,13 +367,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"Fingerspelling/Preview Content\"";
+				DEVELOPMENT_TEAM = X3SA8TV77Y;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = Fingerspelling/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.Fingerspelling;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sloria.Fingerspelling;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -382,13 +387,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"Fingerspelling/Preview Content\"";
+				DEVELOPMENT_TEAM = X3SA8TV77Y;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = Fingerspelling/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.Fingerspelling;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sloria.Fingerspelling;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
