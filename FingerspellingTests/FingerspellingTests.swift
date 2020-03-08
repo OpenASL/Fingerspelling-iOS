@@ -1,10 +1,3 @@
-//
-//  FingerspellingTests.swift
-//  FingerspellingTests
-//
-//  Created by Steven Loria on 3/7/20.
-//
-
 @testable import Fingerspelling
 import XCTest
 

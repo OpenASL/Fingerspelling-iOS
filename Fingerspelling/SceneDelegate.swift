@@ -1,10 +1,3 @@
-//
-//  SceneDelegate.swift
-//  Fingerspelling
-//
-//  Created by Steven Loria on 3/7/20.
-//
-
 import SwiftUI
 import UIKit
 

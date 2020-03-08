@@ -1,3 +1,4 @@
 --swiftversion 5.1
 --self insert
 --indent 2
+--header strip

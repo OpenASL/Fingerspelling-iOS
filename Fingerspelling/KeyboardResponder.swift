@@ -1,10 +1,3 @@
-//
-//  KeyboardResponder.swift
-//  Fingerspelling
-//
-//  Created by Lauren Barker on 3/7/20.
-//
-
 import SwiftUI
 
 // https://stackoverflow.com/questions/56491881/move-textfield-up-when-thekeyboard-has-appeared-by-using-swiftui-ios

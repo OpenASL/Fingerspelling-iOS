@@ -1,10 +1,3 @@
-//
-//  ContentView.swift
-//  Fingerspelling
-//
-//  Created by Steven Loria on 3/7/20.
-//
-
 import Combine
 import SwiftUI
 
