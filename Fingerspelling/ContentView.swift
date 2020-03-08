@@ -47,28 +47,28 @@ struct ContentView: View {
     self.images = letters.map { UIImage(named: $0)! }
   }
 
-  func getTimer() -> LoadingTimer {
+  private func getTimer() -> LoadingTimer {
     let every = self.numerator / max(self.speed, 1)
     return LoadingTimer(every: every)
   }
 
-  func resetTimer() {
+  private func resetTimer() {
     self.timer.cancel()
     self.timer = self.getTimer()
   }
   
-  func handleReplay() {
+  private func handleReplay() {
     self.letterIndex = 0
     self.wordFinished = false
   }
   
-  func handleNextWord() {
+  private func handleNextWord() {
     self.alertIsVisible = true
     self.showValidation = false
     self.answer = ""
   }
   
-  func handleResetSpeed() {
+  private func handleResetSpeed() {
     self.speed = (self.maxSpeed - self.minSpeed) / 2
   }
   
