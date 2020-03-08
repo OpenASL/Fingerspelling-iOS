@@ -40,7 +40,7 @@ struct ContentView: View {
   
   var images: [UIImage]
 
-  
+  let numerator = 2.0
   let minSpeed = 0.0
   let maxSpeed = 10.0
   
@@ -49,9 +49,14 @@ struct ContentView: View {
     self.images = letters.map { UIImage(named: $0)! }
   }
   
+  func getTimer() -> LoadingTimer {
+    let every = self.numerator / max(self.speed, 1)
+    return LoadingTimer(every: every)
+  }
+  
   func resetTimer() {
     self.timer.cancel()
-    self.timer = LoadingTimer(every: 0.5)
+    self.timer = self.getTimer()
   }
   
   var body: some View {
