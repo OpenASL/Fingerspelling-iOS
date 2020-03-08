@@ -1,31 +1,22 @@
-//
-//  ContentView.swift
-//  Fingerspelling
-//
-//  Created by Steven Loria on 3/7/20.
-//
-
-import SwiftUI
 import Combine
-
+import SwiftUI
 
 // XXX: Complicated implementation of an animated image
 //   since there doesn't seem to be a better way to do this in
 //   SwiftUI yet: https://stackoverflow.com/a/57749621/1157536
 class LoadingTimer {
-  
   var publisher: Timer.TimerPublisher
   private var timerCancellable: Cancellable?
-  
-  init (every: Double) {
+
+  init(every: Double) {
     self.publisher = Timer.publish(every: every, on: .main, in: .default)
     self.timerCancellable = nil
   }
-  
+
   func start() {
-    self.timerCancellable = publisher.connect()
+    self.timerCancellable = self.publisher.connect()
   }
-  
+
   func cancel() {
     self.timerCancellable?.cancel()
   }
@@ -40,12 +31,12 @@ struct ContentView: View {
   @State private var showValidation: Bool = false
   @State private var timer: LoadingTimer = LoadingTimer(every: 0.5)
   @ObservedObject private var keyboard = KeyboardResponder()
-  
+
   private var images: [UIImage]
   private let numerator = 2.0
   private let minSpeed = 0.0
   private let maxSpeed = 10.0
-  
+
   private var isAnswerValid: Bool {
     let trimmedString = self.answer.trimmingCharacters(in: .whitespaces).lowercased()
     return trimmedString == "test"
@@ -55,17 +46,17 @@ struct ContentView: View {
     let letters = Array("lauren").map { String($0).uppercased() }
     self.images = letters.map { UIImage(named: $0)! }
   }
-  
+
   func getTimer() -> LoadingTimer {
     let every = self.numerator / max(self.speed, 1)
     return LoadingTimer(every: every)
   }
-  
+
   func resetTimer() {
     self.timer.cancel()
     self.timer = self.getTimer()
   }
-  
+
   var body: some View {
     VStack {
       Spacer()
@@ -81,8 +72,8 @@ struct ContentView: View {
                 if self.letterIndex >= self.images.count {
                   self.wordFinished = true
                 }
-            }
-          )
+              }
+            )
             .onAppear { self.resetTimer(); self.timer.start() }
             .onDisappear { self.resetTimer() }
         }
@@ -102,11 +93,11 @@ struct ContentView: View {
           Text("Check")
         }
       }.padding(.top, 20)
-      
+
       VStack {
         HStack {
           Text("Slow")
-          Slider(value: self.$speed, in: self.minSpeed...self.maxSpeed)
+          Slider(value: self.$speed, in: self.minSpeed ... self.maxSpeed)
           Text("Fast")
         }
         Button(action: {
@@ -115,7 +106,7 @@ struct ContentView: View {
           Text("Reset speed")
         }
       }.padding(.vertical, 30)
-      
+
       HStack {
         if self.wordFinished {
           Button(action: {
@@ -125,7 +116,7 @@ struct ContentView: View {
             Text("Replay")
           }
           .alert(isPresented: $alertIsVisible) { () -> Alert in
-            return Alert(
+            Alert(
               title: Text("TODO"),
               message: Text("show next word")
             )
@@ -138,14 +129,14 @@ struct ContentView: View {
             Text("Next word")
           }
           .alert(isPresented: $alertIsVisible) { () -> Alert in
-            return Alert(
+            Alert(
               title: Text("TODO"),
               message: Text("show next word")
             )
           }
         } else {
           // Placeholder to maintain spacing while buttons are hidden
-          Button(action: {}) { Text("Replay")}.hidden()
+          Button(action: {}) { Text("Replay") }.hidden()
         }
       }
     }
@@ -153,7 +144,6 @@ struct ContentView: View {
     .padding(.bottom, keyboard.currentHeight)
     .padding(.vertical, 20)
     .padding(.horizontal, 40)
-
   }
 }
 
