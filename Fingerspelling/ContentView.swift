@@ -31,7 +31,7 @@ private var words = [String]()
 
 struct ContentView: View {
   @State private var alertIsVisible: Bool = false
-  @State private var speed = 5.0
+  @State private var speed = 6.0
   @State private var wordFinished = false
   @State private var letterIndex = 0
   @State private var answer: String = ""
@@ -41,8 +41,8 @@ struct ContentView: View {
   @ObservedObject private var keyboard = KeyboardResponder()
 
   private let numerator = 2.0
-  private let minSpeed = 0.0
-  private let maxSpeed = 10.0
+  private let minSpeed = 1.0
+  private let maxSpeed = 11.0
 
   init() {
     if let path = Bundle.main.path(forResource: "words", ofType: "json") {
@@ -58,6 +58,7 @@ struct ContentView: View {
     }
     // XXX Setting state variable in init: https://stackoverflow.com/a/60028709/1157536
     self._currentWord = State<String>(initialValue: words.randomElement()!)
+    self._speed = State<Double>(initialValue: (self.maxSpeed + self.minSpeed) / 2)
   }
 
   private var answerTrimmed: String {
@@ -74,7 +75,7 @@ struct ContentView: View {
   }
 
   private func getTimer() -> LoadingTimer {
-    let every = self.numerator / max(self.speed, 1)
+    let every = self.numerator / max(self.speed, 1.0)
     return LoadingTimer(every: every)
   }
 
@@ -100,7 +101,7 @@ struct ContentView: View {
   }
 
   private func handleResetSpeed() {
-    self.speed = (self.maxSpeed - self.minSpeed) / 2
+    self.speed = (self.maxSpeed + self.minSpeed) / 2
   }
 
   func handleCheck() {
@@ -158,13 +159,16 @@ struct ContentView: View {
       }.padding(.top, 20)
       /* Speed control */
       VStack {
+        Text(String(Int(self.speed.rounded())))
         HStack {
           Text("Slow")
           Slider(value: self.$speed, in: self.minSpeed ... self.maxSpeed)
           Text("Fast")
         }
-        Button(action: self.handleResetSpeed) {
-          Text("Reset speed")
+        HStack {
+          Button(action: self.handleResetSpeed) {
+            Text("Reset speed")
+          }
         }
       }.padding(.vertical, 30)
       /* Word controls */
