@@ -35,7 +35,6 @@ struct ContentView: View {
   @State private var wordFinished = false
   @State private var letterIndex = 0
   @State private var answer: String = ""
-  @State private var showValidation: Bool = false
   @State private var timer: LoadingTimer = LoadingTimer(every: 0.5)
   @State private var currentWord = ""
   @State private var score = 0
@@ -95,7 +94,6 @@ struct ContentView: View {
   }
 
   private func handleNextWord() {
-    self.showValidation = false
     self.answer = ""
     self.resetWord()
     self.currentWord = words.randomElement()!
@@ -107,7 +105,6 @@ struct ContentView: View {
 
   func handleCheck() {
     self.alertIsVisible = true
-    self.showValidation = true
     self.alertIsVisible = true
     if self.isAnswerValid {
       self.score += 1
@@ -127,7 +124,8 @@ struct ContentView: View {
         if !self.wordFinished {
           Image(uiImage: self.images[self.letterIndex])
             .resizable()
-            .frame(width: 100, height: 100, alignment: .center)
+            .frame(width: 100, height: 100)
+            .offset(x: self.letterIndex > 0 && Array(self.currentWord)[self.letterIndex - 1] == Array(self.currentWord)[self.letterIndex] ? -20 : 0)
             .onReceive(
               self.timer.publisher,
               perform: { _ in
