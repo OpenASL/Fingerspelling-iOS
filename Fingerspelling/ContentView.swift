@@ -123,11 +123,6 @@ struct ContentView: View {
 
   var body: some View {
     VStack {
-      /* Score */
-      HStack {
-        Text(String(self.score))
-        Spacer()
-      }
       Spacer()
       /* Letter display */
       HStack {
@@ -151,6 +146,28 @@ struct ContentView: View {
         }
       }
       Spacer()
+
+      /* Speed control */
+      VStack {
+        HStack {
+          Text("Slow").font(.system(size: 12))
+          Slider(value: self.$speed, in: self.minSpeed ... self.maxSpeed)
+            .disabled(!self.wordFinished)
+          Text("Fast").font(.system(size: 12))
+        }
+        HStack {
+          Text("Speed: \(String(Int(self.speed.rounded())))")
+          Spacer()
+          Text("Score: \(String(self.score))")
+        }
+        
+        HStack {
+          Button(action: self.handleResetSpeed) {
+            Text("Reset speed").font(.system(size: 14))
+          }.disabled(!self.wordFinished)
+        }
+      }.padding(.top, 30)
+      
       /* Answer input */
       HStack {
         TextField("Answer", text: $answer).textFieldStyle(RoundedBorderTextFieldStyle() )
@@ -166,21 +183,7 @@ struct ContentView: View {
           )
         }
       }.padding(.top, 20)
-      /* Speed control */
-      VStack {
-        Text(String(Int(self.speed.rounded())))
-        HStack {
-          Text("Slow")
-          Slider(value: self.$speed, in: self.minSpeed ... self.maxSpeed)
-            .disabled(!self.wordFinished)
-          Text("Fast")
-        }
-        HStack {
-          Button(action: self.handleResetSpeed) {
-            Text("Reset speed").font(.system(size: 14))
-          }.disabled(!self.wordFinished)
-        }.padding(.top, 15)
-      }.padding(.top, 30)
+      
       /* Word controls */
 
       HStack {
