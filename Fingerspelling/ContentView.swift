@@ -31,57 +31,45 @@ class LoadingTimer {
   }
 }
 
-struct WordView: View {
-  
-  @State private var index = 0
-  @State private var done = false
-  private var timer: LoadingTimer
-  private var images: [UIImage]
-  private var onFinish: () -> Void
-  
-  init(_ word: String, onFinish: @escaping () -> Void, every: Double = 0.5) {
-    let letters = Array(word).map { String($0).uppercased() }
-    self.timer = LoadingTimer(every: every)
-    self.images = letters.map { UIImage(named: $0)! }
-    self.onFinish = onFinish
-  }
-  
-  var body: some View {
-    return Image(uiImage: self.images[index])
-      .resizable()
-      .frame(width: 100, height: 100, alignment: .center)
-      .onReceive(
-        self.timer.publisher,
-        perform: { _ in
-          self.index = self.index + 1
-          if self.index >= self.images.count {
-            self.timer.cancel()
-            self.index = 0
-            self.onFinish()
-          }
-      }
-    )
-      .onAppear { self.timer.start() }
-      .onDisappear { self.timer.cancel() }
-  }
-}
-
 struct ContentView: View {
   @State var alertIsVisible: Bool = false
   @State var speed = 5.0
   @State var wordFinished = false
+  @State var letterIndex = 0
+  
+  var timer: LoadingTimer
+  var images: [UIImage]
+
+  
   let minSpeed = 0.0
   let maxSpeed = 10.0
+  
+  init() {
+    self.timer = LoadingTimer(every: 0.5)
+    let letters = Array("lauren").map { String($0).uppercased() }
+    self.images = letters.map { UIImage(named: $0)! }
+  }
   
   var body: some View {
     VStack {
       Spacer()
       HStack {
         if !self.wordFinished {
-          WordView("lauren",
-                   onFinish: {() -> Void in
-                    self.wordFinished = true
-          })
+          Image(uiImage: self.images[self.letterIndex])
+            .resizable()
+            .frame(width: 100, height: 100, alignment: .center)
+            .onReceive(
+              self.timer.publisher,
+              perform: { _ in
+                self.letterIndex += 1
+                if self.letterIndex >= self.images.count {
+//                  self.timer.cancel()
+                  self.wordFinished = true
+                }
+            }
+          )
+            .onAppear { self.timer.start() }
+//            .onDisappear { self.timer.cancel() }
         }
       }
       .padding(.horizontal, 100)
@@ -103,6 +91,13 @@ struct ContentView: View {
       
       HStack {
         Button(action: {
+          self.letterIndex = 0
+          self.wordFinished = false
+          self.timer.start()
+        }) {
+          Text("Replay")
+        }
+        Button(action: {
           self.alertIsVisible = true
         }) {
           Text("Next word")
@@ -113,6 +108,7 @@ struct ContentView: View {
             message: Text("show next word")
           )
         }
+        
       }
       .padding(.bottom, 20)
     }
