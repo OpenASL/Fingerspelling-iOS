@@ -36,8 +36,8 @@ struct ContentView: View {
   @State var speed = 5.0
   @State var wordFinished = false
   @State var letterIndex = 0
+  @State var timer: LoadingTimer = LoadingTimer(every: 0.5)
   
-  var timer: LoadingTimer
   var images: [UIImage]
 
   
@@ -45,9 +45,13 @@ struct ContentView: View {
   let maxSpeed = 10.0
   
   init() {
-    self.timer = LoadingTimer(every: 0.5)
     let letters = Array("lauren").map { String($0).uppercased() }
     self.images = letters.map { UIImage(named: $0)! }
+  }
+  
+  func resetTimer() {
+    self.timer.cancel()
+    self.timer = LoadingTimer(every: 0.5)
   }
   
   var body: some View {
@@ -63,13 +67,12 @@ struct ContentView: View {
               perform: { _ in
                 self.letterIndex += 1
                 if self.letterIndex >= self.images.count {
-//                  self.timer.cancel()
                   self.wordFinished = true
                 }
             }
           )
-            .onAppear { self.timer.start() }
-//            .onDisappear { self.timer.cancel() }
+            .onAppear { self.resetTimer(); self.timer.start() }
+            .onDisappear { self.resetTimer() }
         }
       }
       .padding(.horizontal, 100)
@@ -90,25 +93,28 @@ struct ContentView: View {
       .padding(.vertical, 30)
       
       HStack {
-        Button(action: {
-          self.letterIndex = 0
-          self.wordFinished = false
-          self.timer.start()
-        }) {
-          Text("Replay")
+        if self.wordFinished {
+          Button(action: {
+            self.letterIndex = 0
+            self.wordFinished = false
+          }) {
+            Text("Replay")
+          }
+          Button(action: {
+            self.alertIsVisible = true
+          }) {
+            Text("Next word")
+          }
+          .alert(isPresented: $alertIsVisible) { () -> Alert in
+            return Alert(
+              title: Text("TODO"),
+              message: Text("show next word")
+            )
+          }
+        } else {
+          // Placeholder to maintain spacing
+          Button(action: {}) { Text("Replay")}.hidden()
         }
-        Button(action: {
-          self.alertIsVisible = true
-        }) {
-          Text("Next word")
-        }
-        .alert(isPresented: $alertIsVisible) { () -> Alert in
-          return Alert(
-            title: Text("TODO"),
-            message: Text("show next word")
-          )
-        }
-        
       }
       .padding(.bottom, 20)
     }
