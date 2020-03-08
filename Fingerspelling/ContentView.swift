@@ -22,6 +22,13 @@ class LoadingTimer {
   }
 }
 
+// private let words: Array<String> = [
+//  "lauren",
+//  "steve"
+// ]
+
+private var words = [String]()
+
 struct ContentView: View {
   @State private var alertIsVisible: Bool = false
   @State private var speed = 5.0
@@ -30,21 +37,41 @@ struct ContentView: View {
   @State private var answer: String = ""
   @State private var showValidation: Bool = false
   @State private var timer: LoadingTimer = LoadingTimer(every: 0.5)
+  @State private var currentWord = ""
+  @State private var score = 0
   @ObservedObject private var keyboard = KeyboardResponder()
 
-  private var images: [UIImage]
   private let numerator = 2.0
   private let minSpeed = 0.0
   private let maxSpeed = 10.0
 
-  private var isAnswerValid: Bool {
-    let trimmedString = self.answer.trimmingCharacters(in: .whitespaces).lowercased()
-    return trimmedString == "test"
+  init() {
+    if let path = Bundle.main.path(forResource: "words", ofType: "json") {
+      do {
+        let data = try Data(contentsOf: URL(fileURLWithPath: path), options: .mappedIfSafe)
+        let jsonResult = try JSONSerialization.jsonObject(with: data, options: .mutableLeaves)
+        if let jsonResult = jsonResult as? [String] {
+          words = jsonResult
+        }
+      } catch {
+        print("Could not parse words.json")
+      }
+    }
+    // XXX Setting state variable in init: https://stackoverflow.com/a/60028709/1157536
+    self._currentWord = State<String>(initialValue: words.randomElement()!)
   }
 
-  init() {
-    let letters = Array("lauren").map { String($0).uppercased() }
-    self.images = letters.map { UIImage(named: $0)! }
+  private var answerTrimmed: String {
+    self.answer.trimmingCharacters(in: .whitespaces)
+  }
+
+  private var isAnswerValid: Bool {
+    self.answerTrimmed.lowercased() == self.currentWord.lowercased()
+  }
+
+  private var images: [UIImage] {
+    let letters = Array(self.currentWord).map { String($0).uppercased() }
+    return letters.map { UIImage(named: $0)! }
   }
 
   private func getTimer() -> LoadingTimer {
@@ -56,29 +83,46 @@ struct ContentView: View {
     self.timer.cancel()
     self.timer = self.getTimer()
   }
-  
+
   private func handleReplay() {
     self.letterIndex = 0
     self.wordFinished = false
   }
-  
+
+  private func resetWord() {
+    self.letterIndex = 0
+    self.wordFinished = false
+  }
+
   private func handleNextWord() {
-    self.alertIsVisible = true
     self.showValidation = false
     self.answer = ""
+    self.resetWord()
+    self.currentWord = words.randomElement()!
   }
-  
+
   private func handleResetSpeed() {
     self.speed = (self.maxSpeed - self.minSpeed) / 2
   }
-  
+
   func handleCheck() {
+    self.alertIsVisible = true
     self.showValidation = true
+    self.alertIsVisible = true
+    if self.isAnswerValid {
+      self.score += 1
+    }
   }
 
   var body: some View {
     VStack {
+      /* Score */
+      HStack {
+        Text(String(self.score))
+        Spacer()
+      }
       Spacer()
+      /* Letter display */
       HStack {
         if !self.wordFinished {
           Image(uiImage: self.images[self.letterIndex])
@@ -99,18 +143,22 @@ struct ContentView: View {
       }
       .padding(.horizontal, 100)
       Spacer()
+      /* Answer input */
       HStack {
-        if self.showValidation {
-          TextField("Answer", text: $answer).border(self.isAnswerValid ? Color.green : Color.red)
-        } else {
-          TextField("Answer", text: $answer)
-        }
+        TextField("Answer", text: $answer)
         Spacer()
         Button(action: self.handleCheck) {
           Text("Check")
         }
+        .alert(isPresented: $alertIsVisible) { () -> Alert in
+          Alert(
+            title: self.isAnswerValid ? Text("✅ Correct!") : Text("🚩 Incorrect"),
+            message: self.isAnswerValid ? Text("\"\(self.answerTrimmed)\" is correct") : Text("Try again"),
+            dismissButton: self.isAnswerValid ? .default(Text("Next word"), action: self.handleNextWord) : .default(Text("OK"))
+          )
+        }
       }.padding(.top, 20)
-
+      /* Speed control */
       VStack {
         HStack {
           Text("Slow")
@@ -121,27 +169,17 @@ struct ContentView: View {
           Text("Reset speed")
         }
       }.padding(.vertical, 30)
-
+      /* Word controls */
       HStack {
         if self.wordFinished {
           Button(action: self.handleReplay) {
             Text("Replay")
           }
-          .alert(isPresented: $alertIsVisible) { () -> Alert in
-            Alert(
-              title: Text("TODO"),
-              message: Text("show next word")
-            )
-          }
+          Spacer()
           Button(action: self.handleNextWord) {
-            Text("Next word")
+            Text("Skip")
           }
-          .alert(isPresented: $alertIsVisible) { () -> Alert in
-            Alert(
-              title: Text("TODO"),
-              message: Text("show next word")
-            )
-          }
+
         } else {
           // Placeholder to maintain spacing while buttons are hidden
           Button(action: {}) { Text("Replay") }.hidden()
