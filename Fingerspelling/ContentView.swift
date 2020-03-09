@@ -39,13 +39,16 @@ struct ContentView: View {
   @State private var letterIndex = 0
   @State private var answer: String = ""
   @State private var timer: LoadingTimer = LoadingTimer(every: 0.5)
+  @State private var delayTimer: Timer? = nil
   @State private var currentWord = ""
   @State private var score = 0
+  @State private var waitingForNextWord: Bool = false
   @ObservedObject private var keyboard = KeyboardResponder()
 
   private let numerator = 2.0 // Higher value = slower speeds
   private let minSpeed = 1.0
   private let maxSpeed = 11.0
+  private let nextWordDelay = 1.0 // seconds
   private var words = [String]()
 
   init() {
@@ -99,8 +102,12 @@ struct ContentView: View {
 
   private func handleNextWord() {
     self.answer = ""
-    self.resetWord()
     self.currentWord = self.words.randomElement()!
+    self.waitingForNextWord = true
+    self.delayTimer = Timer.scheduledTimer(withTimeInterval: self.nextWordDelay, repeats: false) { _ in
+      self.resetWord()
+      self.waitingForNextWord = false
+    }
   }
 
   private func handleResetSpeed() {
@@ -108,13 +115,14 @@ struct ContentView: View {
   }
 
   private func handleStop() {
+    self.delayTimer?.invalidate()
     self.resetWord()
+    self.waitingForNextWord = false
     self.wordFinished = true
     self.resetTimer()
   }
 
   func handleCheck() {
-    self.alertIsVisible = true
     self.alertIsVisible = true
     if self.isAnswerValid {
       self.score += 1
@@ -177,7 +185,7 @@ struct ContentView: View {
 
       /* Word controls */
       HStack {
-        if self.wordFinished {
+        if self.wordFinished && !self.waitingForNextWord {
           // TODO: change this to "Reveal"
           Button(action: self.handleNextWord) {
             Text("Skip")
