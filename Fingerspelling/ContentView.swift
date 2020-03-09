@@ -30,22 +30,26 @@ struct IconButton: ViewModifier {
   }
 }
 
-private var words = [String]()
+let defaultSpeed = 3.0
 
 struct ContentView: View {
   @State private var alertIsVisible: Bool = false
-  @State private var speed = 6.0
+  @State private var speed = defaultSpeed
   @State private var wordFinished = true
   @State private var letterIndex = 0
   @State private var answer: String = ""
   @State private var timer: LoadingTimer = LoadingTimer(every: 0.5)
+  @State private var delayTimer: Timer? = nil
   @State private var currentWord = ""
   @State private var score = 0
+  @State private var waitingForNextWord: Bool = false
   @ObservedObject private var keyboard = KeyboardResponder()
 
-  private let numerator = 2.0
+  private let numerator = 2.0 // Higher value = slower speeds
   private let minSpeed = 1.0
   private let maxSpeed = 11.0
+  private let nextWordDelay = 1.0 // seconds
+  private var words = [String]()
 
   init() {
     if let path = Bundle.main.path(forResource: "words", ofType: "json") {
@@ -53,15 +57,14 @@ struct ContentView: View {
         let data = try Data(contentsOf: URL(fileURLWithPath: path), options: .mappedIfSafe)
         let jsonResult = try JSONSerialization.jsonObject(with: data, options: .mutableLeaves)
         if let jsonResult = jsonResult as? [String] {
-          words = jsonResult
+          self.words = jsonResult
         }
       } catch {
         print("Could not parse words.json")
       }
     }
     // XXX Setting state variable in init: https://stackoverflow.com/a/60028709/1157536
-    self._currentWord = State<String>(initialValue: words.randomElement()!)
-    self._speed = State<Double>(initialValue: (self.maxSpeed + self.minSpeed) / 2)
+    self._currentWord = State<String>(initialValue: self.words.randomElement()!)
   }
 
   private var answerTrimmed: String {
@@ -99,22 +102,27 @@ struct ContentView: View {
 
   private func handleNextWord() {
     self.answer = ""
-    self.resetWord()
-    self.currentWord = words.randomElement()!
+    self.currentWord = self.words.randomElement()!
+    self.waitingForNextWord = true
+    self.delayTimer = Timer.scheduledTimer(withTimeInterval: self.nextWordDelay, repeats: false) { _ in
+      self.resetWord()
+      self.waitingForNextWord = false
+    }
   }
 
   private func handleResetSpeed() {
-    self.speed = (self.maxSpeed + self.minSpeed) / 2
+    self.speed = defaultSpeed
   }
 
   private func handleStop() {
+    self.delayTimer?.invalidate()
     self.resetWord()
+    self.waitingForNextWord = false
     self.wordFinished = true
     self.resetTimer()
   }
 
   func handleCheck() {
-    self.alertIsVisible = true
     self.alertIsVisible = true
     if self.isAnswerValid {
       self.score += 1
@@ -165,7 +173,7 @@ struct ContentView: View {
       VStack {
         HStack {
           Text("Slow").font(.system(size: 12))
-          Slider(value: self.$speed, in: self.minSpeed ... self.maxSpeed)
+          Slider(value: self.$speed, in: self.minSpeed ... self.maxSpeed, step: 1)
             .disabled(!self.wordFinished)
           Text("Fast").font(.system(size: 12))
         }
@@ -180,14 +188,13 @@ struct ContentView: View {
 
       /* Answer input */
       HStack {
-        FocusableTextField(text: $answer, isFirstResponder: true)
+        FocusableTextField(text: $answer, isFirstResponder: true, placeholder: "Answer")
           .frame(width: 300, height: 30)
       }
 
       /* Word controls */
-
       HStack {
-        if self.wordFinished {
+        if self.wordFinished && !self.waitingForNextWord {
           // TODO: change this to "Reveal"
           Button(action: self.handleNextWord) {
             Text("Skip")
