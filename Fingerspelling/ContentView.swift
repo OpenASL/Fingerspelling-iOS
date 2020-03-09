@@ -30,6 +30,13 @@ struct IconButton: ViewModifier {
   }
 }
 
+// https://stackoverflow.com/a/40211633/1157536
+func delayWithSeconds(_ seconds: Double, completion: @escaping () -> Void) {
+  DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
+    completion()
+  }
+}
+
 let defaultSpeed = 3.0
 
 struct ContentView: View {
@@ -41,11 +48,13 @@ struct ContentView: View {
   @State private var timer: LoadingTimer = LoadingTimer(every: 0.5)
   @State private var currentWord = ""
   @State private var score = 0
+  @State private var waitingForNextWord: Bool = false
   @ObservedObject private var keyboard = KeyboardResponder()
 
   private let numerator = 2.0 // Higher value = slower speeds
   private let minSpeed = 1.0
   private let maxSpeed = 11.0
+  private let nextWordDelay = 1.0 // seconds
   private var words = [String]()
 
   init() {
@@ -99,8 +108,12 @@ struct ContentView: View {
 
   private func handleNextWord() {
     self.answer = ""
-    self.resetWord()
     self.currentWord = self.words.randomElement()!
+    self.waitingForNextWord = true
+    delayWithSeconds(self.nextWordDelay) {
+      self.resetWord()
+      self.waitingForNextWord = false
+    }
   }
 
   private func handleResetSpeed() {
@@ -114,7 +127,6 @@ struct ContentView: View {
   }
 
   func handleCheck() {
-    self.alertIsVisible = true
     self.alertIsVisible = true
     if self.isAnswerValid {
       self.score += 1
@@ -177,7 +189,7 @@ struct ContentView: View {
 
       /* Word controls */
       HStack {
-        if self.wordFinished {
+        if self.wordFinished && !self.waitingForNextWord {
           // TODO: change this to "Reveal"
           Button(action: self.handleNextWord) {
             Text("Skip")
