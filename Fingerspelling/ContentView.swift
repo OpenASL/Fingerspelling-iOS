@@ -30,9 +30,11 @@ struct IconButton: ViewModifier {
   }
 }
 
+let defaultSpeed = 3.0
+
 struct ContentView: View {
   @State private var alertIsVisible: Bool = false
-  @State private var speed = 6.0
+  @State private var speed = defaultSpeed
   @State private var wordFinished = true
   @State private var letterIndex = 0
   @State private var answer: String = ""
@@ -41,7 +43,7 @@ struct ContentView: View {
   @State private var score = 0
   @ObservedObject private var keyboard = KeyboardResponder()
 
-  private let numerator = 2.0
+  private let numerator = 2.0 // Higher value = slower speeds
   private let minSpeed = 1.0
   private let maxSpeed = 11.0
   private var words = [String]()
@@ -60,7 +62,6 @@ struct ContentView: View {
     }
     // XXX Setting state variable in init: https://stackoverflow.com/a/60028709/1157536
     self._currentWord = State<String>(initialValue: self.words.randomElement()!)
-    self._speed = State<Double>(initialValue: (self.maxSpeed + self.minSpeed) / 2)
   }
 
   private var answerTrimmed: String {
@@ -103,7 +104,7 @@ struct ContentView: View {
   }
 
   private func handleResetSpeed() {
-    self.speed = (self.maxSpeed + self.minSpeed) / 2
+    self.speed = defaultSpeed
   }
 
   private func handleStop() {
@@ -151,7 +152,7 @@ struct ContentView: View {
       VStack {
         HStack {
           Text("Slow").font(.system(size: 12))
-          Slider(value: self.$speed, in: self.minSpeed ... self.maxSpeed)
+          Slider(value: self.$speed, in: self.minSpeed ... self.maxSpeed, step: 1)
             .disabled(!self.wordFinished)
           Text("Fast").font(.system(size: 12))
         }
