@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		432387942415D001009C2BCF /* FocusableTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 432387932415D001009C2BCF /* FocusableTextField.swift */; };
 		43D610812413D8640089DE4D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43D610802413D8640089DE4D /* AppDelegate.swift */; };
 		43D610832413D8640089DE4D /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43D610822413D8640089DE4D /* SceneDelegate.swift */; };
 		43D610852413D8640089DE4D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43D610842413D8640089DE4D /* ContentView.swift */; };
@@ -29,6 +30,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		432387932415D001009C2BCF /* FocusableTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusableTextField.swift; sourceTree = "<group>"; };
 		43D6107D2413D8640089DE4D /* Fingerspelling.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Fingerspelling.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		43D610802413D8640089DE4D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		43D610822413D8640089DE4D /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -92,6 +94,7 @@
 				43D6108B2413D8680089DE4D /* LaunchScreen.storyboard */,
 				43D6108E2413D8680089DE4D /* Info.plist */,
 				43D610882413D8680089DE4D /* Preview Content */,
+				432387932415D001009C2BCF /* FocusableTextField.swift */,
 			);
 			path = Fingerspelling;
 			sourceTree = "<group>";
@@ -218,6 +221,7 @@
 				43D610812413D8640089DE4D /* AppDelegate.swift in Sources */,
 				43D610832413D8640089DE4D /* SceneDelegate.swift in Sources */,
 				43D610852413D8640089DE4D /* ContentView.swift in Sources */,
+				432387942415D001009C2BCF /* FocusableTextField.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

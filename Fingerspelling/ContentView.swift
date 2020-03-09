@@ -106,7 +106,7 @@ struct ContentView: View {
   private func handleResetSpeed() {
     self.speed = (self.maxSpeed + self.minSpeed) / 2
   }
-  
+
   private func handleStop() {
     self.resetWord()
     self.wordFinished = true
@@ -129,7 +129,7 @@ struct ContentView: View {
         if !self.wordFinished {
           Image(uiImage: self.images[self.letterIndex])
             .resizable()
-            .frame(width: 100, height: 150)
+            .frame(width: 75, height: 100)
             .scaledToFit()
             .offset(x: self.letterIndex > 0 && Array(self.currentWord)[self.letterIndex - 1] == Array(self.currentWord)[self.letterIndex] ? -20 : 0)
             .onReceive(
@@ -160,44 +160,43 @@ struct ContentView: View {
           Spacer()
           Text("Score: \(String(self.score))")
         }
-        
+
         HStack {
           Button(action: self.handleResetSpeed) {
             Text("Reset speed").font(.system(size: 14))
           }.disabled(!self.wordFinished)
         }
       }.padding(.top, 30)
-      
+
       /* Answer input */
       HStack {
-        TextField("Answer", text: $answer).textFieldStyle(RoundedBorderTextFieldStyle() )
-        Spacer()
-        Button(action: self.handleCheck) {
-          Text("Check").fontWeight(.semibold)
-        }
-        .alert(isPresented: $alertIsVisible) { () -> Alert in
-          Alert(
-            title: self.isAnswerValid ? Text("✅ Correct!") : Text("🚩 Incorrect"),
-            message: self.isAnswerValid ? Text("\"\(self.answerTrimmed)\" is correct") : Text("Try again"),
-            dismissButton: self.isAnswerValid ? .default(Text("Next word"), action: self.handleNextWord) : .default(Text("OK"))
-          )
-        }
-      }.padding(.top, 20)
-      
+        FocusableTextField(text: $answer, isFirstResponder: true)
+          .frame(width: 300, height: 30)
+      }
+
       /* Word controls */
 
       HStack {
         if self.wordFinished {
-          // TODO: Figure out a better way to center the play button
-          Button(action: {}) { Image(systemName: "gobackward")}.modifier(IconButton()).hidden()
+          // TODO: change this to "Reveal"
+          Button(action: self.handleNextWord) {
+            Text("Skip")
+          }
           Spacer()
           Button(action: self.handleReplay) {
             Image(systemName: "play.fill").modifier(IconButton())
-          }.offset(x: 0)
+          }.offset(x: 10)
           Spacer()
-          Button(action: self.handleNextWord) {
-            Image(systemName: "forward.end").modifier(IconButton())
-          }
+          Button(action: self.handleCheck) {
+            Image(systemName: "checkmark").modifier(IconButton())
+          }.disabled(self.answerTrimmed.isEmpty)
+            .alert(isPresented: $alertIsVisible) { () -> Alert in
+              Alert(
+                title: self.isAnswerValid ? Text("✅ Correct!") : Text("🚩 Incorrect"),
+                message: self.isAnswerValid ? Text("\"\(self.answerTrimmed)\" is correct") : Text("Try again"),
+                dismissButton: self.isAnswerValid ? .default(Text("Next word"), action: self.handleNextWord) : .default(Text("OK"))
+              )
+            }
 
         } else {
           // Placeholder to maintain spacing while buttons are hidden
@@ -207,7 +206,6 @@ struct ContentView: View {
     }
     // Move the current UI up when the keyboard is active
     .padding(.bottom, keyboard.currentHeight)
-    .padding(.vertical, 20)
     .padding(.horizontal, 40)
   }
 }
