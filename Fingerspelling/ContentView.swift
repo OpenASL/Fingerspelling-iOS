@@ -171,7 +171,7 @@ struct ContentView: View {
 
       /* Answer input */
       HStack {
-        FocusableTextField(text: $answer, isFirstResponder: true)
+        FocusableTextField(text: $answer, isFirstResponder: true, placeholder: "Answer")
           .frame(width: 300, height: 30)
       }
 

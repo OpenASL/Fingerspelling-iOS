@@ -17,11 +17,13 @@ struct FocusableTextField: UIViewRepresentable {
 
   @Binding var text: String
   var isFirstResponder: Bool = false
+  var placeholder: String = ""
 
   func makeUIView(context: UIViewRepresentableContext<FocusableTextField>) -> UITextField {
     let textField = UITextField(frame: .zero)
     textField.delegate = context.coordinator
     textField.borderStyle = .roundedRect
+    textField.placeholder = self.placeholder
     return textField
   }
 
