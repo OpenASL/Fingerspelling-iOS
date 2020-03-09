@@ -30,8 +30,6 @@ struct IconButton: ViewModifier {
   }
 }
 
-private var words = [String]()
-
 struct ContentView: View {
   @State private var alertIsVisible: Bool = false
   @State private var speed = 6.0
@@ -46,6 +44,7 @@ struct ContentView: View {
   private let numerator = 2.0
   private let minSpeed = 1.0
   private let maxSpeed = 11.0
+  private var words = [String]()
 
   init() {
     if let path = Bundle.main.path(forResource: "words", ofType: "json") {
@@ -53,14 +52,14 @@ struct ContentView: View {
         let data = try Data(contentsOf: URL(fileURLWithPath: path), options: .mappedIfSafe)
         let jsonResult = try JSONSerialization.jsonObject(with: data, options: .mutableLeaves)
         if let jsonResult = jsonResult as? [String] {
-          words = jsonResult
+          self.words = jsonResult
         }
       } catch {
         print("Could not parse words.json")
       }
     }
     // XXX Setting state variable in init: https://stackoverflow.com/a/60028709/1157536
-    self._currentWord = State<String>(initialValue: words.randomElement()!)
+    self._currentWord = State<String>(initialValue: self.words.randomElement()!)
     self._speed = State<Double>(initialValue: (self.maxSpeed + self.minSpeed) / 2)
   }
 
@@ -100,7 +99,7 @@ struct ContentView: View {
   private func handleNextWord() {
     self.answer = ""
     self.resetWord()
-    self.currentWord = words.randomElement()!
+    self.currentWord = self.words.randomElement()!
   }
 
   private func handleResetSpeed() {
@@ -145,6 +144,7 @@ struct ContentView: View {
             .onDisappear { self.resetTimer() }
         }
       }
+
       Spacer()
 
       /* Speed control */
@@ -175,7 +175,6 @@ struct ContentView: View {
       }
 
       /* Word controls */
-
       HStack {
         if self.wordFinished {
           // TODO: change this to "Reveal"
