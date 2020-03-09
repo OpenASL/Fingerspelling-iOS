@@ -151,10 +151,10 @@ struct ContentView: View {
       /* Speed control */
       VStack {
         HStack {
-          Text("Slow").font(.system(size: 12))
+          Image(systemName: "tortoise").foregroundColor(.gray)
           Slider(value: self.$speed, in: self.minSpeed ... self.maxSpeed, step: 1)
             .disabled(!self.wordFinished)
-          Text("Fast").font(.system(size: 12))
+          Image(systemName: "hare").foregroundColor(.gray)
         }
         HStack {
           Text("Speed: \(String(Int(self.speed.rounded())))")
