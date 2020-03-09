@@ -1,38 +1,49 @@
 import SwiftUI
 
-// https://stackoverflow.com/a/56508132/1157536
+// adapted from https://stackoverflow.com/a/56508132/1157536
 struct FocusableTextField: UIViewRepresentable {
   class Coordinator: NSObject, UITextFieldDelegate {
     @Binding var text: String
     var didBecomeFirstResponder = false
+    var _textFieldShouldReturn: (_ textField: UITextField) -> Bool
 
-    init(text: Binding<String>) {
+    init(text: Binding<String>, textFieldShouldReturn: @escaping (_ textField: UITextField) -> Bool) {
       _text = text
+      self._textFieldShouldReturn = textFieldShouldReturn
     }
 
     func textFieldDidChangeSelection(_ textField: UITextField) {
       self.text = textField.text ?? ""
+    }
+
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+      self._textFieldShouldReturn(textField)
     }
   }
 
   @Binding var text: String
   var isFirstResponder: Bool = false
   var placeholder: String = ""
+  var textFieldShouldReturn: (_ textField: UITextField) -> Bool = { _ in true }
 
   func makeUIView(context: UIViewRepresentableContext<FocusableTextField>) -> UITextField {
     let textField = UITextField(frame: .zero)
     textField.delegate = context.coordinator
-    textField.borderStyle = .roundedRect
     textField.placeholder = self.placeholder
+    textField.borderStyle = .roundedRect
+    textField.autocapitalizationType = .allCharacters
+    textField.autocorrectionType = .no
+    textField.returnKeyType = .go
+    textField.keyboardType = .asciiCapable
     return textField
   }
 
   func makeCoordinator() -> FocusableTextField.Coordinator {
-    Coordinator(text: $text)
+    Coordinator(text: $text, textFieldShouldReturn: self.textFieldShouldReturn)
   }
 
   func updateUIView(_ uiView: UITextField, context: UIViewRepresentableContext<FocusableTextField>) {
-    uiView.text = self.text
+    uiView.text = self.text.uppercased() // autocapitalize input
     if self.isFirstResponder, !context.coordinator.didBecomeFirstResponder {
       uiView.becomeFirstResponder()
       context.coordinator.didBecomeFirstResponder = true
