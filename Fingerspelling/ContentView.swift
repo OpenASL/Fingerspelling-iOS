@@ -138,11 +138,11 @@ struct ContentView: View {
           Spacer()
           Text("\(String(self.score))")
         }.padding(.horizontal, 10)
-        .padding(.vertical, 2)
-        .background(Color.green)
-        .foregroundColor(Color.white)
-        .cornerRadius(8)
-        .frame(maxWidth: 150)
+          .padding(.vertical, 2)
+          .background(Color.green)
+          .foregroundColor(Color.white)
+          .cornerRadius(8)
+          .frame(maxWidth: 150)
         Spacer()
       }
       Spacer()
@@ -178,7 +178,7 @@ struct ContentView: View {
           Image(systemName: "hare").foregroundColor(.gray)
         }
         HStack {
-          Text("Speed: \(String(Int(self.speed.rounded())))")
+          Text("Speed: \(String(Int(self.speed.rounded())))").font(.system(size: 14))
           Spacer()
           Button(action: self.handleResetSpeed) {
             Text("Reset speed").font(.system(size: 14))
@@ -188,8 +188,16 @@ struct ContentView: View {
 
       /* Answer input */
       HStack {
-        FocusableTextField(text: $answer, isFirstResponder: true, placeholder: "Answer")
-          .frame(width: 300, height: 30)
+        FocusableTextField(
+          text: $answer,
+          isFirstResponder: true,
+          placeholder: "Answer",
+          textFieldShouldReturn: { _ in
+            self.handleCheck()
+            return true
+          }
+        )
+        .frame(width: 300, height: 30)
       }
 
       /* Word controls */
