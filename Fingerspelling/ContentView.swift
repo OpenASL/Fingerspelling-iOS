@@ -110,10 +110,6 @@ struct ContentView: View {
     }
   }
 
-  private func handleResetSpeed() {
-    self.speed = defaultSpeed
-  }
-
   private func handleStop() {
     self.delayTimer?.invalidate()
     self.resetTimer()
@@ -184,9 +180,6 @@ struct ContentView: View {
         HStack {
           Text("Speed: \(String(Int(self.speed.rounded())))").font(.system(size: 14))
           Spacer()
-          Button(action: self.handleResetSpeed) {
-            Text("Reset speed").font(.system(size: 14))
-          }.disabled(!self.wordFinished)
         }
       }.padding(.top, 30)
 
