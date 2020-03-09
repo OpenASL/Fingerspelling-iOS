@@ -116,13 +116,15 @@ struct ContentView: View {
 
   private func handleStop() {
     self.delayTimer?.invalidate()
+    self.resetTimer()
     self.resetWord()
     self.waitingForNextWord = false
     self.wordFinished = true
-    self.resetTimer()
   }
 
   func handleCheck() {
+    self.handleStop()
+
     self.alertIsVisible = true
     if self.isAnswerValid {
       self.score += 1
@@ -131,6 +133,7 @@ struct ContentView: View {
 
   var body: some View {
     VStack {
+      /* Score display */
       HStack {
         Spacer()
         HStack {
@@ -146,6 +149,7 @@ struct ContentView: View {
         Spacer()
       }
       Spacer()
+
       /* Letter display */
       HStack {
         if !self.wordFinished {
@@ -212,21 +216,29 @@ struct ContentView: View {
             Image(systemName: "play.fill").modifier(IconButton())
           }.offset(x: 10)
           Spacer()
-          Button(action: self.handleCheck) {
-            Image(systemName: "checkmark").modifier(IconButton())
-          }.disabled(self.answerTrimmed.isEmpty)
-            .alert(isPresented: $alertIsVisible) { () -> Alert in
-              Alert(
-                title: self.isAnswerValid ? Text("✅ Correct!") : Text("🚩 Incorrect"),
-                message: self.isAnswerValid ? Text("\"\(self.answerTrimmed)\" is correct") : Text("Try again"),
-                dismissButton: self.isAnswerValid ? .default(Text("Next word"), action: self.handleNextWord) : .default(Text("OK"))
-              )
-            }
 
         } else {
-          // Placeholder to maintain spacing while buttons are hidden
-          Button(action: self.handleStop) { Image(systemName: "stop.fill").modifier(IconButton()).foregroundColor(.red) }
+          // Placeholder to maintain spacing
+          // TODO: Is there a better way to do this?
+          Button(action: {}) {
+            Text("Skip")
+          }.hidden()
+          Spacer()
+          Button(action: self.handleStop) {
+            Image(systemName: "stop.fill").modifier(IconButton()).foregroundColor(.red)
+          }.offset(x: 10)
+          Spacer()
         }
+        Button(action: self.handleCheck) {
+          Image(systemName: "checkmark").modifier(IconButton())
+        }.disabled(self.answerTrimmed.isEmpty)
+          .alert(isPresented: $alertIsVisible) { () -> Alert in
+            Alert(
+              title: self.isAnswerValid ? Text("✅ Correct!") : Text("🚩 Incorrect"),
+              message: self.isAnswerValid ? Text("\"\(self.answerTrimmed)\" is correct") : Text("Try again"),
+              dismissButton: self.isAnswerValid ? .default(Text("Next word"), action: self.handleNextWord) : .default(Text("OK"))
+            )
+          }
       }
     }
     // Move the current UI up when the keyboard is active
