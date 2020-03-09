@@ -25,17 +25,13 @@ struct FocusableTextField: UIViewRepresentable {
   var isFirstResponder: Bool = false
   var placeholder: String = ""
   var textFieldShouldReturn: (_ textField: UITextField) -> Bool = { _ in true }
+  var modifyTextField: (_ textField: UITextField) -> UITextField = { (_ textField) in textField }
 
   func makeUIView(context: UIViewRepresentableContext<FocusableTextField>) -> UITextField {
     let textField = UITextField(frame: .zero)
     textField.delegate = context.coordinator
     textField.placeholder = self.placeholder
-    textField.borderStyle = .roundedRect
-    textField.autocapitalizationType = .allCharacters
-    textField.autocorrectionType = .no
-    textField.returnKeyType = .go
-    textField.keyboardType = .asciiCapable
-    return textField
+    return self.modifyTextField(textField)
   }
 
   func makeCoordinator() -> FocusableTextField.Coordinator {
