@@ -30,13 +30,6 @@ struct IconButton: ViewModifier {
   }
 }
 
-// https://stackoverflow.com/a/40211633/1157536
-func delayWithSeconds(_ seconds: Double, completion: @escaping () -> Void) {
-  DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
-    completion()
-  }
-}
-
 let defaultSpeed = 3.0
 
 struct ContentView: View {
@@ -46,6 +39,7 @@ struct ContentView: View {
   @State private var letterIndex = 0
   @State private var answer: String = ""
   @State private var timer: LoadingTimer = LoadingTimer(every: 0.5)
+  @State private var delayTimer: Timer? = nil
   @State private var currentWord = ""
   @State private var score = 0
   @State private var waitingForNextWord: Bool = false
@@ -110,7 +104,7 @@ struct ContentView: View {
     self.answer = ""
     self.currentWord = self.words.randomElement()!
     self.waitingForNextWord = true
-    delayWithSeconds(self.nextWordDelay) {
+    self.delayTimer = Timer.scheduledTimer(withTimeInterval: self.nextWordDelay, repeats: false) { _ in
       self.resetWord()
       self.waitingForNextWord = false
     }
@@ -121,7 +115,9 @@ struct ContentView: View {
   }
 
   private func handleStop() {
+    self.delayTimer?.invalidate()
     self.resetWord()
+    self.waitingForNextWord = false
     self.wordFinished = true
     self.resetTimer()
   }
