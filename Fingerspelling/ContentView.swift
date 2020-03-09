@@ -106,7 +106,7 @@ struct ContentView: View {
   private func handleResetSpeed() {
     self.speed = (self.maxSpeed + self.minSpeed) / 2
   }
-  
+
   private func handleStop() {
     self.resetWord()
     self.wordFinished = true
@@ -129,7 +129,7 @@ struct ContentView: View {
         if !self.wordFinished {
           Image(uiImage: self.images[self.letterIndex])
             .resizable()
-            .frame(width: 100, height: 150)
+            .frame(width: 75, height: 100)
             .scaledToFit()
             .offset(x: self.letterIndex > 0 && Array(self.currentWord)[self.letterIndex - 1] == Array(self.currentWord)[self.letterIndex] ? -20 : 0)
             .onReceive(
@@ -160,21 +160,21 @@ struct ContentView: View {
           Spacer()
           Text("Score: \(String(self.score))")
         }
-        
+
         HStack {
           Button(action: self.handleResetSpeed) {
             Text("Reset speed").font(.system(size: 14))
           }.disabled(!self.wordFinished)
         }
       }.padding(.top, 30)
-      
+
       /* Answer input */
       HStack {
-        TextField("Answer", text: $answer).textFieldStyle(RoundedBorderTextFieldStyle() )
-        Spacer()
-        
-      }.padding(.top, 20)
-      
+        FocusableTextField(text: $answer, isFirstResponder: true)
+          .frame(width: 300, height: 30)
+          .textFieldStyle(RoundedBorderTextFieldStyle())
+      }
+
       /* Word controls */
 
       HStack {
@@ -191,14 +191,13 @@ struct ContentView: View {
           Button(action: self.handleCheck) {
             Image(systemName: "checkmark").modifier(IconButton())
           }.disabled(self.answerTrimmed.isEmpty)
-          .alert(isPresented: $alertIsVisible) { () -> Alert in
-            Alert(
-              title: self.isAnswerValid ? Text("✅ Correct!") : Text("🚩 Incorrect"),
-              message: self.isAnswerValid ? Text("\"\(self.answerTrimmed)\" is correct") : Text("Try again"),
-              dismissButton: self.isAnswerValid ? .default(Text("Next word"), action: self.handleNextWord) : .default(Text("OK"))
-            )
-          }
-
+            .alert(isPresented: $alertIsVisible) { () -> Alert in
+              Alert(
+                title: self.isAnswerValid ? Text("✅ Correct!") : Text("🚩 Incorrect"),
+                message: self.isAnswerValid ? Text("\"\(self.answerTrimmed)\" is correct") : Text("Try again"),
+                dismissButton: self.isAnswerValid ? .default(Text("Next word"), action: self.handleNextWord) : .default(Text("OK"))
+              )
+            }
 
         } else {
           // Placeholder to maintain spacing while buttons are hidden
