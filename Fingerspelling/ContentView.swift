@@ -172,7 +172,6 @@ struct ContentView: View {
       HStack {
         FocusableTextField(text: $answer, isFirstResponder: true)
           .frame(width: 300, height: 30)
-          .textFieldStyle(RoundedBorderTextFieldStyle())
       }
 
       /* Word controls */
