@@ -195,10 +195,19 @@ struct ContentView: View {
         FocusableTextField(
           text: $answer,
           isFirstResponder: true,
-          placeholder: "Answer",
+          placeholder: "WORD",
           textFieldShouldReturn: { _ in
             self.handleCheck()
             return true
+          },
+          modifyTextField: { textField in
+            textField.borderStyle = .roundedRect
+            textField.autocapitalizationType = .allCharacters
+            textField.autocorrectionType = .no
+            textField.returnKeyType = .go
+            textField.keyboardType = .asciiCapable
+            textField.font = .monospacedSystemFont(ofSize: 18.0, weight: .regular)
+            return textField
           }
         )
         .frame(width: 300, height: 30)
