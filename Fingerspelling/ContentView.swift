@@ -123,6 +123,20 @@ struct ContentView: View {
 
   var body: some View {
     VStack {
+      HStack {
+        Spacer()
+        HStack {
+          Text("Score").bold()
+          Spacer()
+          Text("\(String(self.score))")
+        }.padding(.horizontal, 10)
+        .padding(.vertical, 2)
+        .background(Color.green)
+        .foregroundColor(Color.white)
+        .cornerRadius(8)
+        .frame(maxWidth: 150)
+        Spacer()
+      }
       Spacer()
       /* Letter display */
       HStack {
@@ -144,7 +158,7 @@ struct ContentView: View {
             .onAppear { self.resetTimer(); self.timer.start() }
             .onDisappear { self.resetTimer() }
         }
-      }
+      }.frame(width: 100, height: 150)
       Spacer()
 
       /* Speed control */
@@ -158,10 +172,6 @@ struct ContentView: View {
         HStack {
           Text("Speed: \(String(Int(self.speed.rounded())))")
           Spacer()
-          Text("Score: \(String(self.score))")
-        }
-
-        HStack {
           Button(action: self.handleResetSpeed) {
             Text("Reset speed").font(.system(size: 14))
           }.disabled(!self.wordFinished)
@@ -206,6 +216,7 @@ struct ContentView: View {
     }
     // Move the current UI up when the keyboard is active
     .padding(.bottom, keyboard.currentHeight)
+    .padding(.top, 10)
     .padding(.horizontal, 40)
   }
 }
