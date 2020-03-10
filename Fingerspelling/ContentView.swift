@@ -26,7 +26,7 @@ struct IconButton: ViewModifier {
   func body(content: Content) -> some View {
     content
       .padding()
-      .font(.system(size: 36))
+      .font(.system(size: 24))
   }
 }
 
@@ -70,6 +70,7 @@ struct ContentView: View {
         print("Could not parse words.json")
       }
     }
+    self.words = ["californication"]
     // XXX Setting state variable in init: https://stackoverflow.com/a/60028709/1157536
     self._currentWord = State<String>(initialValue: self.words.randomElement()!)
     self._playTimer = State<LoadingTimer?>(initialValue: self.getTimer())
@@ -172,7 +173,11 @@ struct ContentView: View {
           if self.showAnswer || self.submittedValidAnswer {
             if self.submittedValidAnswer {
               VStack {
-                Text(self.currentWord.uppercased()).font(.title).allowsTightening(true)
+                Text(self.currentWord.uppercased())
+                  .font(.title)
+                  .allowsTightening(true)
+                  .minimumScaleFactor(0.8)
+                  .scaledToFill()
                 Image(systemName: "checkmark.circle")
                   .modifier(MainDisplayIcon())
                   .foregroundColor(Color.green)
@@ -180,7 +185,6 @@ struct ContentView: View {
 
             } else {
               VStack {
-                Text("Try again").font(.callout)
                 Image(systemName: "xmark.circle")
                   .modifier(MainDisplayIcon())
                   .foregroundColor(Color.red)
