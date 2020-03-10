@@ -232,7 +232,11 @@ struct ContentView: View {
           isFirstResponder: true,
           placeholder: "WORD",
           textFieldShouldReturn: { _ in
-            self.handleSubmit()
+            if self.submittedValidAnswer {
+              self.handleNextWord()
+            } else {
+              self.handleSubmit()
+            }
             return true
           },
           modifyTextField: { textField in
@@ -258,6 +262,7 @@ struct ContentView: View {
               Text("Skip")
             }
           } else {
+            // Placeholder to maintain spacing
             // TODO: Is there a better way to do this?
             Button(action: self.handleNextWord) {
               Text("Skip")
@@ -269,7 +274,6 @@ struct ContentView: View {
           }.offset(x: 10)
           Spacer()
         } else {
-          // Placeholder to maintain spacing
           // TODO: Is there a better way to do this?
           Button(action: {}) {
             Text("Skip")
