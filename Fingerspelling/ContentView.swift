@@ -70,7 +70,6 @@ struct ContentView: View {
         print("Could not parse words.json")
       }
     }
-    self.words = ["californication"]
     // XXX Setting state variable in init: https://stackoverflow.com/a/60028709/1157536
     self._currentWord = State<String>(initialValue: self.words.randomElement()!)
     self._playTimer = State<LoadingTimer?>(initialValue: self.getTimer())
