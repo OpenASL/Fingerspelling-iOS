@@ -59,18 +59,17 @@ struct ContentView: View {
   private var words = [String]()
 
   init() {
-//    if let path = Bundle.main.path(forResource: "words", ofType: "json") {
-//      do {
-//        let data = try Data(contentsOf: URL(fileURLWithPath: path), options: .mappedIfSafe)
-//        let jsonResult = try JSONSerialization.jsonObject(with: data, options: .mutableLeaves)
-//        if let jsonResult = jsonResult as? [String] {
-//          self.words = jsonResult
-//        }
-//      } catch {
-//        print("Could not parse words.json")
-//      }
-//    }
-    self.words = ["handbook"]
+    if let path = Bundle.main.path(forResource: "words", ofType: "json") {
+      do {
+        let data = try Data(contentsOf: URL(fileURLWithPath: path), options: .mappedIfSafe)
+        let jsonResult = try JSONSerialization.jsonObject(with: data, options: .mutableLeaves)
+        if let jsonResult = jsonResult as? [String] {
+          self.words = jsonResult
+        }
+      } catch {
+        print("Could not parse words.json")
+      }
+    }
     // XXX Setting state variable in init: https://stackoverflow.com/a/60028709/1157536
     self._currentWord = State<String>(initialValue: self.words.randomElement()!)
     self._playTimer = State<LoadingTimer?>(initialValue: self.getTimer())
