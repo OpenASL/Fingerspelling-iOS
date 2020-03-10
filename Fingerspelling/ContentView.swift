@@ -190,8 +190,6 @@ struct ContentView: View {
                   .foregroundColor(Color.red)
               }
             }
-          } else if self.waitingForNextWord {
-            Text("*").padding().font(.system(size: 48))
           }
         } else {
           Image(uiImage: self.images[self.letterIndex])
