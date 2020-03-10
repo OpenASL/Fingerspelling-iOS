@@ -30,6 +30,14 @@ struct IconButton: ViewModifier {
   }
 }
 
+struct MainDisplayIcon: ViewModifier {
+  func body(content: Content) -> some View {
+    content
+      .padding()
+      .font(.system(size: 120))
+  }
+}
+
 let defaultSpeed = 3.0
 
 struct ContentView: View {
@@ -167,8 +175,7 @@ struct ContentView: View {
               VStack {
                 Text(self.currentWord.uppercased()).font(.title)
                 Image(systemName: "checkmark.circle")
-                  .padding()
-                  .font(.system(size: 120))
+                  .modifier(MainDisplayIcon())
                   .foregroundColor(Color.green)
               }
 
@@ -176,11 +183,12 @@ struct ContentView: View {
               VStack {
                 Text("Try again").font(.callout)
                 Image(systemName: "xmark.circle")
-                  .padding()
-                  .font(.system(size: 120))
+                  .modifier(MainDisplayIcon())
                   .foregroundColor(Color.red)
               }
             }
+          } else if self.waitingForNextWord {
+            Text("*").padding().font(.system(size: 48))
           }
         } else {
           Image(uiImage: self.images[self.letterIndex])
