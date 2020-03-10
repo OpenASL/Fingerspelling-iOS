@@ -33,7 +33,7 @@ struct IconButton: ViewModifier {
 let defaultSpeed = 3.0
 
 struct ContentView: View {
-  @State private var alertIsVisible: Bool = false
+  @State private var showAnswer: Bool = false
   @State private var speed = defaultSpeed
   @State private var wordFinished = true
   @State private var letterIndex = 0
@@ -43,6 +43,7 @@ struct ContentView: View {
   @State private var currentWord = ""
   @State private var score = 0
   @State private var waitingForNextWord: Bool = false
+  @State private var submittedValidAnswer: Bool = false
   @ObservedObject private var keyboard = KeyboardResponder()
 
   private let numerator = 2.0 // Higher value = slower speeds
@@ -80,6 +81,10 @@ struct ContentView: View {
     return letters.map { UIImage(named: $0)! }
   }
 
+  private var isPlaying: Bool {
+    !self.wordFinished || self.waitingForNextWord
+  }
+
   private func getTimer() -> LoadingTimer {
     let every = self.numerator / max(self.speed, 1.0)
     return LoadingTimer(every: every)
@@ -91,19 +96,21 @@ struct ContentView: View {
   }
 
   private func handleReplay() {
-    self.letterIndex = 0
-    self.wordFinished = false
+    self.resetWord()
   }
 
   private func resetWord() {
     self.letterIndex = 0
     self.wordFinished = false
+    self.showAnswer = false
   }
 
   private func handleNextWord() {
     self.answer = ""
     self.currentWord = self.words.randomElement()!
+    self.submittedValidAnswer = false
     self.waitingForNextWord = true
+    self.showAnswer = false
     self.delayTimer = Timer.scheduledTimer(withTimeInterval: self.nextWordDelay, repeats: false) { _ in
       self.resetWord()
       self.waitingForNextWord = false
@@ -118,13 +125,19 @@ struct ContentView: View {
     self.wordFinished = true
   }
 
-  func handleCheck() {
+  private func handleSubmit() {
     self.handleStop()
-
-    self.alertIsVisible = true
+    self.showAnswer = true
     if self.isAnswerValid {
+      self.submittedValidAnswer = true
       self.score += 1
     }
+  }
+
+  private func renderCheckButton() -> some View {
+    Button(action: self.handleSubmit) {
+      Image(systemName: "checkmark").modifier(IconButton())
+    }.disabled(self.answerTrimmed.isEmpty)
   }
 
   var body: some View {
@@ -135,7 +148,7 @@ struct ContentView: View {
         HStack {
           Text("Score").bold()
           Spacer()
-          Text("\(String(self.score))")
+          Text(String(self.score))
         }.padding(.horizontal, 10)
           .padding(.vertical, 2)
           .background(Color.green)
@@ -146,9 +159,30 @@ struct ContentView: View {
       }
       Spacer()
 
-      /* Letter display */
+      /* Main display */
       HStack {
-        if !self.wordFinished {
+        if self.wordFinished {
+          if self.showAnswer || self.submittedValidAnswer {
+            if self.submittedValidAnswer {
+              VStack {
+                Text(self.currentWord.uppercased()).font(.title)
+                Image(systemName: "checkmark.circle")
+                  .padding()
+                  .font(.system(size: 120))
+                  .foregroundColor(Color.green)
+              }
+
+            } else {
+              VStack {
+                Text("Try again").font(.callout)
+                Image(systemName: "xmark.circle")
+                  .padding()
+                  .font(.system(size: 120))
+                  .foregroundColor(Color.red)
+              }
+            }
+          }
+        } else {
           Image(uiImage: self.images[self.letterIndex])
             .resizable()
             .frame(width: 75, height: 100)
@@ -190,7 +224,7 @@ struct ContentView: View {
           isFirstResponder: true,
           placeholder: "WORD",
           textFieldShouldReturn: { _ in
-            self.handleCheck()
+            self.handleSubmit()
             return true
           },
           modifyTextField: { textField in
@@ -204,21 +238,28 @@ struct ContentView: View {
           }
         )
         .frame(width: 300, height: 30)
+        .opacity(self.submittedValidAnswer ? 0 : 1)
       }
 
       /* Word controls */
       HStack {
-        if self.wordFinished && !self.waitingForNextWord {
+        if !self.isPlaying {
           // TODO: change this to "Reveal"
-          Button(action: self.handleNextWord) {
-            Text("Skip")
+          if !self.submittedValidAnswer {
+            Button(action: self.handleNextWord) {
+              Text("Skip")
+            }
+          } else {
+            // TODO: Is there a better way to do this?
+            Button(action: self.handleNextWord) {
+              Text("Skip")
+            }.hidden()
           }
           Spacer()
           Button(action: self.handleReplay) {
             Image(systemName: "play.fill").modifier(IconButton())
           }.offset(x: 10)
           Spacer()
-
         } else {
           // Placeholder to maintain spacing
           // TODO: Is there a better way to do this?
@@ -231,16 +272,13 @@ struct ContentView: View {
           }.offset(x: 10)
           Spacer()
         }
-        Button(action: self.handleCheck) {
-          Image(systemName: "checkmark").modifier(IconButton())
-        }.disabled(self.answerTrimmed.isEmpty)
-          .alert(isPresented: $alertIsVisible) { () -> Alert in
-            Alert(
-              title: self.isAnswerValid ? Text("✅ Correct!") : Text("🚩 Incorrect"),
-              message: self.isAnswerValid ? Text("\"\(self.answerTrimmed)\" is correct") : Text("Try again"),
-              dismissButton: self.isAnswerValid ? .default(Text("Next word"), action: self.handleNextWord) : .default(Text("OK"))
-            )
+        if self.submittedValidAnswer {
+          Button(action: self.handleNextWord) {
+            Image(systemName: "arrow.right.to.line").modifier(IconButton())
           }
+        } else {
+          self.renderCheckButton()
+        }
       }
     }
     // Move the current UI up when the keyboard is active
