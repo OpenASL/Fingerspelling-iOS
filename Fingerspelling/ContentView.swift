@@ -30,19 +30,26 @@ struct IconButton: ViewModifier {
   }
 }
 
-let defaultSpeed = 3.0
+struct MainDisplayIcon: ViewModifier {
+  func body(content: Content) -> some View {
+    content
+      .padding()
+      .font(.system(size: 120))
+  }
+}
 
 struct ContentView: View {
-  @State private var alertIsVisible: Bool = false
-  @State private var speed = defaultSpeed
-  @State private var wordFinished = true
+  @State private var showAnswer: Bool = false
+  @State private var speed = 3.0
+  @State private var hasPlayed = true
   @State private var letterIndex = 0
   @State private var answer: String = ""
-  @State private var timer: LoadingTimer = LoadingTimer(every: 0.5)
+  @State private var playTimer: LoadingTimer? = nil
   @State private var delayTimer: Timer? = nil
   @State private var currentWord = ""
   @State private var score = 0
   @State private var waitingForNextWord: Bool = false
+  @State private var submittedValidAnswer: Bool = false
   @ObservedObject private var keyboard = KeyboardResponder()
 
   private let numerator = 2.0 // Higher value = slower speeds
@@ -52,19 +59,21 @@ struct ContentView: View {
   private var words = [String]()
 
   init() {
-    if let path = Bundle.main.path(forResource: "words", ofType: "json") {
-      do {
-        let data = try Data(contentsOf: URL(fileURLWithPath: path), options: .mappedIfSafe)
-        let jsonResult = try JSONSerialization.jsonObject(with: data, options: .mutableLeaves)
-        if let jsonResult = jsonResult as? [String] {
-          self.words = jsonResult
-        }
-      } catch {
-        print("Could not parse words.json")
-      }
-    }
+//    if let path = Bundle.main.path(forResource: "words", ofType: "json") {
+//      do {
+//        let data = try Data(contentsOf: URL(fileURLWithPath: path), options: .mappedIfSafe)
+//        let jsonResult = try JSONSerialization.jsonObject(with: data, options: .mutableLeaves)
+//        if let jsonResult = jsonResult as? [String] {
+//          self.words = jsonResult
+//        }
+//      } catch {
+//        print("Could not parse words.json")
+//      }
+//    }
+    self.words = ["handbook"]
     // XXX Setting state variable in init: https://stackoverflow.com/a/60028709/1157536
     self._currentWord = State<String>(initialValue: self.words.randomElement()!)
+    self._playTimer = State<LoadingTimer?>(initialValue: self.getTimer())
   }
 
   private var answerTrimmed: String {
@@ -80,38 +89,40 @@ struct ContentView: View {
     return letters.map { UIImage(named: $0)! }
   }
 
+  private var isPlaying: Bool {
+    !self.hasPlayed || self.waitingForNextWord
+  }
+
   private func getTimer() -> LoadingTimer {
     let every = self.numerator / max(self.speed, 1.0)
     return LoadingTimer(every: every)
   }
 
   private func resetTimer() {
-    self.timer.cancel()
-    self.timer = self.getTimer()
+    self.playTimer!.cancel()
+    self.playTimer = self.getTimer()
   }
 
   private func handleReplay() {
-    self.letterIndex = 0
-    self.wordFinished = false
+    self.resetWord()
   }
 
   private func resetWord() {
     self.letterIndex = 0
-    self.wordFinished = false
+    self.hasPlayed = false
+    self.showAnswer = false
   }
 
   private func handleNextWord() {
     self.answer = ""
     self.currentWord = self.words.randomElement()!
+    self.submittedValidAnswer = false
     self.waitingForNextWord = true
+    self.showAnswer = false
     self.delayTimer = Timer.scheduledTimer(withTimeInterval: self.nextWordDelay, repeats: false) { _ in
       self.resetWord()
       self.waitingForNextWord = false
     }
-  }
-
-  private func handleResetSpeed() {
-    self.speed = defaultSpeed
   }
 
   private func handleStop() {
@@ -119,16 +130,22 @@ struct ContentView: View {
     self.resetTimer()
     self.resetWord()
     self.waitingForNextWord = false
-    self.wordFinished = true
+    self.hasPlayed = true
   }
 
-  func handleCheck() {
+  private func handleSubmit() {
     self.handleStop()
-
-    self.alertIsVisible = true
+    self.showAnswer = true
     if self.isAnswerValid {
+      self.submittedValidAnswer = true
       self.score += 1
     }
+  }
+
+  private func renderCheckButton() -> some View {
+    Button(action: self.handleSubmit) {
+      Image(systemName: "checkmark").modifier(IconButton())
+    }.disabled(self.answerTrimmed.isEmpty)
   }
 
   var body: some View {
@@ -139,7 +156,7 @@ struct ContentView: View {
         HStack {
           Text("Score").bold()
           Spacer()
-          Text("\(String(self.score))")
+          Text(String(self.score))
         }.padding(.horizontal, 10)
           .padding(.vertical, 2)
           .background(Color.green)
@@ -150,24 +167,48 @@ struct ContentView: View {
       }
       Spacer()
 
-      /* Letter display */
+      /* Main display */
       HStack {
-        if !self.wordFinished {
+        if self.hasPlayed {
+          if self.showAnswer || self.submittedValidAnswer {
+            if self.submittedValidAnswer {
+              VStack {
+                Text(self.currentWord.uppercased()).font(.title).allowsTightening(true)
+                Image(systemName: "checkmark.circle")
+                  .modifier(MainDisplayIcon())
+                  .foregroundColor(Color.green)
+              }
+
+            } else {
+              VStack {
+                Text("Try again").font(.callout)
+                Image(systemName: "xmark.circle")
+                  .modifier(MainDisplayIcon())
+                  .foregroundColor(Color.red)
+              }
+            }
+          } else if self.waitingForNextWord {
+            Text("*").padding().font(.system(size: 48))
+          }
+        } else {
           Image(uiImage: self.images[self.letterIndex])
             .resizable()
             .frame(width: 75, height: 100)
             .scaledToFit()
             .offset(x: self.letterIndex > 0 && Array(self.currentWord)[self.letterIndex - 1] == Array(self.currentWord)[self.letterIndex] ? -20 : 0)
             .onReceive(
-              self.timer.publisher,
+              self.playTimer!.publisher,
               perform: { _ in
                 self.letterIndex += 1
                 if self.letterIndex >= self.images.count {
-                  self.wordFinished = true
+                  self.hasPlayed = true
                 }
               }
             )
-            .onAppear { self.resetTimer(); self.timer.start() }
+            .onAppear {
+              self.resetTimer()
+              self.playTimer!.start()
+            }
             .onDisappear { self.resetTimer() }
         }
       }.frame(width: 100, height: 150)
@@ -178,15 +219,12 @@ struct ContentView: View {
         HStack {
           Image(systemName: "tortoise").foregroundColor(.gray)
           Slider(value: self.$speed, in: self.minSpeed ... self.maxSpeed, step: 1)
-            .disabled(!self.wordFinished)
+            .disabled(!self.hasPlayed)
           Image(systemName: "hare").foregroundColor(.gray)
         }
         HStack {
           Text("Speed: \(String(Int(self.speed.rounded())))").font(.system(size: 14))
           Spacer()
-          Button(action: self.handleResetSpeed) {
-            Text("Reset speed").font(.system(size: 14))
-          }.disabled(!self.wordFinished)
         }
       }.padding(.top, 30)
 
@@ -197,7 +235,11 @@ struct ContentView: View {
           isFirstResponder: true,
           placeholder: "WORD",
           textFieldShouldReturn: { _ in
-            self.handleCheck()
+            if self.submittedValidAnswer {
+              self.handleNextWord()
+            } else {
+              self.handleSubmit()
+            }
             return true
           },
           modifyTextField: { textField in
@@ -211,23 +253,30 @@ struct ContentView: View {
           }
         )
         .frame(width: 300, height: 30)
+        .opacity(self.submittedValidAnswer ? 0 : 1)
       }
 
       /* Word controls */
       HStack {
-        if self.wordFinished && !self.waitingForNextWord {
+        if !self.isPlaying {
           // TODO: change this to "Reveal"
-          Button(action: self.handleNextWord) {
-            Text("Skip")
+          if !self.submittedValidAnswer {
+            Button(action: self.handleNextWord) {
+              Text("Skip")
+            }
+          } else {
+            // Placeholder to maintain spacing
+            // TODO: Is there a better way to do this?
+            Button(action: self.handleNextWord) {
+              Text("Skip")
+            }.hidden()
           }
           Spacer()
           Button(action: self.handleReplay) {
             Image(systemName: "play.fill").modifier(IconButton())
           }.offset(x: 10)
           Spacer()
-
         } else {
-          // Placeholder to maintain spacing
           // TODO: Is there a better way to do this?
           Button(action: {}) {
             Text("Skip")
@@ -238,16 +287,13 @@ struct ContentView: View {
           }.offset(x: 10)
           Spacer()
         }
-        Button(action: self.handleCheck) {
-          Image(systemName: "checkmark").modifier(IconButton())
-        }.disabled(self.answerTrimmed.isEmpty)
-          .alert(isPresented: $alertIsVisible) { () -> Alert in
-            Alert(
-              title: self.isAnswerValid ? Text("✅ Correct!") : Text("🚩 Incorrect"),
-              message: self.isAnswerValid ? Text("\"\(self.answerTrimmed)\" is correct") : Text("Try again"),
-              dismissButton: self.isAnswerValid ? .default(Text("Next word"), action: self.handleNextWord) : .default(Text("OK"))
-            )
+        if self.submittedValidAnswer {
+          Button(action: self.handleNextWord) {
+            Image(systemName: "arrow.right.to.line").modifier(IconButton())
           }
+        } else {
+          self.renderCheckButton()
+        }
       }
     }
     // Move the current UI up when the keyboard is active
