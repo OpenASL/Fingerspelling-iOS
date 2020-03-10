@@ -84,7 +84,7 @@ struct ContentView: View {
   }
 
   private var images: [UIImage] {
-    let letters = Array(self.currentWord).map { String($0).uppercased() }
+    let letters = Array(self.currentWord).map { "\(String($0).uppercased())-lauren-nobg" }
     return letters.map { UIImage(named: $0)! }
   }
 
@@ -192,7 +192,7 @@ struct ContentView: View {
         } else {
           Image(uiImage: self.images[self.letterIndex])
             .resizable()
-            .frame(width: 75, height: 100)
+            .frame(width: 225, height: 225)
             .scaledToFit()
             .offset(x: self.letterIndex > 0 && Array(self.currentWord)[self.letterIndex - 1] == Array(self.currentWord)[self.letterIndex] ? -20 : 0)
             .onReceive(
@@ -211,7 +211,6 @@ struct ContentView: View {
             .onDisappear { self.resetTimer() }
         }
       }.frame(width: 100, height: 150)
-      Spacer()
 
       /* Speed control */
       VStack {
