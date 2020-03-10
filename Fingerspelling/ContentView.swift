@@ -38,15 +38,13 @@ struct MainDisplayIcon: ViewModifier {
   }
 }
 
-let defaultSpeed = 3.0
-
 struct ContentView: View {
   @State private var showAnswer: Bool = false
-  @State private var speed = defaultSpeed
-  @State private var wordFinished = true
+  @State private var speed = 3.0
+  @State private var hasPlayed = true
   @State private var letterIndex = 0
   @State private var answer: String = ""
-  @State private var timer: LoadingTimer = LoadingTimer(every: 0.5)
+  @State private var playTimer: LoadingTimer? = nil
   @State private var delayTimer: Timer? = nil
   @State private var currentWord = ""
   @State private var score = 0
@@ -74,6 +72,7 @@ struct ContentView: View {
     }
     // XXX Setting state variable in init: https://stackoverflow.com/a/60028709/1157536
     self._currentWord = State<String>(initialValue: self.words.randomElement()!)
+    self._playTimer = State<LoadingTimer?>(initialValue: self.getTimer())
   }
 
   private var answerTrimmed: String {
@@ -90,7 +89,7 @@ struct ContentView: View {
   }
 
   private var isPlaying: Bool {
-    !self.wordFinished || self.waitingForNextWord
+    !self.hasPlayed || self.waitingForNextWord
   }
 
   private func getTimer() -> LoadingTimer {
@@ -99,8 +98,8 @@ struct ContentView: View {
   }
 
   private func resetTimer() {
-    self.timer.cancel()
-    self.timer = self.getTimer()
+    self.playTimer!.cancel()
+    self.playTimer = self.getTimer()
   }
 
   private func handleReplay() {
@@ -109,7 +108,7 @@ struct ContentView: View {
 
   private func resetWord() {
     self.letterIndex = 0
-    self.wordFinished = false
+    self.hasPlayed = false
     self.showAnswer = false
   }
 
@@ -130,7 +129,7 @@ struct ContentView: View {
     self.resetTimer()
     self.resetWord()
     self.waitingForNextWord = false
-    self.wordFinished = true
+    self.hasPlayed = true
   }
 
   private func handleSubmit() {
@@ -169,7 +168,7 @@ struct ContentView: View {
 
       /* Main display */
       HStack {
-        if self.wordFinished {
+        if self.hasPlayed {
           if self.showAnswer || self.submittedValidAnswer {
             if self.submittedValidAnswer {
               VStack {
@@ -197,15 +196,18 @@ struct ContentView: View {
             .scaledToFit()
             .offset(x: self.letterIndex > 0 && Array(self.currentWord)[self.letterIndex - 1] == Array(self.currentWord)[self.letterIndex] ? -20 : 0)
             .onReceive(
-              self.timer.publisher,
+              self.playTimer!.publisher,
               perform: { _ in
                 self.letterIndex += 1
                 if self.letterIndex >= self.images.count {
-                  self.wordFinished = true
+                  self.hasPlayed = true
                 }
               }
             )
-            .onAppear { self.resetTimer(); self.timer.start() }
+            .onAppear {
+              self.resetTimer()
+              self.playTimer!.start()
+            }
             .onDisappear { self.resetTimer() }
         }
       }.frame(width: 100, height: 150)
@@ -216,7 +218,7 @@ struct ContentView: View {
         HStack {
           Image(systemName: "tortoise").foregroundColor(.gray)
           Slider(value: self.$speed, in: self.minSpeed ... self.maxSpeed, step: 1)
-            .disabled(!self.wordFinished)
+            .disabled(!self.hasPlayed)
           Image(systemName: "hare").foregroundColor(.gray)
         }
         HStack {
