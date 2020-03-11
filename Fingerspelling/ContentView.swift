@@ -81,6 +81,177 @@ struct ContentView: View {
     !self.hasPlayed || self.waitingForNextWord
   }
 
+  var body: some View {
+    VStack {
+      self.createScoreDisplay()
+      Spacer()
+      self.createMainDisplay()
+      self.createSpeedControl()
+      self.createAnswerInput()
+      self.createControls()
+    }
+    // Move the current UI up when the keyboard is active
+    .padding(.bottom, keyboard.currentHeight)
+    .padding(.top, 10)
+    .padding(.horizontal, 40)
+  }
+
+  private func createScoreDisplay() -> some View {
+    HStack {
+      Spacer()
+      HStack {
+        Text("Score").font(.system(size: 12))
+        Spacer()
+        Text(String(self.score)).font(.system(size: 12)).bold()
+      }.padding(.horizontal, 10)
+        .padding(.vertical, 2)
+        .background(Color.green)
+        .foregroundColor(Color.white)
+        .cornerRadius(8)
+        .frame(maxWidth: 100)
+      Spacer()
+    }
+  }
+
+  private func createMainDisplay() -> some View {
+    HStack {
+      if self.hasPlayed {
+        if self.showAnswer || self.submittedValidAnswer {
+          if self.submittedValidAnswer {
+            VStack {
+              Text(self.currentWord.uppercased())
+                .font(.title)
+                .allowsTightening(true)
+                .minimumScaleFactor(0.8)
+                .scaledToFill()
+              Image(systemName: "checkmark.circle")
+                .modifier(MainDisplayIcon())
+                .foregroundColor(Color.green)
+            }
+
+          } else {
+            VStack {
+              Image(systemName: "xmark.circle")
+                .modifier(MainDisplayIcon())
+                .foregroundColor(Color.red)
+            }
+          }
+        }
+      } else {
+        Image(uiImage: self.images[self.letterIndex])
+          .resizable()
+          .frame(width: 225, height: 225)
+          .scaledToFit()
+          .offset(x: self.letterIndex > 0 && Array(self.currentWord)[self.letterIndex - 1] == Array(self.currentWord)[self.letterIndex] ? -20 : 0)
+          .onReceive(
+            self.playTimer!.publisher,
+            perform: { _ in
+              self.letterIndex += 1
+              if self.letterIndex >= self.images.count {
+                self.hasPlayed = true
+              }
+            }
+          )
+          .onAppear {
+            self.resetTimer()
+            self.playTimer!.start()
+          }
+          .onDisappear { self.resetTimer() }
+      }
+    }.frame(width: 100, height: 150)
+  }
+
+  private func createSpeedControl() -> some View {
+    VStack {
+      HStack {
+        Image(systemName: "tortoise").foregroundColor(.gray)
+        Slider(value: self.$speed, in: self.minSpeed ... self.maxSpeed, step: 1)
+          .disabled(!self.hasPlayed)
+        Image(systemName: "hare").foregroundColor(.gray)
+      }
+      HStack {
+        Text("Speed: \(String(Int(self.speed.rounded())))").font(.system(size: 14))
+        Spacer()
+      }
+    }.padding(.top, 30)
+  }
+
+  private func createAnswerInput() -> some View {
+    HStack {
+      FocusableTextField(
+        text: $answer,
+        isFirstResponder: true,
+        placeholder: "WORD",
+        textFieldShouldReturn: { _ in
+          if self.submittedValidAnswer {
+            self.handleNextWord()
+          } else {
+            self.handleSubmit()
+          }
+          return true
+        },
+        modifyTextField: { textField in
+          textField.borderStyle = .roundedRect
+          textField.autocapitalizationType = .allCharacters
+          textField.autocorrectionType = .no
+          textField.returnKeyType = .go
+          textField.keyboardType = .asciiCapable
+          textField.font = .monospacedSystemFont(ofSize: 18.0, weight: .regular)
+          return textField
+        }
+      )
+      .frame(width: 300, height: 30)
+      .opacity(self.submittedValidAnswer ? 0 : 1)
+    }
+  }
+
+  private func createControls() -> some View {
+    HStack {
+      if !self.isPlaying {
+        // TODO: change this to "Reveal"
+        if !self.submittedValidAnswer {
+          Button(action: self.handleNextWord) {
+            Text("Skip")
+          }
+        } else {
+          // Placeholder to maintain spacing
+          // TODO: Is there a better way to do this?
+          Button(action: self.handleNextWord) {
+            Text("Skip")
+          }.hidden()
+        }
+        Spacer()
+        Button(action: self.handleReplay) {
+          Image(systemName: "play.fill").modifier(IconButton())
+        }.offset(x: 10)
+        Spacer()
+      } else {
+        // TODO: Is there a better way to do this?
+        Button(action: {}) {
+          Text("Skip")
+        }.hidden()
+        Spacer()
+        Button(action: self.handleStop) {
+          Image(systemName: "stop.fill").modifier(IconButton()).foregroundColor(.red)
+        }.offset(x: 10)
+        Spacer()
+      }
+      if self.submittedValidAnswer {
+        Button(action: self.handleNextWord) {
+          Image(systemName: "arrow.right.to.line").modifier(IconButton())
+        }
+      } else {
+        self.createCheckButton()
+      }
+    }
+  }
+
+  private func createCheckButton() -> some View {
+    Button(action: self.handleSubmit) {
+      Image(systemName: "checkmark").modifier(IconButton())
+    }.disabled(self.answerTrimmed.isEmpty)
+  }
+
   private func getTimer() -> LoadingTimer {
     let every = self.numerator / max(self.speed, 1.0)
     return LoadingTimer(every: every)
@@ -91,14 +262,14 @@ struct ContentView: View {
     self.playTimer = self.getTimer()
   }
 
-  private func handleReplay() {
-    self.resetWord()
-  }
-
   private func resetWord() {
     self.letterIndex = 0
     self.hasPlayed = false
     self.showAnswer = false
+  }
+
+  private func handleReplay() {
+    self.resetWord()
   }
 
   private func handleNextWord() {
@@ -128,166 +299,6 @@ struct ContentView: View {
       self.submittedValidAnswer = true
       self.score += 1
     }
-  }
-
-  private func renderCheckButton() -> some View {
-    Button(action: self.handleSubmit) {
-      Image(systemName: "checkmark").modifier(IconButton())
-    }.disabled(self.answerTrimmed.isEmpty)
-  }
-
-  var body: some View {
-    VStack {
-      /* Score display */
-      HStack {
-        Spacer()
-        HStack {
-          Text("Score").font(.system(size: 12))
-          Spacer()
-          Text(String(self.score)).font(.system(size: 12)).bold()
-        }.padding(.horizontal, 10)
-          .padding(.vertical, 2)
-          .background(Color.green)
-          .foregroundColor(Color.white)
-          .cornerRadius(8)
-          .frame(maxWidth: 100)
-        Spacer()
-      }
-      Spacer()
-
-      /* Main display */
-      HStack {
-        if self.hasPlayed {
-          if self.showAnswer || self.submittedValidAnswer {
-            if self.submittedValidAnswer {
-              VStack {
-                Text(self.currentWord.uppercased())
-                  .font(.title)
-                  .allowsTightening(true)
-                  .minimumScaleFactor(0.8)
-                  .scaledToFill()
-                Image(systemName: "checkmark.circle")
-                  .modifier(MainDisplayIcon())
-                  .foregroundColor(Color.green)
-              }
-
-            } else {
-              VStack {
-                Image(systemName: "xmark.circle")
-                  .modifier(MainDisplayIcon())
-                  .foregroundColor(Color.red)
-              }
-            }
-          }
-        } else {
-          Image(uiImage: self.images[self.letterIndex])
-            .resizable()
-            .frame(width: 225, height: 225)
-            .scaledToFit()
-            .offset(x: self.letterIndex > 0 && Array(self.currentWord)[self.letterIndex - 1] == Array(self.currentWord)[self.letterIndex] ? -20 : 0)
-            .onReceive(
-              self.playTimer!.publisher,
-              perform: { _ in
-                self.letterIndex += 1
-                if self.letterIndex >= self.images.count {
-                  self.hasPlayed = true
-                }
-              }
-            )
-            .onAppear {
-              self.resetTimer()
-              self.playTimer!.start()
-            }
-            .onDisappear { self.resetTimer() }
-        }
-      }.frame(width: 100, height: 150)
-
-      /* Speed control */
-      VStack {
-        HStack {
-          Image(systemName: "tortoise").foregroundColor(.gray)
-          Slider(value: self.$speed, in: self.minSpeed ... self.maxSpeed, step: 1)
-            .disabled(!self.hasPlayed)
-          Image(systemName: "hare").foregroundColor(.gray)
-        }
-        HStack {
-          Text("Speed: \(String(Int(self.speed.rounded())))").font(.system(size: 14))
-          Spacer()
-        }
-      }.padding(.top, 30)
-
-      /* Answer input */
-      HStack {
-        FocusableTextField(
-          text: $answer,
-          isFirstResponder: true,
-          placeholder: "WORD",
-          textFieldShouldReturn: { _ in
-            if self.submittedValidAnswer {
-              self.handleNextWord()
-            } else {
-              self.handleSubmit()
-            }
-            return true
-          },
-          modifyTextField: { textField in
-            textField.borderStyle = .roundedRect
-            textField.autocapitalizationType = .allCharacters
-            textField.autocorrectionType = .no
-            textField.returnKeyType = .go
-            textField.keyboardType = .asciiCapable
-            textField.font = .monospacedSystemFont(ofSize: 18.0, weight: .regular)
-            return textField
-          }
-        )
-        .frame(width: 300, height: 30)
-        .opacity(self.submittedValidAnswer ? 0 : 1)
-      }
-
-      /* Word controls */
-      HStack {
-        if !self.isPlaying {
-          // TODO: change this to "Reveal"
-          if !self.submittedValidAnswer {
-            Button(action: self.handleNextWord) {
-              Text("Skip")
-            }
-          } else {
-            // Placeholder to maintain spacing
-            // TODO: Is there a better way to do this?
-            Button(action: self.handleNextWord) {
-              Text("Skip")
-            }.hidden()
-          }
-          Spacer()
-          Button(action: self.handleReplay) {
-            Image(systemName: "play.fill").modifier(IconButton())
-          }.offset(x: 10)
-          Spacer()
-        } else {
-          // TODO: Is there a better way to do this?
-          Button(action: {}) {
-            Text("Skip")
-          }.hidden()
-          Spacer()
-          Button(action: self.handleStop) {
-            Image(systemName: "stop.fill").modifier(IconButton()).foregroundColor(.red)
-          }.offset(x: 10)
-          Spacer()
-        }
-        if self.submittedValidAnswer {
-          Button(action: self.handleNextWord) {
-            Image(systemName: "arrow.right.to.line").modifier(IconButton())
-          }
-        } else {
-          self.renderCheckButton()
-        }
-      }
-    }
-    // Move the current UI up when the keyboard is active
-    .padding(.bottom, keyboard.currentHeight)
-    .padding(.top, 10)
-    .padding(.horizontal, 40)
   }
 }
 
