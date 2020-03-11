@@ -45,6 +45,23 @@ struct MainDisplayIcon: ViewModifier {
   }
 }
 
+struct FullWidthButton: ViewModifier {
+  var color: Color = Color.blue
+
+  func body(content: Content) -> some View {
+    content
+      .padding()
+      .font(.system(size: 24))
+      .offset(x: 10)
+      .frame(minWidth: 0, maxWidth: .infinity)
+      .overlay(
+        RoundedRectangle(cornerRadius: 40)
+          .stroke(self.color, lineWidth: 1)
+      )
+      .foregroundColor(self.color)
+  }
+}
+
 struct ContentView: View {
   @State private var showAnswer: Bool = false
   @State private var speed = 3.0
@@ -91,34 +108,48 @@ struct ContentView: View {
 
   var body: some View {
     VStack {
-      self.createScoreDisplay()
+      HStack {
+        self.createSpeedDisplay()
+        Spacer()
+        self.createScoreDisplay()
+      }
+      Divider().padding(.bottom, 10)
+
+      HStack {
+        self.createAnswerInput()
+        Spacer()
+        // TODO: Make this reveal
+        Button(action: self.handleNextWord) {
+          Text("Skip").font(.system(size: 14))
+        }.disabled(self.submittedValidAnswer)
+      }
+
       Spacer()
       self.createMainDisplay()
-      self.createSpeedControl()
-      self.createAnswerInput()
-      self.createControls()
+      Spacer()
+      self.createSpeedControl().padding(.bottom, 10)
+      self.createControls().padding(.bottom, 10)
     }
     // Move the current UI up when the keyboard is active
     .padding(.bottom, keyboard.currentHeight)
     .padding(.top, 10)
-    .padding(.horizontal, 40)
+    .padding(.horizontal, 20)
+  }
+
+  private func createSpeedDisplay() -> some View {
+    HStack {
+      Image(systemName: "metronome").foregroundColor(.primary)
+      Text(String(Int(self.speed))).font(.system(size: 14))
+    }.padding(.horizontal, 10)
+      .foregroundColor(Color.primary)
   }
 
   private func createScoreDisplay() -> some View {
     HStack {
-      Spacer()
-      HStack {
-        Text("Score").font(.system(size: 14))
-        Spacer()
-        Text(String(self.score)).font(.system(size: 14)).bold()
-      }.padding(.horizontal, 10)
-        .padding(.vertical, 2)
-        .background(Color.green)
-        .foregroundColor(Color.white)
-        .cornerRadius(8)
-        .frame(maxWidth: 100)
-      Spacer()
+      Image(systemName: "checkmark").foregroundColor(.primary)
+      Text(String(self.score)).font(.system(size: 14)).bold()
     }
+    .foregroundColor(Color.primary)
   }
 
   private func createMainDisplay() -> some View {
@@ -170,18 +201,12 @@ struct ContentView: View {
   }
 
   private func createSpeedControl() -> some View {
-    VStack {
-      HStack {
-        Image(systemName: "tortoise").foregroundColor(.gray)
-        Slider(value: self.$speed, in: self.minSpeed ... self.maxSpeed, step: 1)
-          .disabled(!self.hasPlayed)
-        Image(systemName: "hare").foregroundColor(.gray)
-      }
-      HStack {
-        Text("Speed: \(String(Int(self.speed.rounded())))").font(.system(size: 14))
-        Spacer()
-      }
-    }.padding(.top, 30)
+    HStack {
+      Image(systemName: "tortoise").foregroundColor(.gray)
+      Slider(value: self.$speed, in: self.minSpeed ... self.maxSpeed, step: 1)
+        .disabled(!self.hasPlayed)
+      Image(systemName: "hare").foregroundColor(.gray)
+    }
   }
 
   private func createAnswerInput() -> some View {
@@ -198,13 +223,13 @@ struct ContentView: View {
           textField.borderStyle = .roundedRect
           textField.autocapitalizationType = .allCharacters
           textField.autocorrectionType = .no
-          textField.returnKeyType = .go
+          textField.returnKeyType = .done
           textField.keyboardType = .asciiCapable
           textField.font = .monospacedSystemFont(ofSize: 18.0, weight: .regular)
           return textField
         }
       )
-      .frame(width: 300, height: 30)
+      .frame(width: 275, height: 30)
       .opacity(self.submittedValidAnswer ? 0 : 1)
     }
   }
@@ -212,35 +237,15 @@ struct ContentView: View {
   private func createControls() -> some View {
     HStack {
       if !self.isPlaying {
-        // TODO: change this to "Reveal"
-        if !self.submittedValidAnswer {
-          Button(action: self.handleNextWord) {
-            Text("Skip")
-          }
-        } else {
-          // Placeholder to maintain spacing
-          // TODO: Is there a better way to do this?
-          Button(action: self.handleNextWord) {
-            Text("Skip")
-          }.hidden()
-        }
-        Spacer()
         Button(action: self.handleReplay) {
-          Image(systemName: "play.fill").modifier(IconButton())
-        }.offset(x: 10).disabled(self.submittedValidAnswer)
-        Spacer()
+          Image(systemName: "play.fill")
+            .modifier(FullWidthButton())
+        }.disabled(self.submittedValidAnswer)
       } else {
-        // TODO: Is there a better way to do this?
-        Button(action: {}) {
-          Text("Skip")
-        }.hidden()
-        Spacer()
         Button(action: self.handleStop) {
-          Image(systemName: "stop.fill").modifier(IconButton()).foregroundColor(.red)
-        }.offset(x: 10)
-        Spacer()
+          Image(systemName: "stop.fill").modifier(FullWidthButton())
+        }
       }
-      self.createCheckButton()
     }
   }
 
