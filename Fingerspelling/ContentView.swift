@@ -121,7 +121,7 @@ struct ContentView: View {
         // TODO: Make this reveal
         Button(action: self.handleNextWord) {
           Text("Skip").font(.system(size: 14))
-        }
+        }.disabled(self.submittedValidAnswer)
       }
 
       Spacer()
@@ -223,7 +223,7 @@ struct ContentView: View {
           textField.borderStyle = .roundedRect
           textField.autocapitalizationType = .allCharacters
           textField.autocorrectionType = .no
-          textField.returnKeyType = .go
+          textField.returnKeyType = .done
           textField.keyboardType = .asciiCapable
           textField.font = .monospacedSystemFont(ofSize: 18.0, weight: .regular)
           return textField
