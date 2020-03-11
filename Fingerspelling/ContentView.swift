@@ -142,15 +142,15 @@ struct ContentView: View {
       HStack {
         Spacer()
         HStack {
-          Text("Score").bold()
+          Text("Score").font(.system(size: 12))
           Spacer()
-          Text(String(self.score))
+          Text(String(self.score)).font(.system(size: 12)).bold()
         }.padding(.horizontal, 10)
           .padding(.vertical, 2)
           .background(Color.green)
           .foregroundColor(Color.white)
           .cornerRadius(8)
-          .frame(maxWidth: 150)
+          .frame(maxWidth: 100)
         Spacer()
       }
       Spacer()
