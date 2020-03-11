@@ -22,6 +22,13 @@ class LoadingTimer {
   }
 }
 
+@discardableResult
+func delayFor(_ seconds: Double, onComplete: @escaping () -> Void) -> Timer {
+  Timer.scheduledTimer(withTimeInterval: seconds, repeats: false) { _ in
+    onComplete()
+  }
+}
+
 struct IconButton: ViewModifier {
   func body(content: Content) -> some View {
     content
@@ -55,6 +62,7 @@ struct ContentView: View {
   private let numerator = 2.0 // Higher value = slower speeds
   private let minSpeed = 1.0
   private let maxSpeed = 11.0
+  private let postSubmitDelay = 2.0 // seconds
   private let nextWordDelay = 1.0 // seconds
   private var words = [String]()
 
@@ -100,9 +108,9 @@ struct ContentView: View {
     HStack {
       Spacer()
       HStack {
-        Text("Score").font(.system(size: 12))
+        Text("Score").font(.system(size: 14))
         Spacer()
-        Text(String(self.score)).font(.system(size: 12)).bold()
+        Text(String(self.score)).font(.system(size: 14)).bold()
       }.padding(.horizontal, 10)
         .padding(.vertical, 2)
         .background(Color.green)
@@ -183,11 +191,7 @@ struct ContentView: View {
         isFirstResponder: true,
         placeholder: "WORD",
         textFieldShouldReturn: { _ in
-          if self.submittedValidAnswer {
-            self.handleNextWord()
-          } else {
-            self.handleSubmit()
-          }
+          self.handleSubmit()
           return true
         },
         modifyTextField: { textField in
@@ -223,7 +227,7 @@ struct ContentView: View {
         Spacer()
         Button(action: self.handleReplay) {
           Image(systemName: "play.fill").modifier(IconButton())
-        }.offset(x: 10)
+        }.offset(x: 10).disabled(self.submittedValidAnswer)
         Spacer()
       } else {
         // TODO: Is there a better way to do this?
@@ -236,20 +240,14 @@ struct ContentView: View {
         }.offset(x: 10)
         Spacer()
       }
-      if self.submittedValidAnswer {
-        Button(action: self.handleNextWord) {
-          Image(systemName: "arrow.right.to.line").modifier(IconButton())
-        }
-      } else {
-        self.createCheckButton()
-      }
+      self.createCheckButton()
     }
   }
 
   private func createCheckButton() -> some View {
     Button(action: self.handleSubmit) {
       Image(systemName: "checkmark").modifier(IconButton())
-    }.disabled(self.answerTrimmed.isEmpty)
+    }.disabled(self.answerTrimmed.isEmpty || self.submittedValidAnswer)
   }
 
   private func getTimer() -> LoadingTimer {
@@ -278,7 +276,7 @@ struct ContentView: View {
     self.submittedValidAnswer = false
     self.waitingForNextWord = true
     self.showAnswer = false
-    self.delayTimer = Timer.scheduledTimer(withTimeInterval: self.nextWordDelay, repeats: false) { _ in
+    self.delayTimer = delayFor(self.nextWordDelay) {
       self.resetWord()
       self.waitingForNextWord = false
     }
@@ -293,11 +291,22 @@ struct ContentView: View {
   }
 
   private func handleSubmit() {
+    // Prevent multiple submissions from pressing "return" key
+    if self.submittedValidAnswer {
+      return
+    }
     self.handleStop()
     self.showAnswer = true
     if self.isAnswerValid {
       self.submittedValidAnswer = true
       self.score += 1
+      delayFor(self.postSubmitDelay) {
+        self.handleNextWord()
+      }
+    } else {
+      delayFor(self.postSubmitDelay) {
+        self.showAnswer = false
+      }
     }
   }
 }
