@@ -109,9 +109,9 @@ struct ContentView: View {
   var body: some View {
     VStack {
       HStack {
-        self.createSpeedDisplay()
-        Spacer()
         self.createScoreDisplay()
+        Spacer()
+        self.createSpeedDisplay()
       }
       Divider().padding(.bottom, 10)
 
@@ -119,9 +119,11 @@ struct ContentView: View {
         self.createAnswerInput()
         Spacer()
         // TODO: Make this reveal
-        Button(action: self.handleNextWord) {
-          Text("Skip").font(.system(size: 14))
-        }.disabled(self.submittedValidAnswer)
+        if !self.submittedValidAnswer {
+          Button(action: self.handleNextWord) {
+            Text("Skip").font(.system(size: 14))
+          }
+        }
       }
 
       Spacer()
@@ -226,10 +228,11 @@ struct ContentView: View {
           textField.returnKeyType = .done
           textField.keyboardType = .asciiCapable
           textField.font = .monospacedSystemFont(ofSize: 18.0, weight: .regular)
+          textField.clearButtonMode = .whileEditing
           return textField
         }
       )
-      .frame(width: 275, height: 30)
+      .frame(width: 285, height: 30)
       .opacity(self.submittedValidAnswer ? 0 : 1)
     }
   }
