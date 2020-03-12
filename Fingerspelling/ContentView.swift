@@ -82,7 +82,6 @@ private func getNextWord() -> String {
 
 struct ContentView: View {
   @State private var showAnswer: Bool = false
-  @State private var speed = 3.0
   @State private var hasPlayed = true
   @State private var letterIndex = 0
   @State private var answer: String = ""
@@ -92,6 +91,7 @@ struct ContentView: View {
   @State private var score = 0
   @State private var waitingForNextWord: Bool = false
   @State private var submittedValidAnswer: Bool = false
+  @ObservedObject var settings = UserSettings()
   @ObservedObject private var keyboard = KeyboardResponder()
 
   private let numerator = 2.0 // Higher value = slower speeds
@@ -162,7 +162,7 @@ struct ContentView: View {
   private func createSpeedDisplay() -> some View {
     HStack {
       Image(systemName: "metronome").foregroundColor(.primary)
-      Text(String(Int(self.speed))).font(.system(size: 14))
+      Text(String(Int(self.settings.speed))).font(.system(size: 14))
     }.padding(.horizontal, 10)
       .foregroundColor(Color.primary)
   }
@@ -227,7 +227,7 @@ struct ContentView: View {
   private func createSpeedControl() -> some View {
     HStack {
       Image(systemName: "tortoise").foregroundColor(.gray)
-      Slider(value: self.$speed, in: self.minSpeed ... self.maxSpeed, step: 1)
+      Slider(value: self.$settings.speed, in: self.minSpeed ... self.maxSpeed, step: 1)
         .disabled(!self.hasPlayed)
       Image(systemName: "hare").foregroundColor(.gray)
     }
@@ -294,7 +294,7 @@ struct ContentView: View {
   }
 
   private func getTimer() -> LoadingTimer {
-    let every = self.numerator / max(self.speed, 1.0)
+    let every = self.numerator / self.settings.speed
     return LoadingTimer(every: every)
   }
 
