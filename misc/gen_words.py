@@ -6,7 +6,7 @@ HERE = pathlib.Path(__file__).parent
 OUTPUT = HERE.parent / "Fingerspelling" / "Words.swift"
 
 WORDS_URL = "https://raw.githubusercontent.com/derekchuank/high-frequency-vocabulary/master/10k.txt"
-NAUGHTY_WORDS_URL = "https://raw.githubusercontent.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words/master/en"
+NAUGHTY_WORDS_URL = "https://raw.githubusercontent.com/sloria/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words/en/en"
 TEMPLATE = """
 /**
  GENERATED FILE--DO NOT EDIT
