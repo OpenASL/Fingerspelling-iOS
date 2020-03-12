@@ -91,6 +91,7 @@ struct ContentView: View {
   @State private var score = 0
   @State private var waitingForNextWord: Bool = false
   @State private var submittedValidAnswer: Bool = false
+  @State private var isRevealed: Bool = false
   @ObservedObject var settings = UserSettings()
   @ObservedObject private var keyboard = KeyboardResponder()
 
@@ -124,6 +125,10 @@ struct ContentView: View {
     !self.hasPlayed || self.waitingForNextWord
   }
 
+  private var shouldDisableControls: Bool {
+    self.submittedValidAnswer || self.isRevealed
+  }
+
   var body: some View {
     VStack {
       HStack {
@@ -133,7 +138,7 @@ struct ContentView: View {
       }
       Divider().padding(.bottom, 10)
 
-      if self.submittedValidAnswer {
+      if self.submittedValidAnswer || self.isRevealed {
         self.createCorrectWordDisplay()
       }
 
@@ -141,9 +146,9 @@ struct ContentView: View {
         self.createAnswerInput()
         Spacer()
         // TODO: Make this reveal
-        if !self.submittedValidAnswer {
-          Button(action: self.handleNextWord) {
-            Text("Skip").font(.system(size: 14))
+        if !self.shouldDisableControls {
+          Button(action: self.handleReveal) {
+            Text("Reveal").font(.system(size: 14))
           }
         }
       }
@@ -257,8 +262,8 @@ struct ContentView: View {
       // Hide input after success.
       // Note: we use opacity to hide because the text field needs to be present for the keyboard
       //   to remain on the screen and we set the frame to 0 to make room for the correct word display.
-      .frame(width: self.submittedValidAnswer ? 0 : 290, height: self.submittedValidAnswer ? 0 : 30)
-      .opacity(self.submittedValidAnswer ? 0 : 1)
+      .frame(width: self.shouldDisableControls ? 0 : 280, height: self.submittedValidAnswer ? 0 : 30)
+      .opacity(self.shouldDisableControls ? 0 : 1)
     }
   }
 
@@ -275,8 +280,8 @@ struct ContentView: View {
         Button(action: self.handleReplay) {
           Image(systemName: "play.fill")
             .font(.system(size: 18))
-            .modifier(FullWidthButtonContent(disabled: self.submittedValidAnswer))
-        }.disabled(self.submittedValidAnswer)
+            .modifier(FullWidthButtonContent(disabled: self.shouldDisableControls))
+        }.disabled(self.shouldDisableControls)
       } else {
         Button(action: self.handleStop) {
           Image(systemName: "stop.fill")
@@ -331,6 +336,15 @@ struct ContentView: View {
     self.resetWord()
     self.waitingForNextWord = false
     self.hasPlayed = true
+  }
+
+  private func handleReveal() {
+    self.isRevealed = true
+    self.showAnswer = false
+    delayFor(self.postSubmitDelay) {
+      self.isRevealed = false
+      self.handleNextWord()
+    }
   }
 
   private func handleSubmit() {
