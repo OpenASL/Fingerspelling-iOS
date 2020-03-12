@@ -45,21 +45,39 @@ struct MainDisplayIcon: ViewModifier {
   }
 }
 
-struct FullWidthButton: ViewModifier {
+struct FullWidthButtonContent: ViewModifier {
+  var background: Color = Color.blue
+  var foregroundColor: Color = Color.white
+  var disabled: Bool = false
+
+  func body(content: Content) -> some View {
+    content
+      .frame(minWidth: 0, maxWidth: .infinity)
+      .padding()
+      .background(self.background)
+      .foregroundColor(self.foregroundColor)
+      .cornerRadius(40)
+      .opacity(self.disabled ? 0.5 : 1)
+  }
+}
+
+struct FullWidthGhostButtonContent: ViewModifier {
   var color: Color = Color.blue
 
   func body(content: Content) -> some View {
     content
-      .padding()
-      .font(.system(size: 24))
-      .offset(x: 10)
       .frame(minWidth: 0, maxWidth: .infinity)
+      .padding()
       .overlay(
         RoundedRectangle(cornerRadius: 40)
           .stroke(self.color, lineWidth: 1)
       )
       .foregroundColor(self.color)
   }
+}
+
+private func getNextWord() -> String {
+  Words.randomElement()!
 }
 
 struct ContentView: View {
@@ -85,7 +103,7 @@ struct ContentView: View {
 
   init() {
     // XXX Setting state variable in init: https://stackoverflow.com/a/60028709/1157536
-    self._currentWord = State<String>(initialValue: Words.randomElement()!)
+    self._currentWord = State<String>(initialValue: getNextWord())
     self._playTimer = State<LoadingTimer?>(initialValue: self.getTimer())
   }
 
@@ -115,6 +133,10 @@ struct ContentView: View {
       }
       Divider().padding(.bottom, 10)
 
+      if self.submittedValidAnswer {
+        self.createCorrectWordDisplay()
+      }
+
       HStack {
         self.createAnswerInput()
         Spacer()
@@ -125,7 +147,6 @@ struct ContentView: View {
           }
         }
       }
-
       Spacer()
       self.createMainDisplay()
       Spacer()
@@ -155,51 +176,52 @@ struct ContentView: View {
   }
 
   private func createMainDisplay() -> some View {
-    HStack {
+    VStack {
       if self.hasPlayed {
         if self.showAnswer || self.submittedValidAnswer {
-          if self.submittedValidAnswer {
-            VStack {
-              Text(self.currentWord.uppercased())
-                .font(.title)
-                .allowsTightening(true)
-                .minimumScaleFactor(0.8)
-                .scaledToFill()
-              Image(systemName: "checkmark.circle")
-                .modifier(MainDisplayIcon())
-                .foregroundColor(Color.green)
-            }
-
-          } else {
-            VStack {
-              Image(systemName: "xmark.circle")
-                .modifier(MainDisplayIcon())
-                .foregroundColor(Color.red)
-            }
-          }
+          self.createFeedbackDisplay()
         }
       } else {
-        Image(uiImage: self.images[self.letterIndex])
-          .resizable()
-          .frame(width: 225, height: 225)
-          .scaledToFit()
-          .offset(x: self.letterIndex > 0 && Array(self.currentWord)[self.letterIndex - 1] == Array(self.currentWord)[self.letterIndex] ? -20 : 0)
-          .onReceive(
-            self.playTimer!.publisher,
-            perform: { _ in
-              self.letterIndex += 1
-              if self.letterIndex >= self.images.count {
-                self.hasPlayed = true
-              }
-            }
-          )
-          .onAppear {
-            self.resetTimer()
-            self.playTimer!.start()
-          }
-          .onDisappear { self.resetTimer() }
+        self.createLetterDisplay()
       }
     }.frame(width: 100, height: 150)
+  }
+
+  private func createFeedbackDisplay() -> some View {
+    Group {
+      if self.submittedValidAnswer {
+        Image(systemName: "checkmark.circle")
+          .modifier(MainDisplayIcon())
+          .foregroundColor(Color.green)
+
+      } else {
+        Image(systemName: "xmark.circle")
+          .modifier(MainDisplayIcon())
+          .foregroundColor(Color.red)
+      }
+    }
+  }
+
+  private func createLetterDisplay() -> some View {
+    Image(uiImage: self.images[self.letterIndex])
+      .resizable()
+      .frame(width: 225, height: 225)
+      .scaledToFit()
+      .offset(x: self.letterIndex > 0 && Array(self.currentWord)[self.letterIndex - 1] == Array(self.currentWord)[self.letterIndex] ? -20 : 0)
+      .onReceive(
+        self.playTimer!.publisher,
+        perform: { _ in
+          self.letterIndex += 1
+          if self.letterIndex >= self.images.count {
+            self.hasPlayed = true
+          }
+        }
+      )
+      .onAppear {
+        self.resetTimer()
+        self.playTimer!.start()
+      }
+      .onDisappear { self.resetTimer() }
   }
 
   private func createSpeedControl() -> some View {
@@ -232,9 +254,19 @@ struct ContentView: View {
           return textField
         }
       )
-      .frame(width: 285, height: 30)
+      // Hide input after success.
+      // Note: we use opacity to hide because the text field needs to be present for the keyboard
+      //   to remain on the screen and we set the frame to 0 to make room for the correct word display.
+      .frame(width: self.submittedValidAnswer ? 0 : 290, height: self.submittedValidAnswer ? 0 : 30)
       .opacity(self.submittedValidAnswer ? 0 : 1)
     }
+  }
+
+  private func createCorrectWordDisplay() -> some View {
+    Text(self.currentWord.uppercased())
+      .font(.system(.title, design: .monospaced))
+      .minimumScaleFactor(0.8)
+      .scaledToFill()
   }
 
   private func createControls() -> some View {
@@ -242,11 +274,14 @@ struct ContentView: View {
       if !self.isPlaying {
         Button(action: self.handleReplay) {
           Image(systemName: "play.fill")
-            .modifier(FullWidthButton())
+            .font(.system(size: 18))
+            .modifier(FullWidthButtonContent(disabled: self.submittedValidAnswer))
         }.disabled(self.submittedValidAnswer)
       } else {
         Button(action: self.handleStop) {
-          Image(systemName: "stop.fill").modifier(FullWidthButton())
+          Image(systemName: "stop.fill")
+            .font(.system(size: 18))
+            .modifier(FullWidthGhostButtonContent())
         }
       }
     }
@@ -280,7 +315,7 @@ struct ContentView: View {
 
   private func handleNextWord() {
     self.answer = ""
-    self.currentWord = Words.randomElement()!
+    self.currentWord = getNextWord()
     self.submittedValidAnswer = false
     self.waitingForNextWord = true
     self.showAnswer = false
