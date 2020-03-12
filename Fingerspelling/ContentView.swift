@@ -144,8 +144,8 @@ struct ContentView: View {
 
       HStack {
         self.createAnswerInput()
-        Spacer()
         if !self.shouldDisableControls {
+          Spacer()
           Button(action: self.handleReveal) {
             Text("Reveal").font(.system(size: 14))
           }
@@ -340,6 +340,7 @@ struct ContentView: View {
   private func handleReveal() {
     self.isRevealed = true
     self.isShowingFeedback = false
+    self.isStopped = true
     delayFor(self.postSubmitDelay) {
       self.isRevealed = false
       self.handleNextWord()
