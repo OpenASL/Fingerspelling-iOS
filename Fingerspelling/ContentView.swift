@@ -45,15 +45,29 @@ struct MainDisplayIcon: ViewModifier {
   }
 }
 
-struct FullWidthButton: ViewModifier {
+struct FullWidthButtonContent: ViewModifier {
+  var background: Color = Color.blue
+  var foregroundColor: Color = Color.white
+  var disabled: Bool = false
+
+  func body(content: Content) -> some View {
+    content
+      .frame(minWidth: 0, maxWidth: .infinity)
+      .padding()
+      .background(self.background)
+      .foregroundColor(self.foregroundColor)
+      .cornerRadius(40)
+      .opacity(self.disabled ? 0.5 : 1)
+  }
+}
+
+struct FullWidthGhostButtonContent: ViewModifier {
   var color: Color = Color.blue
 
   func body(content: Content) -> some View {
     content
-      .padding()
-      .font(.system(size: 24))
-      .offset(x: 10)
       .frame(minWidth: 0, maxWidth: .infinity)
+      .padding()
       .overlay(
         RoundedRectangle(cornerRadius: 40)
           .stroke(self.color, lineWidth: 1)
@@ -242,11 +256,14 @@ struct ContentView: View {
       if !self.isPlaying {
         Button(action: self.handleReplay) {
           Image(systemName: "play.fill")
-            .modifier(FullWidthButton())
+            .font(.system(size: 18))
+            .modifier(FullWidthButtonContent(disabled: self.submittedValidAnswer))
         }.disabled(self.submittedValidAnswer)
       } else {
         Button(action: self.handleStop) {
-          Image(systemName: "stop.fill").modifier(FullWidthButton())
+          Image(systemName: "stop.fill")
+            .font(.system(size: 18))
+            .modifier(FullWidthGhostButtonContent())
         }
       }
     }
