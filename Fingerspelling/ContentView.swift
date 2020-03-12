@@ -81,16 +81,17 @@ private func getNextWord() -> String {
 }
 
 struct ContentView: View {
-  @State private var showAnswer: Bool = false
-  @State private var hasPlayed = true
   @State private var letterIndex = 0
   @State private var answer: String = ""
   @State private var playTimer: LoadingTimer? = nil
   @State private var delayTimer: Timer? = nil
   @State private var currentWord = ""
   @State private var score = 0
-  @State private var waitingForNextWord: Bool = false
-  @State private var submittedValidAnswer: Bool = false
+  @State private var isShowingFeedback: Bool = false
+  @State private var isPendingNextWord: Bool = false
+  @State private var hasCorrectAnswer: Bool = false
+  @State private var isRevealed: Bool = false
+  @State private var isStopped = true
   @ObservedObject var settings = UserSettings()
   @ObservedObject private var keyboard = KeyboardResponder()
 
@@ -121,7 +122,11 @@ struct ContentView: View {
   }
 
   private var isPlaying: Bool {
-    !self.hasPlayed || self.waitingForNextWord
+    !self.isStopped || self.isPendingNextWord
+  }
+
+  private var shouldDisableControls: Bool {
+    self.hasCorrectAnswer || self.isRevealed
   }
 
   var body: some View {
@@ -133,17 +138,16 @@ struct ContentView: View {
       }
       Divider().padding(.bottom, 10)
 
-      if self.submittedValidAnswer {
+      if self.hasCorrectAnswer || self.isRevealed {
         self.createCorrectWordDisplay()
       }
 
       HStack {
         self.createAnswerInput()
-        Spacer()
-        // TODO: Make this reveal
-        if !self.submittedValidAnswer {
-          Button(action: self.handleNextWord) {
-            Text("Skip").font(.system(size: 14))
+        if !self.shouldDisableControls {
+          Spacer()
+          Button(action: self.handleReveal) {
+            Text("Reveal").font(.system(size: 14))
           }
         }
       }
@@ -177,8 +181,8 @@ struct ContentView: View {
 
   private func createMainDisplay() -> some View {
     VStack {
-      if self.hasPlayed {
-        if self.showAnswer || self.submittedValidAnswer {
+      if self.isStopped {
+        if self.isShowingFeedback || self.hasCorrectAnswer {
           self.createFeedbackDisplay()
         }
       } else {
@@ -189,7 +193,7 @@ struct ContentView: View {
 
   private func createFeedbackDisplay() -> some View {
     Group {
-      if self.submittedValidAnswer {
+      if self.hasCorrectAnswer {
         Image(systemName: "checkmark.circle")
           .modifier(MainDisplayIcon())
           .foregroundColor(Color.green)
@@ -213,7 +217,7 @@ struct ContentView: View {
         perform: { _ in
           self.letterIndex += 1
           if self.letterIndex >= self.images.count {
-            self.hasPlayed = true
+            self.isStopped = true
           }
         }
       )
@@ -228,7 +232,7 @@ struct ContentView: View {
     HStack {
       Image(systemName: "tortoise").foregroundColor(.gray)
       Slider(value: self.$settings.speed, in: self.minSpeed ... self.maxSpeed, step: 1)
-        .disabled(!self.hasPlayed)
+        .disabled(!self.isStopped)
       Image(systemName: "hare").foregroundColor(.gray)
     }
   }
@@ -257,8 +261,8 @@ struct ContentView: View {
       // Hide input after success.
       // Note: we use opacity to hide because the text field needs to be present for the keyboard
       //   to remain on the screen and we set the frame to 0 to make room for the correct word display.
-      .frame(width: self.submittedValidAnswer ? 0 : 290, height: self.submittedValidAnswer ? 0 : 30)
-      .opacity(self.submittedValidAnswer ? 0 : 1)
+      .frame(width: self.shouldDisableControls ? 0 : 280, height: self.hasCorrectAnswer ? 0 : 30)
+      .opacity(self.shouldDisableControls ? 0 : 1)
     }
   }
 
@@ -275,8 +279,8 @@ struct ContentView: View {
         Button(action: self.handleReplay) {
           Image(systemName: "play.fill")
             .font(.system(size: 18))
-            .modifier(FullWidthButtonContent(disabled: self.submittedValidAnswer))
-        }.disabled(self.submittedValidAnswer)
+            .modifier(FullWidthButtonContent(disabled: self.shouldDisableControls))
+        }.disabled(self.shouldDisableControls)
       } else {
         Button(action: self.handleStop) {
           Image(systemName: "stop.fill")
@@ -290,7 +294,7 @@ struct ContentView: View {
   private func createCheckButton() -> some View {
     Button(action: self.handleSubmit) {
       Image(systemName: "checkmark").modifier(IconButton())
-    }.disabled(self.answerTrimmed.isEmpty || self.submittedValidAnswer)
+    }.disabled(self.answerTrimmed.isEmpty || self.hasCorrectAnswer)
   }
 
   private func getTimer() -> LoadingTimer {
@@ -305,8 +309,8 @@ struct ContentView: View {
 
   private func resetWord() {
     self.letterIndex = 0
-    self.hasPlayed = false
-    self.showAnswer = false
+    self.isStopped = false
+    self.isShowingFeedback = false
   }
 
   private func handleReplay() {
@@ -316,12 +320,12 @@ struct ContentView: View {
   private func handleNextWord() {
     self.answer = ""
     self.currentWord = getNextWord()
-    self.submittedValidAnswer = false
-    self.waitingForNextWord = true
-    self.showAnswer = false
+    self.hasCorrectAnswer = false
+    self.isPendingNextWord = true
+    self.isShowingFeedback = false
     self.delayTimer = delayFor(self.nextWordDelay) {
       self.resetWord()
-      self.waitingForNextWord = false
+      self.isPendingNextWord = false
     }
   }
 
@@ -329,26 +333,36 @@ struct ContentView: View {
     self.delayTimer?.invalidate()
     self.resetTimer()
     self.resetWord()
-    self.waitingForNextWord = false
-    self.hasPlayed = true
+    self.isPendingNextWord = false
+    self.isStopped = true
+  }
+
+  private func handleReveal() {
+    self.isRevealed = true
+    self.isShowingFeedback = false
+    self.isStopped = true
+    delayFor(self.postSubmitDelay) {
+      self.isRevealed = false
+      self.handleNextWord()
+    }
   }
 
   private func handleSubmit() {
     // Prevent multiple submissions from pressing "return" key
-    if self.submittedValidAnswer {
+    if self.hasCorrectAnswer {
       return
     }
     self.handleStop()
-    self.showAnswer = true
+    self.isShowingFeedback = true
     if self.isAnswerValid {
-      self.submittedValidAnswer = true
+      self.hasCorrectAnswer = true
       self.score += 1
       delayFor(self.postSubmitDelay) {
         self.handleNextWord()
       }
     } else {
       delayFor(self.postSubmitDelay) {
-        self.showAnswer = false
+        self.isShowingFeedback = false
       }
     }
   }
