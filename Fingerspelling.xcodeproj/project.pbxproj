@@ -19,16 +19,6 @@
 		43D610A3241490130089DE4D /* KeyboardResponder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43D610A2241490130089DE4D /* KeyboardResponder.swift */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		43D610942413D8690089DE4D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 43D610752413D8630089DE4D /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 43D6107C2413D8630089DE4D;
-			remoteInfo = Fingerspelling;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXFileReference section */
 		432387932415D001009C2BCF /* FocusableTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusableTextField.swift; sourceTree = "<group>"; };
 		4323879524186EDF009C2BCF /* Words.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Words.swift; sourceTree = "<group>"; };
@@ -41,19 +31,11 @@
 		43D610892413D8680089DE4D /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		43D6108C2413D8680089DE4D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		43D6108E2413D8680089DE4D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		43D610932413D8690089DE4D /* FingerspellingTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FingerspellingTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		43D610A2241490130089DE4D /* KeyboardResponder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardResponder.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		43D6107A2413D8630089DE4D /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		43D610902413D8690089DE4D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -75,7 +57,6 @@
 			isa = PBXGroup;
 			children = (
 				43D6107D2413D8640089DE4D /* Fingerspelling.app */,
-				43D610932413D8690089DE4D /* FingerspellingTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -126,24 +107,6 @@
 			productReference = 43D6107D2413D8640089DE4D /* Fingerspelling.app */;
 			productType = "com.apple.product-type.application";
 		};
-		43D610922413D8690089DE4D /* FingerspellingTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 43D6109F2413D8690089DE4D /* Build configuration list for PBXNativeTarget "FingerspellingTests" */;
-			buildPhases = (
-				43D6108F2413D8690089DE4D /* Sources */,
-				43D610902413D8690089DE4D /* Frameworks */,
-				43D610912413D8690089DE4D /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				43D610952413D8690089DE4D /* PBXTargetDependency */,
-			);
-			name = FingerspellingTests;
-			productName = FingerspellingTests;
-			productReference = 43D610932413D8690089DE4D /* FingerspellingTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -155,10 +118,6 @@
 				TargetAttributes = {
 					43D6107C2413D8630089DE4D = {
 						CreatedOnToolsVersion = 11.3.1;
-					};
-					43D610922413D8690089DE4D = {
-						CreatedOnToolsVersion = 11.3.1;
-						TestTargetID = 43D6107C2413D8630089DE4D;
 					};
 				};
 			};
@@ -176,7 +135,6 @@
 			projectRoot = "";
 			targets = (
 				43D6107C2413D8630089DE4D /* Fingerspelling */,
-				43D610922413D8690089DE4D /* FingerspellingTests */,
 			);
 		};
 /* End PBXProject section */
@@ -189,13 +147,6 @@
 				43D6108D2413D8680089DE4D /* LaunchScreen.storyboard in Resources */,
 				43D6108A2413D8680089DE4D /* Preview Assets.xcassets in Resources */,
 				43D610872413D8680089DE4D /* Assets.xcassets in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		43D610912413D8690089DE4D /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -216,22 +167,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		43D6108F2413D8690089DE4D /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		43D610952413D8690089DE4D /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 43D6107C2413D8630089DE4D /* Fingerspelling */;
-			targetProxy = 43D610942413D8690089DE4D /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		43D6108B2413D8680089DE4D /* LaunchScreen.storyboard */ = {
@@ -399,48 +335,6 @@
 			};
 			name = Release;
 		};
-		43D610A02413D8690089DE4D /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				INFOPLIST_FILE = FingerspellingTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.2;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.FingerspellingTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Fingerspelling.app/Fingerspelling";
-			};
-			name = Debug;
-		};
-		43D610A12413D8690089DE4D /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
-				INFOPLIST_FILE = FingerspellingTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.2;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.FingerspellingTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Fingerspelling.app/Fingerspelling";
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -458,15 +352,6 @@
 			buildConfigurations = (
 				43D6109D2413D8690089DE4D /* Debug */,
 				43D6109E2413D8690089DE4D /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		43D6109F2413D8690089DE4D /* Build configuration list for PBXNativeTarget "FingerspellingTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				43D610A02413D8690089DE4D /* Debug */,
-				43D610A12413D8690089DE4D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
