@@ -83,24 +83,20 @@ struct FullWidthGhostButtonContent: ViewModifier {
   }
 }
 
-// MARK: State objects
+// MARK: State/service objects
 
-final class PlaybackState: ObservableObject {
+final class PlaybackService: ObservableObject {
   @Published var currentWord = ""
   @Published var letterIndex = 0
-  @Published var isStopped = true
+  @Published var isPlaying = false
   @Published var playTimer: LoadingTimer?
   @ObservedObject var settings = UserSettings()
 
-  private let numerator = 2.0 // Higher value = slower speeds
+  private static let numerator = 2.0 // Higher value = slower speeds
 
   init() {
     self.currentWord = getNextWord()
     self.playTimer = self.getTimer()
-  }
-
-  var speed: Double {
-    self.settings.speed
   }
 
   var currentLetterImage: UIImage {
@@ -108,7 +104,8 @@ final class PlaybackState: ObservableObject {
   }
 
   var currentLetterIsRepeat: Bool {
-    Array(self.currentWord)[self.letterIndex - 1] == Array(self.currentWord)[self.letterIndex]
+    self.letterIndex > 0 &&
+      Array(self.currentWord)[self.letterIndex - 1] == Array(self.currentWord)[self.letterIndex]
   }
 
   private var images: [UIImage] {
@@ -116,9 +113,20 @@ final class PlaybackState: ObservableObject {
     return letters.map { UIImage(named: $0)! }
   }
 
+  func play() {
+    self.letterIndex = 0
+    self.isPlaying = true
+  }
+
+  func stop() {
+    self.resetTimer()
+    self.play()
+    self.isPlaying = false
+  }
+
   func setNextLetter() {
     if self.letterIndex >= (self.images.count - 1) {
-      self.isStopped = true
+      self.isPlaying = false
     } else {
       self.letterIndex += 1
     }
@@ -128,25 +136,24 @@ final class PlaybackState: ObservableObject {
     self.currentWord = getNextWord()
   }
 
+  func startTimer() {
+    self.playTimer!.start()
+  }
+
   func resetTimer() {
     self.playTimer!.cancel()
     self.playTimer = self.getTimer()
   }
 
-  func resetWord() {
-    self.letterIndex = 0
-    self.isStopped = false
-  }
-
   private func getTimer() -> LoadingTimer {
-    let every = self.numerator / self.settings.speed
+    let every = Self.numerator / self.settings.speed
     return LoadingTimer(every: every)
   }
 }
 
 // https://medium.com/swlh/swiftui-and-the-missing-environment-object-1a4bf8913ba7
 struct SystemServices: ViewModifier {
-  static var playback = PlaybackState()
+  static var playback = PlaybackService()
 
   func body(content: Content) -> some View {
     content
@@ -157,29 +164,29 @@ struct SystemServices: ViewModifier {
 // MARK: Views
 
 struct LetterDisplay: View {
-  @EnvironmentObject var playbackState: PlaybackState
+  @EnvironmentObject var playback: PlaybackService
 
   var body: some View {
     // XXX: Complicated implementation of an animated image
     //   since there doesn't seem to be a better way to do this in
     //   SwiftUI yet: https://stackoverflow.com/a/57749621/1157536
-    Image(uiImage: self.playbackState.currentLetterImage)
+    Image(uiImage: self.playback.currentLetterImage)
       .resizable()
       .frame(width: 225, height: 225)
       .scaledToFit()
-      .offset(x: self.playbackState.letterIndex > 0 && self.playbackState.currentLetterIsRepeat ? -20 : 0)
+      .offset(x: self.playback.currentLetterIsRepeat ? -20 : 0)
       .onReceive(
-        self.playbackState.playTimer!.publisher,
+        self.playback.playTimer!.publisher,
         perform: { _ in
-          self.playbackState.setNextLetter()
+          self.playback.setNextLetter()
         }
       )
       .onAppear {
-        self.playbackState.resetTimer()
-        self.playbackState.playTimer!.start()
+        self.playback.resetTimer()
+        self.playback.startTimer()
       }
       .onDisappear {
-        self.playbackState.resetTimer()
+        self.playback.resetTimer()
       }
   }
 }
@@ -193,16 +200,15 @@ struct ContentView: View {
   @State private var hasCorrectAnswer: Bool = false
   @State private var isRevealed: Bool = false
 
-  @ObservedObject var settings = UserSettings()
-  @EnvironmentObject var playback: PlaybackState
-
+  @ObservedObject private var settings = UserSettings()
   @ObservedObject private var keyboard = KeyboardResponder()
 
-  private let minSpeed = 1.0
-  private let maxSpeed = 11.0
-  private let postSubmitDelay = 2.0 // seconds
-  private let nextWordDelay = 1.0 // seconds
-  private var words = [String]()
+  @EnvironmentObject private var playback: PlaybackService
+
+  private static let minSpeed = 1.0
+  private static let maxSpeed = 11.0
+  private static let postSubmitDelay = 2.0 // seconds
+  private static let nextWordDelay = 1.0 // seconds
 
   private var currentWord: String {
     self.playback.currentWord
@@ -217,7 +223,7 @@ struct ContentView: View {
   }
 
   private var isPlaying: Bool {
-    !self.playback.isStopped || self.isPendingNextWord
+    self.playback.isPlaying || self.isPendingNextWord
   }
 
   private var shouldDisableControls: Bool {
@@ -261,7 +267,7 @@ struct ContentView: View {
   private func createSpeedDisplay() -> some View {
     HStack {
       Image(systemName: "metronome").foregroundColor(.primary)
-      Text(String(Int(self.playback.speed))).font(.system(size: 14))
+      Text(String(Int(self.settings.speed))).font(.system(size: 14))
     }.padding(.horizontal, 10)
       .foregroundColor(Color.primary)
   }
@@ -276,7 +282,7 @@ struct ContentView: View {
 
   private func createMainDisplay() -> some View {
     VStack {
-      if self.playback.isStopped {
+      if !self.playback.isPlaying {
         if self.isShowingFeedback || self.hasCorrectAnswer {
           self.createFeedbackDisplay()
         }
@@ -306,8 +312,8 @@ struct ContentView: View {
   private func createSpeedControl() -> some View {
     HStack {
       Image(systemName: "tortoise").foregroundColor(.gray)
-      Slider(value: self.$settings.speed, in: self.minSpeed ... self.maxSpeed, step: 1)
-        .disabled(!self.playback.isStopped)
+      Slider(value: self.$settings.speed, in: Self.minSpeed ... Self.maxSpeed, step: 1)
+        .disabled(self.playback.isPlaying)
       Image(systemName: "hare").foregroundColor(.gray)
     }
   }
@@ -373,7 +379,7 @@ struct ContentView: View {
   }
 
   private func resetWord() {
-    self.playback.resetWord()
+    self.playback.play()
     self.isShowingFeedback = false
   }
 
@@ -387,7 +393,7 @@ struct ContentView: View {
     self.hasCorrectAnswer = false
     self.isPendingNextWord = true
     self.isShowingFeedback = false
-    self.delayTimer = delayFor(self.nextWordDelay) {
+    self.delayTimer = delayFor(Self.nextWordDelay) {
       self.resetWord()
       self.isPendingNextWord = false
     }
@@ -395,17 +401,16 @@ struct ContentView: View {
 
   private func handleStop() {
     self.delayTimer?.invalidate()
-    self.playback.resetTimer()
-    self.resetWord()
+    self.playback.stop()
+    self.isShowingFeedback = false
     self.isPendingNextWord = false
-    self.playback.isStopped = true
   }
 
   private func handleReveal() {
     self.isRevealed = true
     self.isShowingFeedback = false
-    self.playback.isStopped = true
-    delayFor(self.postSubmitDelay) {
+    self.playback.isPlaying = false
+    delayFor(Self.postSubmitDelay) {
       self.isRevealed = false
       self.handleNextWord()
     }
@@ -421,11 +426,11 @@ struct ContentView: View {
     if self.isAnswerValid {
       self.hasCorrectAnswer = true
       self.score += 1
-      delayFor(self.postSubmitDelay) {
+      delayFor(Self.postSubmitDelay) {
         self.handleNextWord()
       }
     } else {
-      delayFor(self.postSubmitDelay) {
+      delayFor(Self.postSubmitDelay) {
         self.isShowingFeedback = false
       }
     }
@@ -434,6 +439,8 @@ struct ContentView: View {
 
 struct ContentView_Previews: PreviewProvider {
   static var previews: some View {
-    ContentView().modifier(SystemServices())
+    let playback = PlaybackService()
+    playback.isPlaying = true
+    return ContentView().environmentObject(playback)
   }
 }
