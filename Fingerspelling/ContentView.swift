@@ -163,6 +163,35 @@ struct SystemServices: ViewModifier {
 
 // MARK: Views
 
+struct GameStatusBar: View {
+  var score: Int
+  var speed: Double
+
+  var scoreDisplay: some View {
+    HStack {
+      Image(systemName: "checkmark").foregroundColor(.primary)
+      Text(String(self.score)).font(.system(size: 14)).bold()
+    }
+    .foregroundColor(Color.primary)
+  }
+
+  var speedDisplay: some View {
+    HStack {
+      Image(systemName: "metronome").foregroundColor(.primary)
+      Text(String(Int(self.speed))).font(.system(size: 14))
+    }.padding(.horizontal, 10)
+      .foregroundColor(Color.primary)
+  }
+
+  var body: some View {
+    HStack {
+      self.scoreDisplay
+      Spacer()
+      self.speedDisplay
+    }
+  }
+}
+
 struct LetterDisplay: View {
   @EnvironmentObject var playback: PlaybackService
 
@@ -191,6 +220,41 @@ struct LetterDisplay: View {
   }
 }
 
+struct FeedbackDisplay: View {
+  var correct: Bool
+
+  var body: some View {
+    Group {
+      if self.correct {
+        Image(systemName: "checkmark.circle")
+          .modifier(MainDisplayIcon())
+          .foregroundColor(Color.green)
+      } else {
+        Image(systemName: "xmark.circle")
+          .modifier(MainDisplayIcon())
+          .foregroundColor(Color.red)
+      }
+    }
+  }
+}
+
+struct SpeedControl: View {
+  @Binding var value: Double
+
+  var minSpeed: Double
+  var maxSpeed: Double
+  var disabled: Bool
+
+  var body: some View {
+    HStack {
+      Image(systemName: "tortoise").foregroundColor(.gray)
+      Slider(value: self.$value, in: self.minSpeed ... self.maxSpeed, step: 1)
+        .disabled(self.disabled)
+      Image(systemName: "hare").foregroundColor(.gray)
+    }
+  }
+}
+
 struct ContentView: View {
   @State private var answer: String = ""
   @State private var delayTimer: Timer? = nil
@@ -209,6 +273,8 @@ struct ContentView: View {
   private static let maxSpeed = 11.0
   private static let postSubmitDelay = 2.0 // seconds
   private static let nextWordDelay = 1.0 // seconds
+
+  // MARK: Computed properties
 
   private var currentWord: String {
     self.playback.currentWord
@@ -230,98 +296,37 @@ struct ContentView: View {
     self.hasCorrectAnswer || self.isRevealed
   }
 
-  var body: some View {
-    VStack {
-      HStack {
-        self.createScoreDisplay()
-        Spacer()
-        self.createSpeedDisplay()
-      }
-      Divider().padding(.bottom, 10)
+  // MARK: Nested views
 
-      if self.hasCorrectAnswer || self.isRevealed {
-        self.createCorrectWordDisplay()
-      }
+  private var correctWordDisplay: some View {
+    Text(self.currentWord.uppercased())
+      .font(.system(.title, design: .monospaced))
+      .minimumScaleFactor(0.8)
+      .scaledToFill()
+  }
 
-      HStack {
-        self.createAnswerInput()
-        if !self.shouldDisableControls {
-          Spacer()
-          Button(action: self.handleReveal) {
-            Text("Reveal").font(.system(size: 14))
-          }
+  private var controls: some View {
+    HStack {
+      if !self.isPlaying {
+        Button(action: self.handlePlay) {
+          Image(systemName: "play.fill")
+            .font(.system(size: 18))
+            .modifier(FullWidthButtonContent(disabled: self.shouldDisableControls))
+        }.disabled(self.shouldDisableControls)
+      } else {
+        Button(action: self.handleStop) {
+          Image(systemName: "stop.fill")
+            .font(.system(size: 18))
+            .modifier(FullWidthGhostButtonContent())
         }
       }
-      Spacer()
-      self.createMainDisplay()
-      Spacer()
-      self.createSpeedControl().padding(.bottom, 10)
-      self.createControls().padding(.bottom, 10)
-    }
-    // Move the current UI up when the keyboard is active
-    .padding(.bottom, keyboard.currentHeight)
-    .padding(.top, 10)
-    .padding(.horizontal, 20)
-  }
-
-  private func createSpeedDisplay() -> some View {
-    HStack {
-      Image(systemName: "metronome").foregroundColor(.primary)
-      Text(String(Int(self.settings.speed))).font(.system(size: 14))
-    }.padding(.horizontal, 10)
-      .foregroundColor(Color.primary)
-  }
-
-  private func createScoreDisplay() -> some View {
-    HStack {
-      Image(systemName: "checkmark").foregroundColor(.primary)
-      Text(String(self.score)).font(.system(size: 14)).bold()
-    }
-    .foregroundColor(Color.primary)
-  }
-
-  private func createMainDisplay() -> some View {
-    VStack {
-      if !self.playback.isPlaying {
-        if self.isShowingFeedback || self.hasCorrectAnswer {
-          self.createFeedbackDisplay()
-        }
-      } else {
-        // Need to pass SystemServices due to a bug in SwiftUI
-        //   re: environment not getting passed to children
-        LetterDisplay().modifier(SystemServices())
-      }
-    }.frame(width: 100, height: 150)
-  }
-
-  private func createFeedbackDisplay() -> some View {
-    Group {
-      if self.hasCorrectAnswer {
-        Image(systemName: "checkmark.circle")
-          .modifier(MainDisplayIcon())
-          .foregroundColor(Color.green)
-
-      } else {
-        Image(systemName: "xmark.circle")
-          .modifier(MainDisplayIcon())
-          .foregroundColor(Color.red)
-      }
     }
   }
 
-  private func createSpeedControl() -> some View {
-    HStack {
-      Image(systemName: "tortoise").foregroundColor(.gray)
-      Slider(value: self.$settings.speed, in: Self.minSpeed ... Self.maxSpeed, step: 1)
-        .disabled(self.playback.isPlaying)
-      Image(systemName: "hare").foregroundColor(.gray)
-    }
-  }
-
-  private func createAnswerInput() -> some View {
+  private var answerInput: some View {
     HStack {
       FocusableTextField(
-        text: $answer,
+        text: self.$answer,
         isFirstResponder: true,
         placeholder: "WORD",
         textFieldShouldReturn: { _ in
@@ -347,44 +352,65 @@ struct ContentView: View {
     }
   }
 
-  private func createCorrectWordDisplay() -> some View {
-    Text(self.currentWord.uppercased())
-      .font(.system(.title, design: .monospaced))
-      .minimumScaleFactor(0.8)
-      .scaledToFill()
+  private var mainDisplay: some View {
+    VStack {
+      if !self.playback.isPlaying {
+        if self.isShowingFeedback || self.hasCorrectAnswer {
+          FeedbackDisplay(correct: self.hasCorrectAnswer)
+        }
+      } else {
+        // Need to pass SystemServices due to a bug in SwiftUI
+        //   re: environment not getting passed to children
+        LetterDisplay().modifier(SystemServices())
+      }
+    }.frame(width: 100, height: 150)
   }
 
-  private func createControls() -> some View {
-    HStack {
-      if !self.isPlaying {
-        Button(action: self.handleReplay) {
-          Image(systemName: "play.fill")
-            .font(.system(size: 18))
-            .modifier(FullWidthButtonContent(disabled: self.shouldDisableControls))
-        }.disabled(self.shouldDisableControls)
-      } else {
-        Button(action: self.handleStop) {
-          Image(systemName: "stop.fill")
-            .font(.system(size: 18))
-            .modifier(FullWidthGhostButtonContent())
+  var body: some View {
+    VStack {
+      GameStatusBar(score: self.score, speed: self.settings.speed)
+      Divider().padding(.bottom, 10)
+
+      if self.hasCorrectAnswer || self.isRevealed {
+        self.correctWordDisplay
+      }
+
+      HStack {
+        self.answerInput
+        if !self.shouldDisableControls {
+          Spacer()
+          Button(action: self.handleReveal) {
+            Text("Reveal").font(.system(size: 14))
+          }
         }
       }
+      Spacer()
+      self.mainDisplay
+      Spacer()
+      SpeedControl(
+        value: self.$settings.speed,
+        minSpeed: Self.minSpeed,
+        maxSpeed: Self.maxSpeed,
+        disabled: self.playback.isPlaying
+      )
+      .padding(.bottom, 10)
+      self.controls.padding(.bottom, 10)
     }
+    // Move the current UI up when the keyboard is active
+    .padding(.bottom, keyboard.currentHeight)
+    .padding(.top, 10)
+    .padding(.horizontal, 20)
   }
 
-  private func createCheckButton() -> some View {
-    Button(action: self.handleSubmit) {
-      Image(systemName: "checkmark").modifier(IconButton())
-    }.disabled(self.answerTrimmed.isEmpty || self.hasCorrectAnswer)
-  }
-
-  private func resetWord() {
+  private func playWord() {
     self.playback.play()
     self.isShowingFeedback = false
   }
 
-  private func handleReplay() {
-    self.resetWord()
+  // MARK: Handlers
+
+  private func handlePlay() {
+    self.playWord()
   }
 
   private func handleNextWord() {
@@ -394,7 +420,7 @@ struct ContentView: View {
     self.isPendingNextWord = true
     self.isShowingFeedback = false
     self.delayTimer = delayFor(Self.nextWordDelay) {
-      self.resetWord()
+      self.playWord()
       self.isPendingNextWord = false
     }
   }
