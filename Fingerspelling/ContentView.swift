@@ -151,13 +151,25 @@ final class PlaybackService: ObservableObject {
   }
 }
 
+final class FeedbackService: ObservableObject {
+  @Published var isShowingFeedback: Bool = false
+  @Published var hasCorrectAnswer: Bool = false
+  @Published var isRevealed: Bool = false
+
+  var shouldDisableControls: Bool {
+    self.hasCorrectAnswer || self.isRevealed
+  }
+}
+
 // https://medium.com/swlh/swiftui-and-the-missing-environment-object-1a4bf8913ba7
 struct SystemServices: ViewModifier {
   static var playback = PlaybackService()
+  static var feedback = FeedbackService()
 
   func body(content: Content) -> some View {
     content
       .environmentObject(Self.playback)
+      .environmentObject(Self.feedback)
   }
 }
 
@@ -188,6 +200,42 @@ struct GameStatusBar: View {
       self.scoreDisplay
       Spacer()
       self.speedDisplay
+    }
+  }
+}
+
+struct AnswerInput: View {
+  @Binding var answer: String
+  var onSubmit: () -> Void
+
+  @EnvironmentObject var feedback: FeedbackService
+
+  var body: some View {
+    HStack {
+      FocusableTextField(
+        text: self.$answer,
+        isFirstResponder: true,
+        placeholder: "WORD",
+        textFieldShouldReturn: { _ in
+          self.onSubmit()
+          return true
+        },
+        modifyTextField: { textField in
+          textField.borderStyle = .roundedRect
+          textField.autocapitalizationType = .allCharacters
+          textField.autocorrectionType = .no
+          textField.returnKeyType = .done
+          textField.keyboardType = .asciiCapable
+          textField.font = .monospacedSystemFont(ofSize: 18.0, weight: .regular)
+          textField.clearButtonMode = .whileEditing
+          return textField
+        }
+      )
+      // Hide input after success.
+      // Note: we use opacity to hide because the text field needs to be present for the keyboard
+      //   to remain on the screen and we set the frame to 0 to make room for the correct word display.
+      .frame(width: self.feedback.shouldDisableControls ? 0 : 280, height: self.feedback.hasCorrectAnswer ? 0 : 30)
+      .opacity(self.feedback.shouldDisableControls ? 0 : 1)
     }
   }
 }
@@ -259,15 +307,13 @@ struct ContentView: View {
   @State private var answer: String = ""
   @State private var delayTimer: Timer? = nil
   @State private var score = 0
-  @State private var isShowingFeedback: Bool = false
   @State private var isPendingNextWord: Bool = false
-  @State private var hasCorrectAnswer: Bool = false
-  @State private var isRevealed: Bool = false
 
   @ObservedObject private var settings = UserSettings()
   @ObservedObject private var keyboard = KeyboardResponder()
 
   @EnvironmentObject private var playback: PlaybackService
+  @EnvironmentObject private var feedback: FeedbackService
 
   private static let minSpeed = 1.0
   private static let maxSpeed = 11.0
@@ -280,20 +326,16 @@ struct ContentView: View {
     self.playback.currentWord
   }
 
-  private var answerTrimmed: String {
-    self.answer.trimmingCharacters(in: .whitespaces)
-  }
-
-  private var isAnswerValid: Bool {
-    self.answerTrimmed.lowercased() == self.currentWord.lowercased()
-  }
-
   private var isPlaying: Bool {
     self.playback.isPlaying || self.isPendingNextWord
   }
 
-  private var shouldDisableControls: Bool {
-    self.hasCorrectAnswer || self.isRevealed
+  private var isAnswerValid: Bool {
+    self.answerTrimmed.lowercased() == self.playback.currentWord.lowercased()
+  }
+
+  private var answerTrimmed: String {
+    self.answer.trimmingCharacters(in: .whitespaces)
   }
 
   // MARK: Nested views
@@ -311,8 +353,8 @@ struct ContentView: View {
         Button(action: self.handlePlay) {
           Image(systemName: "play.fill")
             .font(.system(size: 18))
-            .modifier(FullWidthButtonContent(disabled: self.shouldDisableControls))
-        }.disabled(self.shouldDisableControls)
+            .modifier(FullWidthButtonContent(disabled: self.feedback.shouldDisableControls))
+        }.disabled(self.feedback.shouldDisableControls)
       } else {
         Button(action: self.handleStop) {
           Image(systemName: "stop.fill")
@@ -323,40 +365,11 @@ struct ContentView: View {
     }
   }
 
-  private var answerInput: some View {
-    HStack {
-      FocusableTextField(
-        text: self.$answer,
-        isFirstResponder: true,
-        placeholder: "WORD",
-        textFieldShouldReturn: { _ in
-          self.handleSubmit()
-          return true
-        },
-        modifyTextField: { textField in
-          textField.borderStyle = .roundedRect
-          textField.autocapitalizationType = .allCharacters
-          textField.autocorrectionType = .no
-          textField.returnKeyType = .done
-          textField.keyboardType = .asciiCapable
-          textField.font = .monospacedSystemFont(ofSize: 18.0, weight: .regular)
-          textField.clearButtonMode = .whileEditing
-          return textField
-        }
-      )
-      // Hide input after success.
-      // Note: we use opacity to hide because the text field needs to be present for the keyboard
-      //   to remain on the screen and we set the frame to 0 to make room for the correct word display.
-      .frame(width: self.shouldDisableControls ? 0 : 280, height: self.hasCorrectAnswer ? 0 : 30)
-      .opacity(self.shouldDisableControls ? 0 : 1)
-    }
-  }
-
   private var mainDisplay: some View {
     VStack {
       if !self.playback.isPlaying {
-        if self.isShowingFeedback || self.hasCorrectAnswer {
-          FeedbackDisplay(correct: self.hasCorrectAnswer)
+        if self.feedback.isShowingFeedback || self.feedback.hasCorrectAnswer {
+          FeedbackDisplay(correct: self.feedback.hasCorrectAnswer)
         }
       } else {
         // Need to pass SystemServices due to a bug in SwiftUI
@@ -371,13 +384,13 @@ struct ContentView: View {
       GameStatusBar(score: self.score, speed: self.settings.speed)
       Divider().padding(.bottom, 10)
 
-      if self.hasCorrectAnswer || self.isRevealed {
+      if self.feedback.hasCorrectAnswer || self.feedback.isRevealed {
         self.correctWordDisplay
       }
 
       HStack {
-        self.answerInput
-        if !self.shouldDisableControls {
+        AnswerInput(answer: self.$answer, onSubmit: self.handleSubmit).modifier(SystemServices())
+        if !self.feedback.shouldDisableControls {
           Spacer()
           Button(action: self.handleReveal) {
             Text("Reveal").font(.system(size: 14))
@@ -404,7 +417,7 @@ struct ContentView: View {
 
   private func playWord() {
     self.playback.play()
-    self.isShowingFeedback = false
+    self.feedback.isShowingFeedback = false
   }
 
   // MARK: Handlers
@@ -416,9 +429,10 @@ struct ContentView: View {
   private func handleNextWord() {
     self.answer = ""
     self.playback.setNextWord()
-    self.hasCorrectAnswer = false
+    self.feedback.hasCorrectAnswer = false
+    self.feedback.isShowingFeedback = false
     self.isPendingNextWord = true
-    self.isShowingFeedback = false
+
     self.delayTimer = delayFor(Self.nextWordDelay) {
       self.playWord()
       self.isPendingNextWord = false
@@ -428,36 +442,36 @@ struct ContentView: View {
   private func handleStop() {
     self.delayTimer?.invalidate()
     self.playback.stop()
-    self.isShowingFeedback = false
+    self.feedback.isShowingFeedback = false
     self.isPendingNextWord = false
   }
 
   private func handleReveal() {
-    self.isRevealed = true
-    self.isShowingFeedback = false
+    self.feedback.isRevealed = true
+    self.feedback.isShowingFeedback = false
     self.playback.isPlaying = false
     delayFor(Self.postSubmitDelay) {
-      self.isRevealed = false
+      self.feedback.isRevealed = false
       self.handleNextWord()
     }
   }
 
   private func handleSubmit() {
     // Prevent multiple submissions from pressing "return" key
-    if self.hasCorrectAnswer {
+    if self.feedback.hasCorrectAnswer {
       return
     }
     self.handleStop()
-    self.isShowingFeedback = true
+    self.feedback.isShowingFeedback = true
     if self.isAnswerValid {
-      self.hasCorrectAnswer = true
+      self.feedback.hasCorrectAnswer = true
       self.score += 1
       delayFor(Self.postSubmitDelay) {
         self.handleNextWord()
       }
     } else {
       delayFor(Self.postSubmitDelay) {
-        self.isShowingFeedback = false
+        self.feedback.isShowingFeedback = false
       }
     }
   }
@@ -465,8 +479,14 @@ struct ContentView: View {
 
 struct ContentView_Previews: PreviewProvider {
   static var previews: some View {
-    let playback = PlaybackService()
+    let playback = SystemServices.playback
+    let feedback = SystemServices.feedback
+
+    // Modify these during development to update the preview
     playback.isPlaying = true
-    return ContentView().environmentObject(playback)
+    playback.currentWord = "foo"
+    feedback.isShowingFeedback = false
+
+    return ContentView().modifier(SystemServices())
   }
 }
