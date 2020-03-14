@@ -183,6 +183,10 @@ final class FeedbackService: ObservableObject {
     self.isShown = false
   }
 
+  func markCorrect() {
+    self.hasCorrectAnswer = true
+  }
+
   func reset() {
     self.hasCorrectAnswer = false
     self.isShown = false
@@ -398,7 +402,7 @@ struct ContentView: View {
     self.playback.currentWord
   }
 
-  private var isAnswerValid: Bool {
+  private var answerIsCorrect: Bool {
     self.answerTrimmed.lowercased() == self.playback.currentWord.lowercased()
   }
 
@@ -488,8 +492,8 @@ struct ContentView: View {
     }
     self.handleStop()
     self.feedback.show()
-    if self.isAnswerValid {
-      self.feedback.hasCorrectAnswer = true
+    if self.answerIsCorrect {
+      self.feedback.markCorrect()
       self.score += 1
       delayFor(Self.postSubmitDelay) {
         self.handleNextWord()
