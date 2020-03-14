@@ -1,85 +1,304 @@
 import Combine
 import SwiftUI
 
-// MARK: Utilities
+// MARK: Views
 
-class LoadingTimer {
-  var publisher: Timer.TimerPublisher
-  private var timerCancellable: Cancellable?
+struct ContentView: View {
+  @State private var answer: String = ""
+  @State private var delayTimer: Timer? = nil
+  @State private var score = 0
 
-  init(every: Double) {
-    self.publisher = Timer.publish(every: every, on: .main, in: .default)
-    self.timerCancellable = nil
+  @EnvironmentObject private var playback: PlaybackService
+  @EnvironmentObject private var feedback: FeedbackService
+
+  @ObservedObject private var settings = UserSettings()
+  @ObservedObject private var keyboard = KeyboardResponder()
+
+  private static let minSpeed = 1.0
+  private static let maxSpeed = 11.0
+  private static let postSubmitDelay = 2.0 // seconds
+  private static let nextWordDelay = 1.0 // seconds
+
+  // MARK: Computed properties
+
+  private var currentWord: String {
+    self.playback.currentWord
   }
 
-  func start() {
-    self.timerCancellable = self.publisher.connect()
+  private var answerIsCorrect: Bool {
+    self.answerTrimmed.lowercased() == self.playback.currentWord.lowercased()
   }
 
-  func cancel() {
-    self.timerCancellable?.cancel()
+  private var answerTrimmed: String {
+    self.answer.trimmingCharacters(in: .whitespaces)
   }
-}
 
-private func getNextWord() -> String {
-  let word = Words.randomElement()!
-  print("current word: " + word)
-  return word
-}
+  var body: some View {
+    VStack {
+      GameStatusBar(score: self.score, speed: self.settings.speed)
+      Divider().padding(.bottom, 10)
 
-@discardableResult
-func delayFor(_ seconds: Double, onComplete: @escaping () -> Void) -> Timer {
-  Timer.scheduledTimer(withTimeInterval: seconds, repeats: false) { _ in
-    onComplete()
-  }
-}
+      if self.feedback.hasCorrectAnswer || self.feedback.isRevealed {
+        Text(self.currentWord.uppercased())
+          .font(.system(.title, design: .monospaced))
+          .minimumScaleFactor(0.8)
+          .scaledToFill()
+      }
 
-// MARK: ViewModifiers
-
-struct IconButton: ViewModifier {
-  func body(content: Content) -> some View {
-    content
-      .padding()
-      .font(.system(size: 24))
-  }
-}
-
-struct MainDisplayIcon: ViewModifier {
-  func body(content: Content) -> some View {
-    content
-      .padding()
-      .font(.system(size: 120))
-  }
-}
-
-struct FullWidthButtonContent: ViewModifier {
-  var background: Color = Color.blue
-  var foregroundColor: Color = Color.white
-  var disabled: Bool = false
-
-  func body(content: Content) -> some View {
-    content
-      .frame(minWidth: 0, maxWidth: .infinity)
-      .padding()
-      .background(self.background)
-      .foregroundColor(self.foregroundColor)
-      .cornerRadius(40)
-      .opacity(self.disabled ? 0.5 : 1)
-  }
-}
-
-struct FullWidthGhostButtonContent: ViewModifier {
-  var color: Color = Color.blue
-
-  func body(content: Content) -> some View {
-    content
-      .frame(minWidth: 0, maxWidth: .infinity)
-      .padding()
-      .overlay(
-        RoundedRectangle(cornerRadius: 40)
-          .stroke(self.color, lineWidth: 1)
+      HStack {
+        AnswerInput(answer: self.$answer, onSubmit: self.handleSubmit).modifier(SystemServices())
+        if !self.feedback.shouldDisableControls {
+          Spacer()
+          Button(action: self.handleReveal) {
+            Text("Reveal").font(.system(size: 14))
+          }
+        }
+      }
+      Spacer()
+      MainDisplay().frame(width: 100, height: 150)
+      Spacer()
+      SpeedControl(
+        value: self.$settings.speed,
+        minSpeed: Self.minSpeed,
+        maxSpeed: Self.maxSpeed,
+        disabled: self.playback.isPlaying
       )
-      .foregroundColor(self.color)
+      .padding(.bottom, 10)
+      PlaybackControl(onPlay: self.handlePlay, onStop: self.handleStop).padding(.bottom, 10)
+    }
+    // Move the current UI up when the keyboard is active
+    .padding(.bottom, keyboard.currentHeight)
+    .padding(.top, 10)
+    .padding(.horizontal, 20)
+  }
+
+  private func playWord() {
+    self.playback.play()
+    self.feedback.hide()
+  }
+
+  // MARK: Handlers
+
+  private func handlePlay() {
+    self.playWord()
+  }
+
+  private func handleNextWord() {
+    self.answer = ""
+    self.playback.setNextWord()
+    self.feedback.reset()
+
+    self.delayTimer = delayFor(Self.nextWordDelay) {
+      self.playWord()
+    }
+  }
+
+  private func handleStop() {
+    self.delayTimer?.invalidate()
+    self.playback.stop()
+    self.feedback.hide()
+  }
+
+  private func handleReveal() {
+    self.playback.stop()
+    self.feedback.reveal()
+    delayFor(Self.postSubmitDelay) {
+      self.feedback.hide()
+      self.handleNextWord()
+    }
+  }
+
+  private func handleSubmit() {
+    // Prevent multiple submissions from pressing "return" key
+    if self.feedback.hasCorrectAnswer {
+      return
+    }
+    self.handleStop()
+    self.feedback.show()
+    if self.answerIsCorrect {
+      self.feedback.markCorrect()
+      self.score += 1
+      delayFor(Self.postSubmitDelay) {
+        self.handleNextWord()
+      }
+    } else {
+      delayFor(0.5) {
+        self.feedback.hide()
+      }
+    }
+  }
+}
+
+struct GameStatusBar: View {
+  var score: Int
+  var speed: Double
+
+  var scoreDisplay: some View {
+    HStack {
+      Image(systemName: "checkmark").foregroundColor(.primary)
+      Text(String(self.score)).font(.system(size: 14)).bold()
+    }
+    .foregroundColor(Color.primary)
+  }
+
+  var speedDisplay: some View {
+    HStack {
+      Image(systemName: "metronome").foregroundColor(.primary)
+      Text(String(Int(self.speed))).font(.system(size: 14))
+    }.padding(.horizontal, 10)
+      .foregroundColor(Color.primary)
+  }
+
+  var body: some View {
+    HStack {
+      self.scoreDisplay
+      Spacer()
+      self.speedDisplay
+    }
+  }
+}
+
+struct AnswerInput: View {
+  @Binding var answer: String
+  var onSubmit: () -> Void
+
+  @EnvironmentObject var feedback: FeedbackService
+
+  var body: some View {
+    HStack {
+      FocusableTextField(
+        text: self.$answer,
+        isFirstResponder: true,
+        placeholder: "WORD",
+        textFieldShouldReturn: { _ in
+          self.onSubmit()
+          return true
+        },
+        modifyTextField: { textField in
+          textField.borderStyle = .roundedRect
+          textField.autocapitalizationType = .allCharacters
+          textField.autocorrectionType = .no
+          textField.returnKeyType = .done
+          textField.keyboardType = .asciiCapable
+          textField.font = .monospacedSystemFont(ofSize: 18.0, weight: .regular)
+          textField.clearButtonMode = .whileEditing
+          return textField
+        }
+      )
+      // Hide input after success.
+      // Note: we use opacity to hide because the text field needs to be present for the keyboard
+      //   to remain on the screen and we set the frame to 0 to make room for the correct word display.
+      .frame(width: self.feedback.shouldDisableControls ? 0 : 280, height: self.feedback.hasCorrectAnswer ? 0 : 30)
+      .opacity(self.feedback.shouldDisableControls ? 0 : 1)
+    }
+  }
+}
+
+struct MainDisplay: View {
+  @EnvironmentObject var playback: PlaybackService
+  @EnvironmentObject var feedback: FeedbackService
+
+  var body: some View {
+    VStack {
+      if !self.playback.isPlaying {
+        if self.feedback.isShown || self.feedback.hasCorrectAnswer {
+          FeedbackDisplay(correct: self.feedback.hasCorrectAnswer)
+        }
+      } else {
+        // Need to pass SystemServices due to a bug in SwiftUI
+        //   re: environment not getting passed to children
+        LetterDisplay().modifier(SystemServices())
+      }
+    }
+  }
+}
+
+struct LetterDisplay: View {
+  @EnvironmentObject var playback: PlaybackService
+
+  var body: some View {
+    // XXX: Complicated implementation of an animated image
+    //   since there doesn't seem to be a better way to do this in
+    //   SwiftUI yet: https://stackoverflow.com/a/57749621/1157536
+    Image(uiImage: self.playback.currentLetterImage)
+      .resizable()
+      .frame(width: 225, height: 225)
+      .scaledToFit()
+      .offset(x: self.playback.currentLetterIsRepeat ? -20 : 0)
+      .onReceive(
+        self.playback.playTimer!.publisher,
+        perform: { _ in
+          self.playback.setNextLetter()
+        }
+      )
+      .onAppear {
+        self.playback.resetTimer()
+        self.playback.startTimer()
+      }
+      .onDisappear {
+        self.playback.resetTimer()
+      }
+  }
+}
+
+struct FeedbackDisplay: View {
+  var correct: Bool
+
+  var body: some View {
+    Group {
+      if self.correct {
+        Image(systemName: "checkmark.circle")
+          .modifier(MainDisplayIcon())
+          .foregroundColor(Color.green)
+      } else {
+        Image(systemName: "xmark.circle")
+          .modifier(MainDisplayIcon())
+          .foregroundColor(Color.red)
+      }
+    }
+  }
+}
+
+struct SpeedControl: View {
+  @Binding var value: Double
+
+  var minSpeed: Double
+  var maxSpeed: Double
+  var disabled: Bool
+
+  var body: some View {
+    HStack {
+      Image(systemName: "tortoise").foregroundColor(.gray)
+      Slider(value: self.$value, in: self.minSpeed ... self.maxSpeed, step: 1)
+        .disabled(self.disabled)
+      Image(systemName: "hare").foregroundColor(.gray)
+    }
+  }
+}
+
+struct PlaybackControl: View {
+  var onPlay: () -> Void
+  var onStop: () -> Void
+
+  @EnvironmentObject var playback: PlaybackService
+  @EnvironmentObject var feedback: FeedbackService
+
+  var body: some View {
+    HStack {
+      if !self.playback.isActive {
+        Button(action: self.onPlay) {
+          Image(systemName: "play.fill")
+            .font(.system(size: 18))
+            .modifier(FullWidthButtonContent(disabled: self.feedback.shouldDisableControls))
+        }.disabled(self.feedback.shouldDisableControls)
+      } else {
+        Button(action: self.onStop) {
+          Image(systemName: "stop.fill")
+            .font(.system(size: 18))
+            .modifier(FullWidthGhostButtonContent())
+        }
+      }
+    }
   }
 }
 
@@ -193,6 +412,8 @@ final class FeedbackService: ObservableObject {
   }
 }
 
+// MARK: ViewModifiers
+
 // https://medium.com/swlh/swiftui-and-the-missing-environment-object-1a4bf8913ba7
 struct SystemServices: ViewModifier {
   static var playback = PlaybackService()
@@ -205,304 +426,83 @@ struct SystemServices: ViewModifier {
   }
 }
 
-// MARK: Views
-
-struct GameStatusBar: View {
-  var score: Int
-  var speed: Double
-
-  var scoreDisplay: some View {
-    HStack {
-      Image(systemName: "checkmark").foregroundColor(.primary)
-      Text(String(self.score)).font(.system(size: 14)).bold()
-    }
-    .foregroundColor(Color.primary)
-  }
-
-  var speedDisplay: some View {
-    HStack {
-      Image(systemName: "metronome").foregroundColor(.primary)
-      Text(String(Int(self.speed))).font(.system(size: 14))
-    }.padding(.horizontal, 10)
-      .foregroundColor(Color.primary)
-  }
-
-  var body: some View {
-    HStack {
-      self.scoreDisplay
-      Spacer()
-      self.speedDisplay
-    }
+struct IconButton: ViewModifier {
+  func body(content: Content) -> some View {
+    content
+      .padding()
+      .font(.system(size: 24))
   }
 }
 
-struct AnswerInput: View {
-  @Binding var answer: String
-  var onSubmit: () -> Void
+struct MainDisplayIcon: ViewModifier {
+  func body(content: Content) -> some View {
+    content
+      .padding()
+      .font(.system(size: 120))
+  }
+}
 
-  @EnvironmentObject var feedback: FeedbackService
+struct FullWidthButtonContent: ViewModifier {
+  var background: Color = Color.blue
+  var foregroundColor: Color = Color.white
+  var disabled: Bool = false
 
-  var body: some View {
-    HStack {
-      FocusableTextField(
-        text: self.$answer,
-        isFirstResponder: true,
-        placeholder: "WORD",
-        textFieldShouldReturn: { _ in
-          self.onSubmit()
-          return true
-        },
-        modifyTextField: { textField in
-          textField.borderStyle = .roundedRect
-          textField.autocapitalizationType = .allCharacters
-          textField.autocorrectionType = .no
-          textField.returnKeyType = .done
-          textField.keyboardType = .asciiCapable
-          textField.font = .monospacedSystemFont(ofSize: 18.0, weight: .regular)
-          textField.clearButtonMode = .whileEditing
-          return textField
-        }
+  func body(content: Content) -> some View {
+    content
+      .frame(minWidth: 0, maxWidth: .infinity)
+      .padding()
+      .background(self.background)
+      .foregroundColor(self.foregroundColor)
+      .cornerRadius(40)
+      .opacity(self.disabled ? 0.5 : 1)
+  }
+}
+
+struct FullWidthGhostButtonContent: ViewModifier {
+  var color: Color = Color.blue
+
+  func body(content: Content) -> some View {
+    content
+      .frame(minWidth: 0, maxWidth: .infinity)
+      .padding()
+      .overlay(
+        RoundedRectangle(cornerRadius: 40)
+          .stroke(self.color, lineWidth: 1)
       )
-      // Hide input after success.
-      // Note: we use opacity to hide because the text field needs to be present for the keyboard
-      //   to remain on the screen and we set the frame to 0 to make room for the correct word display.
-      .frame(width: self.feedback.shouldDisableControls ? 0 : 280, height: self.feedback.hasCorrectAnswer ? 0 : 30)
-      .opacity(self.feedback.shouldDisableControls ? 0 : 1)
-    }
+      .foregroundColor(self.color)
   }
 }
 
-struct LetterDisplay: View {
-  @EnvironmentObject var playback: PlaybackService
+// MARK: Utilities
 
-  var body: some View {
-    // XXX: Complicated implementation of an animated image
-    //   since there doesn't seem to be a better way to do this in
-    //   SwiftUI yet: https://stackoverflow.com/a/57749621/1157536
-    Image(uiImage: self.playback.currentLetterImage)
-      .resizable()
-      .frame(width: 225, height: 225)
-      .scaledToFit()
-      .offset(x: self.playback.currentLetterIsRepeat ? -20 : 0)
-      .onReceive(
-        self.playback.playTimer!.publisher,
-        perform: { _ in
-          self.playback.setNextLetter()
-        }
-      )
-      .onAppear {
-        self.playback.resetTimer()
-        self.playback.startTimer()
-      }
-      .onDisappear {
-        self.playback.resetTimer()
-      }
+class LoadingTimer {
+  var publisher: Timer.TimerPublisher
+  private var timerCancellable: Cancellable?
+
+  init(every: Double) {
+    self.publisher = Timer.publish(every: every, on: .main, in: .default)
+    self.timerCancellable = nil
+  }
+
+  func start() {
+    self.timerCancellable = self.publisher.connect()
+  }
+
+  func cancel() {
+    self.timerCancellable?.cancel()
   }
 }
 
-struct MainDisplay: View {
-  @EnvironmentObject var playback: PlaybackService
-  @EnvironmentObject var feedback: FeedbackService
-
-  var body: some View {
-    VStack {
-      if !self.playback.isPlaying {
-        if self.feedback.isShown || self.feedback.hasCorrectAnswer {
-          FeedbackDisplay(correct: self.feedback.hasCorrectAnswer)
-        }
-      } else {
-        // Need to pass SystemServices due to a bug in SwiftUI
-        //   re: environment not getting passed to children
-        LetterDisplay().modifier(SystemServices())
-      }
-    }
-  }
+private func getNextWord() -> String {
+  let word = Words.randomElement()!
+  print("current word: " + word)
+  return word
 }
 
-struct FeedbackDisplay: View {
-  var correct: Bool
-
-  var body: some View {
-    Group {
-      if self.correct {
-        Image(systemName: "checkmark.circle")
-          .modifier(MainDisplayIcon())
-          .foregroundColor(Color.green)
-      } else {
-        Image(systemName: "xmark.circle")
-          .modifier(MainDisplayIcon())
-          .foregroundColor(Color.red)
-      }
-    }
-  }
-}
-
-struct SpeedControl: View {
-  @Binding var value: Double
-
-  var minSpeed: Double
-  var maxSpeed: Double
-  var disabled: Bool
-
-  var body: some View {
-    HStack {
-      Image(systemName: "tortoise").foregroundColor(.gray)
-      Slider(value: self.$value, in: self.minSpeed ... self.maxSpeed, step: 1)
-        .disabled(self.disabled)
-      Image(systemName: "hare").foregroundColor(.gray)
-    }
-  }
-}
-
-struct Controls: View {
-  var onPlay: () -> Void
-  var onStop: () -> Void
-
-  @EnvironmentObject var playback: PlaybackService
-  @EnvironmentObject var feedback: FeedbackService
-
-  var body: some View {
-    HStack {
-      if !self.playback.isActive {
-        Button(action: self.onPlay) {
-          Image(systemName: "play.fill")
-            .font(.system(size: 18))
-            .modifier(FullWidthButtonContent(disabled: self.feedback.shouldDisableControls))
-        }.disabled(self.feedback.shouldDisableControls)
-      } else {
-        Button(action: self.onStop) {
-          Image(systemName: "stop.fill")
-            .font(.system(size: 18))
-            .modifier(FullWidthGhostButtonContent())
-        }
-      }
-    }
-  }
-}
-
-struct ContentView: View {
-  @State private var answer: String = ""
-  @State private var delayTimer: Timer? = nil
-  @State private var score = 0
-
-  @EnvironmentObject private var playback: PlaybackService
-  @EnvironmentObject private var feedback: FeedbackService
-
-  @ObservedObject private var settings = UserSettings()
-  @ObservedObject private var keyboard = KeyboardResponder()
-
-  private static let minSpeed = 1.0
-  private static let maxSpeed = 11.0
-  private static let postSubmitDelay = 2.0 // seconds
-  private static let nextWordDelay = 1.0 // seconds
-
-  // MARK: Computed properties
-
-  private var currentWord: String {
-    self.playback.currentWord
-  }
-
-  private var answerIsCorrect: Bool {
-    self.answerTrimmed.lowercased() == self.playback.currentWord.lowercased()
-  }
-
-  private var answerTrimmed: String {
-    self.answer.trimmingCharacters(in: .whitespaces)
-  }
-
-  var body: some View {
-    VStack {
-      GameStatusBar(score: self.score, speed: self.settings.speed)
-      Divider().padding(.bottom, 10)
-
-      if self.feedback.hasCorrectAnswer || self.feedback.isRevealed {
-        Text(self.currentWord.uppercased())
-          .font(.system(.title, design: .monospaced))
-          .minimumScaleFactor(0.8)
-          .scaledToFill()
-      }
-
-      HStack {
-        AnswerInput(answer: self.$answer, onSubmit: self.handleSubmit).modifier(SystemServices())
-        if !self.feedback.shouldDisableControls {
-          Spacer()
-          Button(action: self.handleReveal) {
-            Text("Reveal").font(.system(size: 14))
-          }
-        }
-      }
-      Spacer()
-      MainDisplay().frame(width: 100, height: 150)
-      Spacer()
-      SpeedControl(
-        value: self.$settings.speed,
-        minSpeed: Self.minSpeed,
-        maxSpeed: Self.maxSpeed,
-        disabled: self.playback.isPlaying
-      )
-      .padding(.bottom, 10)
-      Controls(onPlay: self.handlePlay, onStop: self.handleStop).padding(.bottom, 10)
-    }
-    // Move the current UI up when the keyboard is active
-    .padding(.bottom, keyboard.currentHeight)
-    .padding(.top, 10)
-    .padding(.horizontal, 20)
-  }
-
-  private func playWord() {
-    self.playback.play()
-    self.feedback.hide()
-  }
-
-  // MARK: Handlers
-
-  private func handlePlay() {
-    self.playWord()
-  }
-
-  private func handleNextWord() {
-    self.answer = ""
-    self.playback.setNextWord()
-    self.feedback.reset()
-
-    self.delayTimer = delayFor(Self.nextWordDelay) {
-      self.playWord()
-    }
-  }
-
-  private func handleStop() {
-    self.delayTimer?.invalidate()
-    self.playback.stop()
-    self.feedback.hide()
-  }
-
-  private func handleReveal() {
-    self.playback.stop()
-    self.feedback.reveal()
-    delayFor(Self.postSubmitDelay) {
-      self.feedback.hide()
-      self.handleNextWord()
-    }
-  }
-
-  private func handleSubmit() {
-    // Prevent multiple submissions from pressing "return" key
-    if self.feedback.hasCorrectAnswer {
-      return
-    }
-    self.handleStop()
-    self.feedback.show()
-    if self.answerIsCorrect {
-      self.feedback.markCorrect()
-      self.score += 1
-      delayFor(Self.postSubmitDelay) {
-        self.handleNextWord()
-      }
-    } else {
-      delayFor(0.5) {
-        self.feedback.hide()
-      }
-    }
+@discardableResult
+func delayFor(_ seconds: Double, onComplete: @escaping () -> Void) -> Timer {
+  Timer.scheduledTimer(withTimeInterval: seconds, repeats: false) { _ in
+    onComplete()
   }
 }
 
