@@ -499,7 +499,7 @@ struct ContentView: View {
         self.handleNextWord()
       }
     } else {
-      delayFor(Self.postSubmitDelay) {
+      delayFor(0.5) {
         self.feedback.hide()
       }
     }
