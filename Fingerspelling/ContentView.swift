@@ -152,12 +152,31 @@ final class PlaybackService: ObservableObject {
 }
 
 final class FeedbackService: ObservableObject {
-  @Published var isShowingFeedback: Bool = false
+  @Published var isShown: Bool = false
   @Published var hasCorrectAnswer: Bool = false
   @Published var isRevealed: Bool = false
 
   var shouldDisableControls: Bool {
     self.hasCorrectAnswer || self.isRevealed
+  }
+
+  func show() {
+    self.isShown = true
+  }
+
+  func hide() {
+    self.isShown = false
+    self.isRevealed = false
+  }
+
+  func reveal() {
+    self.isRevealed = true
+    self.isShown = false
+  }
+
+  func reset() {
+    self.hasCorrectAnswer = false
+    self.isShown = false
   }
 }
 
@@ -275,7 +294,7 @@ struct MainDisplay: View {
   var body: some View {
     VStack {
       if !self.playback.isPlaying {
-        if self.feedback.isShowingFeedback || self.feedback.hasCorrectAnswer {
+        if self.feedback.isShown || self.feedback.hasCorrectAnswer {
           FeedbackDisplay(correct: self.feedback.hasCorrectAnswer)
         }
       } else {
@@ -424,7 +443,7 @@ struct ContentView: View {
 
   private func playWord() {
     self.playback.play()
-    self.feedback.isShowingFeedback = false
+    self.feedback.isShown = false
   }
 
   // MARK: Handlers
@@ -436,8 +455,7 @@ struct ContentView: View {
   private func handleNextWord() {
     self.answer = ""
     self.playback.setNextWord()
-    self.feedback.hasCorrectAnswer = false
-    self.feedback.isShowingFeedback = false
+    self.feedback.reset()
     self.isPendingNextWord = true
 
     self.delayTimer = delayFor(Self.nextWordDelay) {
@@ -449,16 +467,15 @@ struct ContentView: View {
   private func handleStop() {
     self.delayTimer?.invalidate()
     self.playback.stop()
-    self.feedback.isShowingFeedback = false
+    self.feedback.hide()
     self.isPendingNextWord = false
   }
 
   private func handleReveal() {
-    self.feedback.isRevealed = true
-    self.feedback.isShowingFeedback = false
-    self.playback.isPlaying = false
+    self.playback.stop()
+    self.feedback.reveal()
     delayFor(Self.postSubmitDelay) {
-      self.feedback.isRevealed = false
+      self.feedback.hide()
       self.handleNextWord()
     }
   }
@@ -469,7 +486,7 @@ struct ContentView: View {
       return
     }
     self.handleStop()
-    self.feedback.isShowingFeedback = true
+    self.feedback.show()
     if self.isAnswerValid {
       self.feedback.hasCorrectAnswer = true
       self.score += 1
@@ -478,7 +495,7 @@ struct ContentView: View {
       }
     } else {
       delayFor(Self.postSubmitDelay) {
-        self.feedback.isShowingFeedback = false
+        self.feedback.hide()
       }
     }
   }
@@ -492,7 +509,7 @@ struct ContentView_Previews: PreviewProvider {
     // Modify these during development to update the preview
     playback.isPlaying = true
     playback.currentWord = "foo"
-    feedback.isShowingFeedback = false
+    feedback.isShown = false
 
     return ContentView().modifier(SystemServices())
   }
