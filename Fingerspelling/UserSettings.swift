@@ -22,6 +22,7 @@ struct UserDefault<T> {
   }
 }
 
+/// Simple wrapper around UserDefaults to make settings observables
 final class UserSettings: ObservableObject {
   let objectWillChange = PassthroughSubject<Void, Never>()
 
