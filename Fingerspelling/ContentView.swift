@@ -19,12 +19,6 @@ struct ContentView: View {
   private static let postSubmitDelay = 2.0 // seconds
   private static let nextWordDelay = 1.0 // seconds
 
-  // MARK: Computed properties
-
-  private var currentWord: String {
-    self.playback.currentWord
-  }
-
   private var answerIsCorrect: Bool {
     self.answerTrimmed.lowercased() == self.playback.currentWord.lowercased()
   }
@@ -39,14 +33,14 @@ struct ContentView: View {
       Divider().padding(.bottom, 10)
 
       if self.feedback.hasCorrectAnswer || self.feedback.isRevealed {
-        Text(self.currentWord.uppercased())
+        Text(self.playback.currentWord.uppercased())
           .font(.system(.title, design: .monospaced))
           .minimumScaleFactor(0.8)
           .scaledToFill()
       }
 
       HStack {
-        AnswerInput(answer: self.$answer, onSubmit: self.handleSubmit).modifier(SystemServices())
+        AnswerInput(value: self.$answer, onSubmit: self.handleSubmit).modifier(SystemServices())
         if !self.feedback.shouldDisableControls {
           Spacer()
           Button(action: self.handleReveal) {
@@ -109,7 +103,7 @@ struct ContentView: View {
   }
 
   private func handleSubmit() {
-    // Prevent multiple submissions from pressing "return" key
+    // Prevent multiple submissions when pressing "return" key
     if self.feedback.hasCorrectAnswer {
       return
     }
@@ -133,10 +127,12 @@ struct GameStatusBar: View {
   var score: Int
   var speed: Double
 
+  static let iconSize: CGFloat = 14
+
   var scoreDisplay: some View {
     HStack {
       Image(systemName: "checkmark").foregroundColor(.primary)
-      Text(String(self.score)).font(.system(size: 14)).bold()
+      Text(String(self.score)).font(.system(size: Self.iconSize)).bold()
     }
     .foregroundColor(Color.primary)
   }
@@ -144,7 +140,7 @@ struct GameStatusBar: View {
   var speedDisplay: some View {
     HStack {
       Image(systemName: "metronome").foregroundColor(.primary)
-      Text(String(Int(self.speed))).font(.system(size: 14))
+      Text(String(Int(self.speed))).font(.system(size: Self.iconSize))
     }.padding(.horizontal, 10)
       .foregroundColor(Color.primary)
   }
@@ -159,7 +155,7 @@ struct GameStatusBar: View {
 }
 
 struct AnswerInput: View {
-  @Binding var answer: String
+  @Binding var value: String
   var onSubmit: () -> Void
 
   @EnvironmentObject var feedback: FeedbackService
@@ -167,7 +163,7 @@ struct AnswerInput: View {
   var body: some View {
     HStack {
       FocusableTextField(
-        text: self.$answer,
+        text: self.$value,
         isFirstResponder: true,
         placeholder: "WORD",
         textFieldShouldReturn: { _ in
@@ -202,7 +198,7 @@ struct MainDisplay: View {
     VStack {
       if !self.playback.isPlaying {
         if self.feedback.isShown || self.feedback.hasCorrectAnswer {
-          FeedbackDisplay(correct: self.feedback.hasCorrectAnswer)
+          FeedbackDisplay(isCorrect: self.feedback.hasCorrectAnswer)
         }
       } else {
         // Need to pass SystemServices due to a bug in SwiftUI
@@ -242,11 +238,11 @@ struct LetterDisplay: View {
 }
 
 struct FeedbackDisplay: View {
-  var correct: Bool
+  var isCorrect: Bool
 
   var body: some View {
     Group {
-      if self.correct {
+      if self.isCorrect {
         Image(systemName: "checkmark.circle")
           .modifier(MainDisplayIcon())
           .foregroundColor(Color.green)
