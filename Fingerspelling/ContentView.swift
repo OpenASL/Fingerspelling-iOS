@@ -90,6 +90,8 @@ final class PlaybackService: ObservableObject {
   @Published var letterIndex = 0
   @Published var isPlaying = false
   @Published var playTimer: LoadingTimer?
+  @Published var isPendingNextWord: Bool = false
+
   @ObservedObject var settings = UserSettings()
 
   private static let numerator = 2.0 // Higher value = slower speeds
@@ -108,6 +110,10 @@ final class PlaybackService: ObservableObject {
       Array(self.currentWord)[self.letterIndex - 1] == Array(self.currentWord)[self.letterIndex]
   }
 
+  var isActive: Bool {
+    self.isPlaying || self.isPendingNextWord
+  }
+
   private var images: [UIImage] {
     let letters = Array(self.currentWord).map { "\(String($0).uppercased())-lauren-nobg" }
     return letters.map { UIImage(named: $0)! }
@@ -116,12 +122,14 @@ final class PlaybackService: ObservableObject {
   func play() {
     self.letterIndex = 0
     self.isPlaying = true
+    self.isPendingNextWord = false
   }
 
   func stop() {
     self.resetTimer()
     self.play()
     self.isPlaying = false
+    self.isPendingNextWord = false
   }
 
   func setNextLetter() {
@@ -134,6 +142,7 @@ final class PlaybackService: ObservableObject {
 
   func setNextWord() {
     self.currentWord = getNextWord()
+    self.isPendingNextWord = true
   }
 
   func startTimer() {
@@ -350,7 +359,7 @@ struct Controls: View {
 
   var body: some View {
     HStack {
-      if !self.playback.isPlaying {
+      if !self.playback.isActive {
         Button(action: self.onPlay) {
           Image(systemName: "play.fill")
             .font(.system(size: 18))
@@ -371,13 +380,12 @@ struct ContentView: View {
   @State private var answer: String = ""
   @State private var delayTimer: Timer? = nil
   @State private var score = 0
-  @State private var isPendingNextWord: Bool = false
-
-  @ObservedObject private var settings = UserSettings()
-  @ObservedObject private var keyboard = KeyboardResponder()
 
   @EnvironmentObject private var playback: PlaybackService
   @EnvironmentObject private var feedback: FeedbackService
+
+  @ObservedObject private var settings = UserSettings()
+  @ObservedObject private var keyboard = KeyboardResponder()
 
   private static let minSpeed = 1.0
   private static let maxSpeed = 11.0
@@ -388,10 +396,6 @@ struct ContentView: View {
 
   private var currentWord: String {
     self.playback.currentWord
-  }
-
-  private var isPlaying: Bool {
-    self.playback.isPlaying || self.isPendingNextWord
   }
 
   private var isAnswerValid: Bool {
@@ -443,7 +447,7 @@ struct ContentView: View {
 
   private func playWord() {
     self.playback.play()
-    self.feedback.isShown = false
+    self.feedback.hide()
   }
 
   // MARK: Handlers
@@ -456,11 +460,9 @@ struct ContentView: View {
     self.answer = ""
     self.playback.setNextWord()
     self.feedback.reset()
-    self.isPendingNextWord = true
 
     self.delayTimer = delayFor(Self.nextWordDelay) {
       self.playWord()
-      self.isPendingNextWord = false
     }
   }
 
@@ -468,7 +470,6 @@ struct ContentView: View {
     self.delayTimer?.invalidate()
     self.playback.stop()
     self.feedback.hide()
-    self.isPendingNextWord = false
   }
 
   private func handleReveal() {
