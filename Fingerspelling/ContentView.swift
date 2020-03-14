@@ -268,6 +268,25 @@ struct LetterDisplay: View {
   }
 }
 
+struct MainDisplay: View {
+  @EnvironmentObject var playback: PlaybackService
+  @EnvironmentObject var feedback: FeedbackService
+
+  var body: some View {
+    VStack {
+      if !self.playback.isPlaying {
+        if self.feedback.isShowingFeedback || self.feedback.hasCorrectAnswer {
+          FeedbackDisplay(correct: self.feedback.hasCorrectAnswer)
+        }
+      } else {
+        // Need to pass SystemServices due to a bug in SwiftUI
+        //   re: environment not getting passed to children
+        LetterDisplay().modifier(SystemServices())
+      }
+    }
+  }
+}
+
 struct FeedbackDisplay: View {
   var correct: Bool
 
@@ -299,6 +318,32 @@ struct SpeedControl: View {
       Slider(value: self.$value, in: self.minSpeed ... self.maxSpeed, step: 1)
         .disabled(self.disabled)
       Image(systemName: "hare").foregroundColor(.gray)
+    }
+  }
+}
+
+struct Controls: View {
+  var onPlay: () -> Void
+  var onStop: () -> Void
+
+  @EnvironmentObject var playback: PlaybackService
+  @EnvironmentObject var feedback: FeedbackService
+
+  var body: some View {
+    HStack {
+      if !self.playback.isPlaying {
+        Button(action: self.onPlay) {
+          Image(systemName: "play.fill")
+            .font(.system(size: 18))
+            .modifier(FullWidthButtonContent(disabled: self.feedback.shouldDisableControls))
+        }.disabled(self.feedback.shouldDisableControls)
+      } else {
+        Button(action: self.onStop) {
+          Image(systemName: "stop.fill")
+            .font(.system(size: 18))
+            .modifier(FullWidthGhostButtonContent())
+        }
+      }
     }
   }
 }
@@ -338,54 +383,16 @@ struct ContentView: View {
     self.answer.trimmingCharacters(in: .whitespaces)
   }
 
-  // MARK: Nested views
-
-  private var correctWordDisplay: some View {
-    Text(self.currentWord.uppercased())
-      .font(.system(.title, design: .monospaced))
-      .minimumScaleFactor(0.8)
-      .scaledToFill()
-  }
-
-  private var controls: some View {
-    HStack {
-      if !self.isPlaying {
-        Button(action: self.handlePlay) {
-          Image(systemName: "play.fill")
-            .font(.system(size: 18))
-            .modifier(FullWidthButtonContent(disabled: self.feedback.shouldDisableControls))
-        }.disabled(self.feedback.shouldDisableControls)
-      } else {
-        Button(action: self.handleStop) {
-          Image(systemName: "stop.fill")
-            .font(.system(size: 18))
-            .modifier(FullWidthGhostButtonContent())
-        }
-      }
-    }
-  }
-
-  private var mainDisplay: some View {
-    VStack {
-      if !self.playback.isPlaying {
-        if self.feedback.isShowingFeedback || self.feedback.hasCorrectAnswer {
-          FeedbackDisplay(correct: self.feedback.hasCorrectAnswer)
-        }
-      } else {
-        // Need to pass SystemServices due to a bug in SwiftUI
-        //   re: environment not getting passed to children
-        LetterDisplay().modifier(SystemServices())
-      }
-    }.frame(width: 100, height: 150)
-  }
-
   var body: some View {
     VStack {
       GameStatusBar(score: self.score, speed: self.settings.speed)
       Divider().padding(.bottom, 10)
 
       if self.feedback.hasCorrectAnswer || self.feedback.isRevealed {
-        self.correctWordDisplay
+        Text(self.currentWord.uppercased())
+          .font(.system(.title, design: .monospaced))
+          .minimumScaleFactor(0.8)
+          .scaledToFill()
       }
 
       HStack {
@@ -398,7 +405,7 @@ struct ContentView: View {
         }
       }
       Spacer()
-      self.mainDisplay
+      MainDisplay().frame(width: 100, height: 150)
       Spacer()
       SpeedControl(
         value: self.$settings.speed,
@@ -407,7 +414,7 @@ struct ContentView: View {
         disabled: self.playback.isPlaying
       )
       .padding(.bottom, 10)
-      self.controls.padding(.bottom, 10)
+      Controls(onPlay: self.handlePlay, onStop: self.handleStop).padding(.bottom, 10)
     }
     // Move the current UI up when the keyboard is active
     .padding(.bottom, keyboard.currentHeight)
