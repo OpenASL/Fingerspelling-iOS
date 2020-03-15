@@ -4,8 +4,8 @@ import SwiftUI
 // MARK: Views
 
 struct ContentView: View {
-  @State private var answer: String = ""
-  @State private var score = 0
+  @State private var receptiveScore = 0
+  @State private var expressiveScore = 0
   /// Timer used to delay playing the next word
   @State private var delayTimer: Timer? = nil
   @State private var isShowingSettings: Bool = false
@@ -16,56 +16,40 @@ struct ContentView: View {
 
   @ObservedObject private var keyboard = KeyboardResponder()
 
-  private static let minSpeed = 1.0
-  private static let maxSpeed = 11.0
   private static let postSubmitDelay = 2.0 // seconds
   private static let nextWordDelay = 1.0 // seconds
 
   private var answerIsCorrect: Bool {
-    self.answerTrimmed.lowercased() == self.playback.currentWord.lowercased()
-  }
-
-  private var answerTrimmed: String {
-    self.answer.trimmingCharacters(in: .whitespaces)
+    self.feedback.answerTrimmed.lowercased() == self.playback.currentWord.lowercased()
   }
 
   var body: some View {
     VStack {
       GameStatusBar(
-        score: self.score,
+        receptiveScore: self.receptiveScore,
+        expressiveScore: self.expressiveScore,
         speed: self.settings.speed,
         isShowingSettings: self.$isShowingSettings
       ).modifier(SystemServices())
       Divider().padding(.bottom, 10)
 
-      if self.feedback.hasCorrectAnswer || self.feedback.isRevealed {
-        Text(self.playback.currentWord.uppercased())
-          .font(.system(.title, design: .monospaced))
-          .minimumScaleFactor(0.8)
-          .scaledToFill()
+      if self.settings.gameMode == GameMode.receptive.rawValue {
+        ReceptiveGameDisplay(
+          onPlay: self.handlePlay,
+          onStop: self.handleStop,
+          onSubmit: self.handleSubmit,
+          onReveal: self.handleReveal,
+          showInput: !self.isShowingSettings
+        )
+      } else if self.settings.gameMode == GameMode.expressive.rawValue {
+        ExpressiveGameDisplay(
+          onReveal: self.handleRevealSpelling,
+          onHide: self.handleHideSpelling,
+          onContinue: self.handleNextSpellingWord
+        )
       }
-
-      HStack {
-        AnswerInput(value: self.$answer, onSubmit: self.handleSubmit).modifier(SystemServices())
-        if !self.feedback.shouldDisableControls {
-          Spacer()
-          Button(action: self.handleReveal) {
-            Text("Reveal").font(.system(size: 14))
-          }.disabled(self.playback.isPlaying)
-        }
-      }
-      Spacer()
-      MainDisplay().frame(width: 100, height: 150)
-      Spacer()
-      SpeedControl(
-        value: self.$settings.speed,
-        minSpeed: Self.minSpeed,
-        maxSpeed: Self.maxSpeed,
-        disabled: self.playback.isPlaying
-      )
-      .padding(.bottom, 10)
-      PlaybackControl(onPlay: self.handlePlay, onStop: self.handleStop).padding(.bottom, 10)
     }
+
     // Move the current UI up when the keyboard is active
     .padding(.bottom, keyboard.currentHeight)
     .padding(.top, 10)
@@ -84,8 +68,7 @@ struct ContentView: View {
   }
 
   private func handleNextWord() {
-    self.answer = ""
-    self.playback.setNextWord()
+    self.playback.setNextWordPending()
     self.feedback.reset()
 
     self.delayTimer = delayFor(Self.nextWordDelay) {
@@ -117,7 +100,7 @@ struct ContentView: View {
     self.feedback.show()
     if self.answerIsCorrect {
       self.feedback.markCorrect()
-      self.score += 1
+      self.receptiveScore += 1
       delayFor(Self.postSubmitDelay) {
         self.handleNextWord()
       }
@@ -127,31 +110,44 @@ struct ContentView: View {
       }
     }
   }
+
+  private func handleRevealSpelling() {
+    self.feedback.reveal()
+  }
+
+  private func handleHideSpelling() {
+    self.feedback.hide()
+  }
+
+  private func handleNextSpellingWord() {
+    self.playback.setNextWord()
+    self.feedback.reset()
+    self.expressiveScore += 1
+  }
 }
 
 struct GameStatusBar: View {
-  var score: Int
+  var receptiveScore: Int
+  var expressiveScore: Int
   var speed: Double
   @Binding var isShowingSettings: Bool
 
   @EnvironmentObject var playback: PlaybackService
+  @EnvironmentObject var settings: UserSettings
 
   static let iconSize: CGFloat = 14
 
-  private var scoreDisplay: some View {
-    HStack {
-      Image(systemName: "checkmark").foregroundColor(.primary)
-      Text(String(self.score)).font(.system(size: Self.iconSize)).bold()
-    }
-    .foregroundColor(Color.primary)
-  }
+  struct Indicator: View {
+    var iconName: String
+    var textContent: String
 
-  private var speedDisplay: some View {
-    HStack {
-      Image(systemName: "metronome").foregroundColor(.primary)
-      Text(String(Int(self.speed))).font(.system(size: Self.iconSize))
-    }.padding(.horizontal, 10)
+    var body: some View {
+      HStack {
+        Image(systemName: self.iconName).foregroundColor(.primary)
+        Text(self.textContent).font(.system(size: GameStatusBar.iconSize)).bold()
+      }
       .foregroundColor(Color.primary)
+    }
   }
 
   private var settingsButton: some View {
@@ -159,20 +155,153 @@ struct GameStatusBar: View {
       self.playback.stop()
       self.isShowingSettings.toggle()
     }) {
-      Image(systemName: "gear")
+      Image(systemName: "gear").padding(.leading)
     }
   }
 
   var body: some View {
     HStack {
-      self.scoreDisplay
-      self.speedDisplay
+      if self.settings.gameMode == GameMode.receptive.rawValue {
+        Indicator(iconName: "checkmark", textContent: String(self.receptiveScore)).padding(.trailing, 10)
+        Indicator(iconName: "metronome", textContent: String(Int(self.speed)))
+      } else {
+        Indicator(iconName: "hand.raised", textContent: String(self.expressiveScore))
+      }
       Spacer()
       self.settingsButton
     }
     .sheet(isPresented: self.$isShowingSettings) {
       GameSettings(isPresented: self.$isShowingSettings)
         .modifier(SystemServices())
+    }
+  }
+}
+
+struct ReceptiveGameDisplay: View {
+  var onPlay: () -> Void
+  var onStop: () -> Void
+  var onSubmit: () -> Void
+  var onReveal: () -> Void
+  var showInput: Bool
+
+  @EnvironmentObject private var playback: PlaybackService
+  @EnvironmentObject private var feedback: FeedbackService
+  @EnvironmentObject private var settings: UserSettings
+
+  private static let minSpeed = 1.0
+  private static let maxSpeed = 11.0
+
+  var body: some View {
+    Group {
+      if self.feedback.hasCorrectAnswer || self.feedback.isRevealed {
+        CurrentWordDisplay()
+      }
+
+      HStack {
+        if self.showInput {
+          AnswerInput(value: self.$feedback.answer, onSubmit: self.onSubmit).modifier(SystemServices())
+        }
+        if !self.feedback.shouldDisableControls {
+          Spacer()
+          Button(action: self.onReveal) {
+            Text("Reveal").font(.system(size: 14))
+          }.disabled(self.playback.isPlaying)
+        }
+      }
+      Spacer()
+
+      MainDisplay().frame(width: 100, height: 150)
+
+      Spacer()
+      SpeedControl(
+        value: self.$settings.speed,
+        minSpeed: Self.minSpeed,
+        maxSpeed: Self.maxSpeed,
+        disabled: self.playback.isPlaying
+      )
+      .padding(.bottom, 10)
+      PlaybackControl(onPlay: self.onPlay, onStop: self.onStop).padding(.bottom, 10)
+    }
+  }
+}
+
+struct PlaybackControl: View {
+  var onPlay: () -> Void
+  var onStop: () -> Void
+
+  @EnvironmentObject var playback: PlaybackService
+  @EnvironmentObject var feedback: FeedbackService
+
+  var body: some View {
+    Group {
+      if !self.playback.isActive {
+        Button(action: self.onPlay) {
+          Image(systemName: "play.fill")
+            .font(.system(size: 18))
+            .modifier(FullWidthButtonContent(disabled: self.feedback.shouldDisableControls))
+        }.disabled(self.feedback.shouldDisableControls)
+      } else {
+        Button(action: self.onStop) {
+          Image(systemName: "stop.fill")
+            .font(.system(size: 18))
+            .modifier(FullWidthGhostButtonContent())
+        }
+      }
+    }
+  }
+}
+
+struct ExpressiveGameDisplay: View {
+  var onReveal: () -> Void
+  var onHide: () -> Void
+  var onContinue: () -> Void
+
+  @EnvironmentObject private var feedback: FeedbackService
+
+  var body: some View {
+    Group {
+      CurrentWordDisplay()
+      Spacer()
+      if self.feedback.isRevealed {
+        SpellingDisplay()
+      } else if !self.feedback.hasRevealed {
+        Text("Fingerspell the word above.")
+      }
+      Spacer()
+      ExpressiveControl(
+        isRevealed: self.feedback.isRevealed,
+        hasRevealed: self.feedback.hasRevealed,
+        onReveal: self.onReveal,
+        onHide: self.onHide,
+        onContinue: self.onContinue
+      ).padding(.bottom)
+    }
+  }
+}
+
+struct ExpressiveControl: View {
+  var isRevealed: Bool
+  var hasRevealed: Bool
+  var onReveal: () -> Void
+  var onHide: () -> Void
+  var onContinue: () -> Void
+
+  var body: some View {
+    VStack {
+      if self.hasRevealed {
+        Button(action: self.onContinue) {
+          Text("Next word").modifier(FullWidthButtonContent(background: Color.green)).padding(.bottom)
+        }
+      }
+      if self.isRevealed {
+        Button(action: self.onHide) {
+          Text("Hide").modifier(FullWidthGhostButtonContent())
+        }
+      } else {
+        Button(action: self.onReveal) {
+          Text("Reveal").modifier(FullWidthButtonContent())
+        }
+      }
     }
   }
 }
@@ -190,20 +319,49 @@ struct GameSettings: View {
     }
   }
 
+  struct LabeledPicker<SelectionValue: Hashable, Content: View>: View {
+    var selection: Binding<SelectionValue>
+    var label: String
+    var content: () -> Content
+
+    var body: some View {
+      Section(header: Text(self.label.uppercased())) {
+        Picker(selection: self.selection, label: Text(self.label)) {
+          self.content()
+        }.pickerStyle(SegmentedPickerStyle())
+      }
+    }
+  }
+
   var body: some View {
     NavigationView {
       Form {
-        Section(header: Text("Max word length".uppercased())) {
-          Picker(selection: self.$settings.maxWordLength, label: Text("Max word length")) {
-            ForEach(Self.wordLengths, id: \.self) {
-              Text($0 == Int.max ? "Any" : "\($0) letters").tag($0)
-            }
-          }.pickerStyle(SegmentedPickerStyle())
+        LabeledPicker(selection: self.$settings.gameMode, label: "Mode") {
+          ForEach(GameMode.allCases, id: \.self) {
+            Text($0.rawValue).tag($0.rawValue)
+          }
+        }
+
+        LabeledPicker(selection: self.$settings.maxWordLength, label: "Max word length") {
+          ForEach(Self.wordLengths, id: \.self) {
+            Text($0 == Int.max ? "Any" : "\($0) letters").tag($0)
+          }
         }
       }
       .navigationBarTitle(Text("Settings"), displayMode: .inline)
       .navigationBarItems(trailing: self.dismissButton)
     }
+  }
+}
+
+struct CurrentWordDisplay: View {
+  @EnvironmentObject var playback: PlaybackService
+
+  var body: some View {
+    Text(self.playback.currentWord.uppercased())
+      .font(.system(.title, design: .monospaced))
+      .minimumScaleFactor(0.8)
+      .scaledToFill()
   }
 }
 
@@ -256,13 +414,13 @@ struct MainDisplay: View {
       } else {
         // Need to pass SystemServices due to a bug in SwiftUI
         //   re: environment not getting passed to children
-        LetterDisplay().modifier(SystemServices())
+        WordPlayer().modifier(SystemServices())
       }
     }
   }
 }
 
-struct LetterDisplay: View {
+struct WordPlayer: View {
   @EnvironmentObject var playback: PlaybackService
 
   var body: some View {
@@ -308,6 +466,29 @@ struct FeedbackDisplay: View {
   }
 }
 
+struct SpellingDisplay: View {
+  @EnvironmentObject var playback: PlaybackService
+
+  static let scaledSize: CGFloat = 165
+  static let width: CGFloat = 100
+
+  var body: some View {
+    ScrollView(.horizontal) {
+      HStack(alignment: .top, spacing: 0) {
+        ForEach(self.playback.imageNames, id: \.self) { (_ imageName) in
+          Image(imageName)
+            .resizable()
+            .frame(width: Self.scaledSize, height: Self.scaledSize)
+            // Crop horizontal space around images
+            .clipped()
+            .frame(width: Self.width)
+        }
+      }
+    }
+    .frame(height: 185)
+  }
+}
+
 struct SpeedControl: View {
   @Binding var value: Double
 
@@ -321,32 +502,6 @@ struct SpeedControl: View {
       Slider(value: self.$value, in: self.minSpeed ... self.maxSpeed, step: 1)
         .disabled(self.disabled)
       Image(systemName: "hare").foregroundColor(.gray)
-    }
-  }
-}
-
-struct PlaybackControl: View {
-  var onPlay: () -> Void
-  var onStop: () -> Void
-
-  @EnvironmentObject var playback: PlaybackService
-  @EnvironmentObject var feedback: FeedbackService
-
-  var body: some View {
-    HStack {
-      if !self.playback.isActive {
-        Button(action: self.onPlay) {
-          Image(systemName: "play.fill")
-            .font(.system(size: 18))
-            .modifier(FullWidthButtonContent(disabled: self.feedback.shouldDisableControls))
-        }.disabled(self.feedback.shouldDisableControls)
-      } else {
-        Button(action: self.onStop) {
-          Image(systemName: "stop.fill")
-            .font(.system(size: 18))
-            .modifier(FullWidthGhostButtonContent())
-        }
-      }
     }
   }
 }
@@ -371,7 +526,7 @@ final class PlaybackService: ObservableObject {
   }
 
   var currentLetterImage: UIImage {
-    self.images[self.letterIndex]
+    self.uiImages[self.letterIndex]
   }
 
   var currentLetterIsRepeat: Bool {
@@ -383,9 +538,17 @@ final class PlaybackService: ObservableObject {
     self.isPlaying || self.isPendingNextWord
   }
 
-  private var images: [UIImage] {
-    let letters = Array(self.currentWord).map { "\(String($0).uppercased())-lauren-nobg" }
-    return letters.map { UIImage(named: $0)! }
+  var imageNames: [String] {
+    Array(self.currentWord).map { "\(String($0).uppercased())-lauren-nobg" }
+  }
+
+  private var uiImages: [UIImage] {
+    self.imageNames.map { UIImage(named: $0)! }
+  }
+
+  func reset() {
+    self.stop()
+    self.setNextWord()
   }
 
   func play() {
@@ -396,22 +559,26 @@ final class PlaybackService: ObservableObject {
 
   func stop() {
     self.resetTimer()
-    self.play()
+    self.letterIndex = 0
     self.isPlaying = false
     self.isPendingNextWord = false
   }
 
   func setNextLetter() {
-    if self.letterIndex >= (self.images.count - 1) {
+    if self.letterIndex >= (self.uiImages.count - 1) {
       self.isPlaying = false
     } else {
       self.letterIndex += 1
     }
   }
 
+  func setNextWordPending() {
+    self.setNextWord()
+    self.isPendingNextWord = true
+  }
+
   func setNextWord() {
     self.currentWord = getRandomWord()
-    self.isPendingNextWord = true
   }
 
   func startTimer() {
@@ -430,12 +597,26 @@ final class PlaybackService: ObservableObject {
 }
 
 final class FeedbackService: ObservableObject {
+  @Published var answer: String = ""
   @Published var isShown: Bool = false
   @Published var hasCorrectAnswer: Bool = false
+  @Published var hasRevealed: Bool = false
   @Published var isRevealed: Bool = false
 
   var shouldDisableControls: Bool {
     self.hasCorrectAnswer || self.isRevealed
+  }
+
+  var answerTrimmed: String {
+    self.answer.trimmingCharacters(in: .whitespaces)
+  }
+
+  func reset() {
+    self.answer = ""
+    self.hasCorrectAnswer = false
+    self.isShown = false
+    self.hasRevealed = false
+    self.isRevealed = false
   }
 
   func show() {
@@ -448,6 +629,7 @@ final class FeedbackService: ObservableObject {
   }
 
   func reveal() {
+    self.hasRevealed = true
     self.isRevealed = true
     self.isShown = false
   }
@@ -455,18 +637,26 @@ final class FeedbackService: ObservableObject {
   func markCorrect() {
     self.hasCorrectAnswer = true
   }
-
-  func reset() {
-    self.hasCorrectAnswer = false
-    self.isShown = false
-  }
 }
 
 // MARK: User settings
 
+enum GameMode: String, CaseIterable {
+  case receptive = "Receptive"
+  case expressive = "Expressive"
+}
+
 /// Simple wrapper around UserDefaults to make settings observables
 final class UserSettings: ObservableObject {
   let objectWillChange = PassthroughSubject<Void, Never>()
+
+  private var playback: PlaybackService {
+    SystemServices.playback
+  }
+
+  private var feedback: FeedbackService {
+    SystemServices.feedback
+  }
 
   init() {
     Words = AllWords.filter { $0.count <= self.maxWordLength }
@@ -481,12 +671,23 @@ final class UserSettings: ObservableObject {
     }
   }
 
+  // Note: we use the raw values of the enum so that it can be properly
+  //   serialized to UserDefaults
+  @UserDefault("gameMode", defaultValue: GameMode.receptive.rawValue)
+  var gameMode: String {
+    willSet {
+      self.playback.reset()
+      self.feedback.reset()
+
+      self.objectWillChange.send()
+    }
+  }
+
   @UserDefault("maxWordLength", defaultValue: Int.max)
   var maxWordLength: Int {
     willSet {
       Words = AllWords.filter { $0.count <= newValue }
-      let playback = SystemServices.playback
-      playback.currentWord = getRandomWord()
+      self.playback.setNextWord()
 
       self.objectWillChange.send()
     }
