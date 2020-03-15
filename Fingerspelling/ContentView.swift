@@ -12,8 +12,8 @@ struct ContentView: View {
 
   @EnvironmentObject private var playback: PlaybackService
   @EnvironmentObject private var feedback: FeedbackService
+  @EnvironmentObject private var settings: UserSettings
 
-  @ObservedObject private var settings = UserSettings()
   @ObservedObject private var keyboard = KeyboardResponder()
 
   private static let minSpeed = 1.0
@@ -138,7 +138,7 @@ struct GameStatusBar: View {
 
   static let iconSize: CGFloat = 14
 
-  var scoreDisplay: some View {
+  private var scoreDisplay: some View {
     HStack {
       Image(systemName: "checkmark").foregroundColor(.primary)
       Text(String(self.score)).font(.system(size: Self.iconSize)).bold()
@@ -146,7 +146,7 @@ struct GameStatusBar: View {
     .foregroundColor(Color.primary)
   }
 
-  var speedDisplay: some View {
+  private var speedDisplay: some View {
     HStack {
       Image(systemName: "metronome").foregroundColor(.primary)
       Text(String(Int(self.speed))).font(.system(size: Self.iconSize))
@@ -154,7 +154,7 @@ struct GameStatusBar: View {
       .foregroundColor(Color.primary)
   }
 
-  var settingsButton: some View {
+  private var settingsButton: some View {
     Button(action: {
       self.playback.stop()
       self.isShowingSettings.toggle()
@@ -172,6 +172,7 @@ struct GameStatusBar: View {
     }
     .sheet(isPresented: self.$isShowingSettings) {
       GameSettings(isPresented: self.$isShowingSettings)
+        .modifier(SystemServices())
     }
   }
 }
@@ -179,11 +180,11 @@ struct GameStatusBar: View {
 struct GameSettings: View {
   @Binding var isPresented: Bool
 
-  @ObservedObject private var settings = UserSettings()
+  @EnvironmentObject private var settings: UserSettings
 
   static let wordLengths = Array(3 ... 6) + [Int.max]
 
-  var dismissButton: some View {
+  private var dismissButton: some View {
     Button(action: { self.isPresented = false }) {
       Text("Done")
     }
@@ -355,17 +356,17 @@ struct PlaybackControl: View {
 // https://medium.com/better-programming/swiftui-microservices-c7002228710
 
 final class PlaybackService: ObservableObject {
-  @Published var currentWord = getRandomWord()
+  @Published var currentWord = ""
   @Published var letterIndex = 0
   @Published var isPlaying = false
   @Published var playTimer: LoadingTimer?
   @Published var isPendingNextWord: Bool = false
 
-  @ObservedObject var settings = UserSettings()
-
+  private var settings = SystemServices.settings
   private static let numerator = 2.0 // Higher value = slower speeds
 
   init() {
+    self.currentWord = getRandomWord()
     self.playTimer = self.getTimer()
   }
 
@@ -467,6 +468,10 @@ final class FeedbackService: ObservableObject {
 final class UserSettings: ObservableObject {
   let objectWillChange = PassthroughSubject<Void, Never>()
 
+  init() {
+    Words = AllWords.filter { $0.count <= self.maxWordLength }
+  }
+
   // Settings go here
 
   @UserDefault("speed", defaultValue: 3.0)
@@ -493,9 +498,11 @@ final class UserSettings: ObservableObject {
 struct SystemServices: ViewModifier {
   static var playback = PlaybackService()
   static var feedback = FeedbackService()
+  static var settings = UserSettings()
 
   func body(content: Content) -> some View {
     content
+      .environmentObject(Self.settings)
       .environmentObject(Self.playback)
       .environmentObject(Self.feedback)
   }
