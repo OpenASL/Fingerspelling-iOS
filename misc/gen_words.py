@@ -11,7 +11,8 @@ TEMPLATE = """
 /**
  GENERATED FILE--DO NOT EDIT
  */
-public let Words: [String] = {words}
+public var AllWords: [String] = {words}
+public var Words: [String] = AllWords
 """
 
 

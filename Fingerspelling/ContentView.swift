@@ -8,6 +8,7 @@ struct ContentView: View {
   @State private var score = 0
   /// Timer used to delay playing the next word
   @State private var delayTimer: Timer? = nil
+  @State private var isShowingSettings: Bool = false
 
   @EnvironmentObject private var playback: PlaybackService
   @EnvironmentObject private var feedback: FeedbackService
@@ -30,7 +31,11 @@ struct ContentView: View {
 
   var body: some View {
     VStack {
-      GameStatusBar(score: self.score, speed: self.settings.speed)
+      GameStatusBar(
+        score: self.score,
+        speed: self.settings.speed,
+        isShowingSettings: self.$isShowingSettings
+      )
       Divider().padding(.bottom, 10)
 
       if self.feedback.hasCorrectAnswer || self.feedback.isRevealed {
@@ -46,7 +51,7 @@ struct ContentView: View {
           Spacer()
           Button(action: self.handleReveal) {
             Text("Reveal").font(.system(size: 14))
-          }
+          }.disabled(self.playback.isPlaying)
         }
       }
       Spacer()
@@ -127,6 +132,7 @@ struct ContentView: View {
 struct GameStatusBar: View {
   var score: Int
   var speed: Double
+  @Binding var isShowingSettings: Bool
 
   static let iconSize: CGFloat = 14
 
@@ -146,11 +152,51 @@ struct GameStatusBar: View {
       .foregroundColor(Color.primary)
   }
 
+  var settingsButton: some View {
+    Button(action: { self.isShowingSettings.toggle() }) {
+      Image(systemName: "gear")
+    }
+  }
+
   var body: some View {
     HStack {
       self.scoreDisplay
-      Spacer()
       self.speedDisplay
+      Spacer()
+      self.settingsButton
+    }
+    .sheet(isPresented: self.$isShowingSettings) {
+      GameSettings(isPresented: self.$isShowingSettings)
+    }
+  }
+}
+
+struct GameSettings: View {
+  @Binding var isPresented: Bool
+
+  @ObservedObject private var settings = UserSettings()
+
+  static let wordLengths = Array(3 ... 6) + [Int.max]
+
+  var dismissButton: some View {
+    Button(action: { self.isPresented = false }) {
+      Text("Done")
+    }
+  }
+
+  var body: some View {
+    NavigationView {
+      Form {
+        Section(header: Text("Max word length".uppercased())) {
+          Picker(selection: self.$settings.maxWordLength, label: Text("Max word length")) {
+            ForEach(Self.wordLengths, id: \.self) {
+              Text($0 == Int.max ? "Any" : "\($0) letters").tag($0)
+            }
+          }.pickerStyle(SegmentedPickerStyle())
+        }
+      }
+      .navigationBarTitle(Text("Settings"), displayMode: .inline)
+      .navigationBarItems(trailing: self.dismissButton)
     }
   }
 }

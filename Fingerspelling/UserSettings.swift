@@ -34,4 +34,12 @@ final class UserSettings: ObservableObject {
       self.objectWillChange.send()
     }
   }
+
+  @UserDefault("maxWordLength", defaultValue: -1)
+  var maxWordLength: Int {
+    willSet {
+      self.objectWillChange.send()
+      Words = AllWords.filter { $0.count <= newValue }
+    }
+  }
 }
