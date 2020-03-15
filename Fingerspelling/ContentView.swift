@@ -469,7 +469,7 @@ struct FeedbackDisplay: View {
 struct SpellingDisplay: View {
   @EnvironmentObject var playback: PlaybackService
 
-  static let scaledSize: CGFloat = 150
+  static let scaledSize: CGFloat = 165
   static let width: CGFloat = 100
 
   var body: some View {
