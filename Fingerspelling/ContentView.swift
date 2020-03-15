@@ -135,7 +135,7 @@ struct GameStatusBar: View {
   @EnvironmentObject var playback: PlaybackService
   @EnvironmentObject var settings: UserSettings
 
-  static let iconSize: CGFloat = 14
+  static let fontSize: CGFloat = 14
 
   struct Indicator: View {
     var iconName: String
@@ -144,36 +144,35 @@ struct GameStatusBar: View {
     var body: some View {
       HStack {
         Image(systemName: self.iconName).foregroundColor(.primary)
-        Text(self.textContent).font(.system(size: GameStatusBar.iconSize)).bold()
+        Text(self.textContent).font(.system(size: GameStatusBar.fontSize)).bold()
       }
       .foregroundColor(Color.primary)
     }
   }
 
-  private var settingsButton: some View {
-    Button(action: {
-      self.playback.stop()
-      self.isShowingSettings.toggle()
-    }) {
-      Image(systemName: "gear").padding(.leading)
-    }
-  }
-
   var body: some View {
     HStack {
+      Button(action: self.handleShowSettings) {
+        Text("Fingerspelling - \(self.settings.gameMode)").font(.system(size: Self.fontSize))
+      }
+      Spacer()
+
       if self.settings.gameMode == GameMode.receptive.rawValue {
         Indicator(iconName: "checkmark", textContent: String(self.receptiveScore)).padding(.trailing, 10)
         Indicator(iconName: "metronome", textContent: String(Int(self.speed)))
       } else {
         Indicator(iconName: "hand.raised", textContent: String(self.expressiveScore))
       }
-      Spacer()
-      self.settingsButton
     }
     .sheet(isPresented: self.$isShowingSettings) {
       GameSettings(isPresented: self.$isShowingSettings)
         .modifier(SystemServices())
     }
+  }
+
+  func handleShowSettings() {
+    self.playback.stop()
+    self.isShowingSettings.toggle()
   }
 }
 
@@ -290,7 +289,7 @@ struct ExpressiveControl: View {
     VStack {
       if self.hasRevealed {
         Button(action: self.onContinue) {
-          Text("Next word").modifier(FullWidthButtonContent(background: Color.green)).padding(.bottom)
+          Text("Next word").modifier(FullWidthButtonContent()).padding(.bottom)
         }
       }
       if self.isRevealed {
@@ -299,7 +298,7 @@ struct ExpressiveControl: View {
         }
       } else {
         Button(action: self.onReveal) {
-          Text("Reveal").modifier(FullWidthButtonContent())
+          Text("Reveal").modifier(FullWidthGhostButtonContent())
         }
       }
     }
