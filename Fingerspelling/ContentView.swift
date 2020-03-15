@@ -400,6 +400,13 @@ struct MainDisplay: View {
   var body: some View {
     VStack {
       if !self.playback.isPlaying {
+        if !self.playback.hasPlayed {
+          HStack {
+            Text("Press ")
+            Image(systemName: "play").foregroundColor(Color.blue)
+            Text(" to begin.")
+          }.frame(width: 200)
+        }
         if self.feedback.isShown || self.feedback.hasCorrectAnswer {
           FeedbackDisplay(isCorrect: self.feedback.hasCorrectAnswer)
         }
@@ -508,6 +515,7 @@ final class PlaybackService: ObservableObject {
   @Published var isPlaying = false
   @Published var playTimer: LoadingTimer?
   @Published var isPendingNextWord: Bool = false
+  @Published var hasPlayed = false
 
   private var settings = SystemServices.settings
   private static let numerator = 2.0 // Higher value = slower speeds
@@ -541,12 +549,14 @@ final class PlaybackService: ObservableObject {
   func reset() {
     self.stop()
     self.setNextWord()
+    self.hasPlayed = false
   }
 
   func play() {
     self.letterIndex = 0
     self.isPlaying = true
     self.isPendingNextWord = false
+    self.hasPlayed = true
   }
 
   func stop() {
@@ -790,7 +800,7 @@ struct ContentView_Previews: PreviewProvider {
     let feedback = SystemServices.feedback
 
     // Modify these during development to update the preview
-    playback.isPlaying = true
+    playback.isPlaying = false
     playback.currentWord = "foo"
     feedback.isShown = false
 
