@@ -42,7 +42,7 @@ struct ContentView: View {
       ).modifier(SystemServices())
       Divider().padding(.bottom, 10)
 
-      if self.settings.gameMode == GameMode.receptive.rawValue {
+      if self.settings.gameMode == GameMode.receptive.rawValue && !self.isShowingSettings {
         if self.feedback.hasCorrectAnswer || self.feedback.isRevealed {
           self.currentWordDisplay
         }
