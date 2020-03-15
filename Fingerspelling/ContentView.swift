@@ -466,7 +466,7 @@ final class FeedbackService: ObservableObject {
 
 /// Simple wrapper around UserDefaults to make settings observables
 final class UserSettings: ObservableObject {
-  let objectWillChange = PassthroughSubject<Void, Never>()
+  let willChange = PassthroughSubject<Void, Never>()
 
   init() {
     Words = AllWords.filter { $0.count <= self.maxWordLength }
@@ -477,14 +477,14 @@ final class UserSettings: ObservableObject {
   @UserDefault("speed", defaultValue: 3.0)
   var speed: Double {
     willSet {
-      self.objectWillChange.send()
+      self.willChange.send()
     }
   }
 
   @UserDefault("maxWordLength", defaultValue: -1)
   var maxWordLength: Int {
     willSet {
-      self.objectWillChange.send()
+      self.willChange.send()
       Words = AllWords.filter { $0.count <= newValue }
       let playback = SystemServices.playback
       playback.currentWord = getRandomWord()
