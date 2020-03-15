@@ -39,7 +39,8 @@ struct ContentView: View {
           onStop: self.handleStop,
           onSubmit: self.handleSubmit,
           onReveal: self.handleReveal,
-          showInput: !self.isShowingSettings
+          showInput: !self.isShowingSettings,
+          isCorrect: self.answerIsCorrect
         )
       } else if self.settings.gameMode == GameMode.expressive.rawValue {
         ExpressiveGameDisplay(
@@ -96,15 +97,16 @@ struct ContentView: View {
     if self.feedback.hasCorrectAnswer {
       return
     }
-    self.handleStop()
     self.feedback.show()
     if self.answerIsCorrect {
+      self.handleStop()
       self.feedback.markCorrect()
       self.receptiveScore += 1
       delayFor(Self.postSubmitDelay) {
         self.handleNextWord()
       }
     } else {
+      self.feedback.markIncorrect()
       delayFor(0.5) {
         self.feedback.hide()
       }
@@ -182,6 +184,7 @@ struct ReceptiveGameDisplay: View {
   var onSubmit: () -> Void
   var onReveal: () -> Void
   var showInput: Bool
+  var isCorrect: Bool
 
   @EnvironmentObject private var playback: PlaybackService
   @EnvironmentObject private var feedback: FeedbackService
@@ -198,7 +201,7 @@ struct ReceptiveGameDisplay: View {
 
       HStack {
         if self.showInput {
-          AnswerInput(value: self.$feedback.answer, onSubmit: self.onSubmit).modifier(SystemServices())
+          AnswerInput(value: self.$feedback.answer, onSubmit: self.onSubmit, isCorrect: self.isCorrect).modifier(SystemServices())
         }
         if !self.feedback.shouldDisableControls {
           Spacer()
@@ -209,7 +212,7 @@ struct ReceptiveGameDisplay: View {
       }
       Spacer()
 
-      MainDisplay().frame(width: 100, height: 150)
+      MainDisplay(onPlay: self.onPlay).frame(width: 100, height: 150)
 
       Spacer()
       SpeedControl(
@@ -233,7 +236,7 @@ struct PlaybackControl: View {
 
   var body: some View {
     Group {
-      if !self.playback.isActive {
+      if !self.playback.isActive && !self.feedback.hasCorrectAnswer {
         Button(action: self.onPlay) {
           Image(systemName: "play.fill")
             .font(.system(size: 18))
@@ -244,7 +247,7 @@ struct PlaybackControl: View {
           Image(systemName: "stop.fill")
             .font(.system(size: 18))
             .modifier(FullWidthGhostButtonContent())
-        }
+        }.disabled(self.feedback.shouldDisableControls)
       }
     }
   }
@@ -360,6 +363,7 @@ struct CurrentWordDisplay: View {
 struct AnswerInput: View {
   @Binding var value: String
   var onSubmit: () -> Void
+  var isCorrect: Bool = true
 
   @EnvironmentObject var feedback: FeedbackService
 
@@ -375,6 +379,7 @@ struct AnswerInput: View {
         },
         modifyTextField: { textField in
           textField.borderStyle = .roundedRect
+
           textField.autocapitalizationType = .allCharacters
           textField.autocorrectionType = .no
           textField.returnKeyType = .done
@@ -382,6 +387,17 @@ struct AnswerInput: View {
           textField.font = .monospacedSystemFont(ofSize: 18.0, weight: .regular)
           textField.clearButtonMode = .whileEditing
           return textField
+        },
+        onUpdate: { textField in
+          if self.feedback.isShown, !self.isCorrect {
+            textField.layer.cornerRadius = 4.0
+            textField.layer.borderColor = UIColor.red.cgColor
+            textField.layer.borderWidth = 2.0
+          } else {
+            textField.layer.cornerRadius = 8.0
+            textField.layer.borderColor = nil
+            textField.layer.borderWidth = 0
+          }
         }
       )
       // Hide input after success.
@@ -394,12 +410,23 @@ struct AnswerInput: View {
 }
 
 struct MainDisplay: View {
+  var onPlay: () -> Void
+
   @EnvironmentObject var playback: PlaybackService
   @EnvironmentObject var feedback: FeedbackService
 
   var body: some View {
     VStack {
       if !self.playback.isPlaying {
+        if !self.playback.hasPlayed && !self.feedback.hasSubmitted {
+          Button(action: self.onPlay) {
+            HStack {
+              Text("Press ").foregroundColor(Color.primary)
+              Image(systemName: "play").foregroundColor(Color.accentColor)
+              Text(" to begin.").foregroundColor(Color.primary)
+            }.frame(width: 200, height: 150)
+          }
+        }
         if self.feedback.isShown || self.feedback.hasCorrectAnswer {
           FeedbackDisplay(isCorrect: self.feedback.hasCorrectAnswer)
         }
@@ -449,10 +476,6 @@ struct FeedbackDisplay: View {
         Image(systemName: "checkmark.circle")
           .modifier(MainDisplayIcon())
           .foregroundColor(Color.green)
-      } else {
-        Image(systemName: "xmark.circle")
-          .modifier(MainDisplayIcon())
-          .foregroundColor(Color.red)
       }
     }
   }
@@ -508,6 +531,7 @@ final class PlaybackService: ObservableObject {
   @Published var isPlaying = false
   @Published var playTimer: LoadingTimer?
   @Published var isPendingNextWord: Bool = false
+  @Published var hasPlayed = false
 
   private var settings = SystemServices.settings
   private static let numerator = 2.0 // Higher value = slower speeds
@@ -541,12 +565,14 @@ final class PlaybackService: ObservableObject {
   func reset() {
     self.stop()
     self.setNextWord()
+    self.hasPlayed = false
   }
 
   func play() {
     self.letterIndex = 0
     self.isPlaying = true
     self.isPendingNextWord = false
+    self.hasPlayed = true
   }
 
   func stop() {
@@ -593,6 +619,7 @@ final class FeedbackService: ObservableObject {
   @Published var isShown: Bool = false
   @Published var hasCorrectAnswer: Bool = false
   @Published var hasRevealed: Bool = false
+  @Published var hasSubmitted: Bool = false
   @Published var isRevealed: Bool = false
 
   var shouldDisableControls: Bool {
@@ -628,6 +655,12 @@ final class FeedbackService: ObservableObject {
 
   func markCorrect() {
     self.hasCorrectAnswer = true
+    self.hasSubmitted = true
+  }
+
+  func markIncorrect() {
+    self.hasCorrectAnswer = false
+    self.hasSubmitted = true
   }
 }
 
@@ -670,6 +703,7 @@ final class UserSettings: ObservableObject {
     willSet {
       self.playback.reset()
       self.feedback.reset()
+      self.feedback.hasSubmitted = false
 
       self.objectWillChange.send()
     }
@@ -681,6 +715,7 @@ final class UserSettings: ObservableObject {
       Words = AllWords.filter { $0.count <= newValue }
       self.playback.setNextWord()
 
+      self.feedback.reset()
       self.objectWillChange.send()
     }
   }
@@ -719,7 +754,7 @@ struct MainDisplayIcon: ViewModifier {
 }
 
 struct FullWidthButtonContent: ViewModifier {
-  var background: Color = Color.blue
+  var background: Color = Color.accentColor
   var foregroundColor: Color = Color.white
   var disabled: Bool = false
 
@@ -735,7 +770,7 @@ struct FullWidthButtonContent: ViewModifier {
 }
 
 struct FullWidthGhostButtonContent: ViewModifier {
-  var color: Color = Color.blue
+  var color: Color = Color.accentColor
 
   func body(content: Content) -> some View {
     content
@@ -790,7 +825,7 @@ struct ContentView_Previews: PreviewProvider {
     let feedback = SystemServices.feedback
 
     // Modify these during development to update the preview
-    playback.isPlaying = true
+    playback.isPlaying = false
     playback.currentWord = "foo"
     feedback.isShown = false
 

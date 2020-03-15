@@ -28,6 +28,7 @@ struct FocusableTextField: UIViewRepresentable {
   var placeholder: String = ""
   var textFieldShouldReturn: (_ textField: UITextField) -> Bool = { _ in true }
   var modifyTextField: (_ textField: UITextField) -> UITextField = { (_ textField) in textField }
+  var onUpdate: (_ textField: UITextField) -> Void = { _ in }
 
   func makeUIView(context: UIViewRepresentableContext<FocusableTextField>) -> UITextField {
     let textField = UITextField(frame: .zero)
@@ -46,5 +47,6 @@ struct FocusableTextField: UIViewRepresentable {
       uiView.becomeFirstResponder()
       context.coordinator.didBecomeFirstResponder = true
     }
+    self.onUpdate(uiView)
   }
 }
