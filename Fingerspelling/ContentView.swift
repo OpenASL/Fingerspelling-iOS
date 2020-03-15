@@ -5,8 +5,9 @@ import SwiftUI
 
 struct ContentView: View {
   @State private var answer: String = ""
-  @State private var delayTimer: Timer? = nil
   @State private var score = 0
+  /// Timer used to delay playing the next word
+  @State private var delayTimer: Timer? = nil
 
   @EnvironmentObject private var playback: PlaybackService
   @EnvironmentObject private var feedback: FeedbackService
@@ -300,6 +301,8 @@ struct PlaybackControl: View {
 
 // MARK: State/service objects
 
+// https://medium.com/better-programming/swiftui-microservices-c7002228710
+
 final class PlaybackService: ObservableObject {
   @Published var currentWord = getRandomWord()
   @Published var letterIndex = 0
@@ -500,6 +503,8 @@ func delayFor(_ seconds: Double, onComplete: @escaping () -> Void) -> Timer {
     onComplete()
   }
 }
+
+// MARK: Preview
 
 struct ContentView_Previews: PreviewProvider {
   static var previews: some View {
