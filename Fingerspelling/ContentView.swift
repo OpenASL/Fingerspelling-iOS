@@ -236,7 +236,11 @@ struct ExpressiveGameDisplay: View {
         Text("Fingerspell the word above.")
       }
       Spacer()
-      ExpressiveControl(onReveal: self.onRevealSpelling, onContinue: self.onContinue).padding(.bottom)
+      ExpressiveControl(
+        isRevealed: self.feedback.isRevealed,
+        onReveal: self.onRevealSpelling,
+        onContinue: self.onContinue
+      ).padding(.bottom)
     }
   }
 }
@@ -343,13 +347,13 @@ struct MainDisplay: View {
       } else {
         // Need to pass SystemServices due to a bug in SwiftUI
         //   re: environment not getting passed to children
-        LetterDisplay().modifier(SystemServices())
+        WordPlayer().modifier(SystemServices())
       }
     }
   }
 }
 
-struct LetterDisplay: View {
+struct WordPlayer: View {
   @EnvironmentObject var playback: PlaybackService
 
   var body: some View {
@@ -462,14 +466,13 @@ struct PlaybackControl: View {
 }
 
 struct ExpressiveControl: View {
+  var isRevealed: Bool
   var onReveal: () -> Void
   var onContinue: () -> Void
 
-  @EnvironmentObject var feedback: FeedbackService
-
   var body: some View {
     Group {
-      if self.feedback.isRevealed {
+      if self.isRevealed {
         Button(action: self.onContinue) {
           Text("Next word").modifier(FullWidthGhostButtonContent())
         }
