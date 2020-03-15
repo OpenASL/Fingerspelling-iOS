@@ -456,6 +456,32 @@ final class FeedbackService: ObservableObject {
   }
 }
 
+// MARK: User settings
+
+/// Simple wrapper around UserDefaults to make settings observables
+final class UserSettings: ObservableObject {
+  let objectWillChange = PassthroughSubject<Void, Never>()
+
+  // Settings go here
+
+  @UserDefault("speed", defaultValue: 3.0)
+  var speed: Double {
+    willSet {
+      self.objectWillChange.send()
+    }
+  }
+
+  @UserDefault("maxWordLength", defaultValue: -1)
+  var maxWordLength: Int {
+    willSet {
+      self.objectWillChange.send()
+      Words = AllWords.filter { $0.count <= newValue }
+      let playback = SystemServices.playback
+      playback.currentWord = getRandomWord()
+    }
+  }
+}
+
 // MARK: ViewModifiers
 
 // https://medium.com/swlh/swiftui-and-the-missing-environment-object-1a4bf8913ba7
