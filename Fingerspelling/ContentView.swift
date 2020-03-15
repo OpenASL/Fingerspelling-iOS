@@ -165,28 +165,17 @@ struct GameStatusBar: View {
 
   static let iconSize: CGFloat = 14
 
-  private var receptiveScoreDisplay: some View {
-    HStack {
-      Image(systemName: "checkmark").foregroundColor(.primary)
-      Text(String(self.receptiveScore)).font(.system(size: Self.iconSize)).bold()
-    }
-    .foregroundColor(Color.primary)
-  }
+  struct Indicator: View {
+    var iconName: String
+    var textContent: String
 
-  private var expressiveScoreDisplay: some View {
-    HStack {
-      Image(systemName: "hand.raised").foregroundColor(.primary)
-      Text(String(self.expressiveScore)).font(.system(size: Self.iconSize)).bold()
-    }
-    .foregroundColor(Color.primary)
-  }
-
-  private var speedDisplay: some View {
-    HStack {
-      Image(systemName: "metronome").foregroundColor(.primary)
-      Text(String(Int(self.speed))).font(.system(size: Self.iconSize))
-    }.padding(.horizontal, 10)
+    var body: some View {
+      HStack {
+        Image(systemName: self.iconName).foregroundColor(.primary)
+        Text(self.textContent).font(.system(size: GameStatusBar.iconSize)).bold()
+      }
       .foregroundColor(Color.primary)
+    }
   }
 
   private var settingsButton: some View {
@@ -201,10 +190,10 @@ struct GameStatusBar: View {
   var body: some View {
     HStack {
       if self.settings.gameMode == GameMode.receptive.rawValue {
-        self.receptiveScoreDisplay
-        self.speedDisplay
+        Indicator(iconName: "checkmark", textContent: String(self.receptiveScore)).padding(.trailing, 10)
+        Indicator(iconName: "metronome", textContent: String(Int(self.speed)))
       } else {
-        self.expressiveScoreDisplay
+        Indicator(iconName: "hand.raised", textContent: String(self.expressiveScore))
       }
       Spacer()
       self.settingsButton
