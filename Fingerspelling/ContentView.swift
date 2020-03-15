@@ -209,7 +209,7 @@ struct ReceptiveGameDisplay: View {
       }
       Spacer()
 
-      MainDisplay().frame(width: 100, height: 150)
+      MainDisplay(onPlay: self.onPlay).frame(width: 100, height: 150)
 
       Spacer()
       SpeedControl(
@@ -394,6 +394,8 @@ struct AnswerInput: View {
 }
 
 struct MainDisplay: View {
+  var onPlay: () -> Void
+
   @EnvironmentObject var playback: PlaybackService
   @EnvironmentObject var feedback: FeedbackService
 
@@ -401,11 +403,13 @@ struct MainDisplay: View {
     VStack {
       if !self.playback.isPlaying {
         if !self.playback.hasPlayed {
-          HStack {
-            Text("Press ")
-            Image(systemName: "play").foregroundColor(Color.blue)
-            Text(" to begin.")
-          }.frame(width: 200)
+          Button(action: self.onPlay) {
+            HStack {
+              Text("Press ").foregroundColor(Color.primary)
+              Image(systemName: "play").foregroundColor(Color.accentColor)
+              Text(" to begin.").foregroundColor(Color.primary)
+            }.frame(width: 200, height: 150)
+          }
         }
         if self.feedback.isShown || self.feedback.hasCorrectAnswer {
           FeedbackDisplay(isCorrect: self.feedback.hasCorrectAnswer)
@@ -729,7 +733,7 @@ struct MainDisplayIcon: ViewModifier {
 }
 
 struct FullWidthButtonContent: ViewModifier {
-  var background: Color = Color.blue
+  var background: Color = Color.accentColor
   var foregroundColor: Color = Color.white
   var disabled: Bool = false
 
@@ -745,7 +749,7 @@ struct FullWidthButtonContent: ViewModifier {
 }
 
 struct FullWidthGhostButtonContent: ViewModifier {
-  var color: Color = Color.blue
+  var color: Color = Color.accentColor
 
   func body(content: Content) -> some View {
     content
