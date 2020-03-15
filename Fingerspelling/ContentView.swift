@@ -565,7 +565,7 @@ enum GameMode: String, CaseIterable {
 
 /// Simple wrapper around UserDefaults to make settings observables
 final class UserSettings: ObservableObject {
-  let willChange = PassthroughSubject<Void, Never>()
+  let objectWillChange = PassthroughSubject<Void, Never>()
 
   private var playback: PlaybackService {
     SystemServices.playback
@@ -584,26 +584,27 @@ final class UserSettings: ObservableObject {
   @UserDefault("speed", defaultValue: 3.0)
   var speed: Double {
     willSet {
-      self.willChange.send()
+      self.objectWillChange.send()
     }
   }
 
   @UserDefault("gameMode", defaultValue: GameMode.receptive.rawValue)
   var gameMode: String {
     willSet {
-      self.willChange.send()
-
       self.playback.reset()
       self.feedback.reset()
+
+      self.objectWillChange.send()
     }
   }
 
   @UserDefault("maxWordLength", defaultValue: -1)
   var maxWordLength: Int {
     willSet {
-      self.willChange.send()
       Words = AllWords.filter { $0.count <= newValue }
       self.playback.setNextWord()
+
+      self.objectWillChange.send()
     }
   }
 }
