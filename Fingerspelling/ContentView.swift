@@ -233,12 +233,12 @@ struct PlaybackControl: View {
 
   var body: some View {
     Group {
-      if !self.playback.isActive && !self.feedback.hasCorrectAnswer {
+      if !self.playback.isActive && !self.feedback.shouldDisableControls {
         Button(action: self.onPlay) {
           Image(systemName: "play.fill")
             .font(.system(size: 18))
-            .modifier(FullWidthButtonContent(disabled: self.feedback.shouldDisableControls))
-        }.disabled(self.feedback.shouldDisableControls)
+            .modifier(FullWidthButtonContent())
+        }
       } else {
         Button(action: self.onStop) {
           Image(systemName: "stop.fill")
