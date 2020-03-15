@@ -4,7 +4,6 @@ import SwiftUI
 // MARK: Views
 
 struct ContentView: View {
-  @State private var answer: String = ""
   @State private var score = 0
   /// Timer used to delay playing the next word
   @State private var delayTimer: Timer? = nil
@@ -21,19 +20,15 @@ struct ContentView: View {
   private static let postSubmitDelay = 2.0 // seconds
   private static let nextWordDelay = 1.0 // seconds
 
-  private var answerIsCorrect: Bool {
-    self.answerTrimmed.lowercased() == self.playback.currentWord.lowercased()
-  }
-
-  private var answerTrimmed: String {
-    self.answer.trimmingCharacters(in: .whitespaces)
-  }
-
   private var currentWordDisplay: some View {
     Text(self.playback.currentWord.uppercased())
       .font(.system(.title, design: .monospaced))
       .minimumScaleFactor(0.8)
       .scaledToFill()
+  }
+
+  private var answerIsCorrect: Bool {
+    self.feedback.answerTrimmed.lowercased() == self.playback.currentWord.lowercased()
   }
 
   var body: some View {
@@ -51,7 +46,7 @@ struct ContentView: View {
         }
 
         HStack {
-          AnswerInput(value: self.$answer, onSubmit: self.handleSubmit).modifier(SystemServices())
+          AnswerInput(value: self.$feedback.answer, onSubmit: self.handleSubmit).modifier(SystemServices())
           if !self.feedback.shouldDisableControls {
             Spacer()
             Button(action: self.handleReveal) {
@@ -103,7 +98,6 @@ struct ContentView: View {
   }
 
   private func handleNextWord() {
-    self.answer = ""
     self.playback.setNextWordPending()
     self.feedback.reset()
 
@@ -523,12 +517,17 @@ final class PlaybackService: ObservableObject {
 }
 
 final class FeedbackService: ObservableObject {
+  @Published var answer: String = ""
   @Published var isShown: Bool = false
   @Published var hasCorrectAnswer: Bool = false
   @Published var isRevealed: Bool = false
 
   var shouldDisableControls: Bool {
     self.hasCorrectAnswer || self.isRevealed
+  }
+
+  var answerTrimmed: String {
+    self.answer.trimmingCharacters(in: .whitespaces)
   }
 
   func show() {
@@ -550,6 +549,7 @@ final class FeedbackService: ObservableObject {
   }
 
   func reset() {
+    self.answer = ""
     self.hasCorrectAnswer = false
     self.isShown = false
     self.isRevealed = false
