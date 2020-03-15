@@ -398,7 +398,8 @@ struct FeedbackDisplay: View {
 struct SpellingDisplay: View {
   @EnvironmentObject var playback: PlaybackService
 
-  static let imageSize: CGFloat = 150
+  static let scaledSize: CGFloat = 150
+  static let width: CGFloat = 100
 
   var body: some View {
     ScrollView(.horizontal) {
@@ -406,7 +407,10 @@ struct SpellingDisplay: View {
         ForEach(self.playback.imageNames, id: \.self) { (_ imageName) in
           Image(imageName)
             .resizable()
-            .frame(width: Self.imageSize, height: Self.imageSize)
+            .frame(width: Self.scaledSize, height: Self.scaledSize)
+            // Crop horizontal space around images
+            .clipped()
+            .frame(width: Self.width)
         }
       }
     }
