@@ -158,6 +158,7 @@ struct GameStatusBar: View {
   @Binding var isShowingSettings: Bool
 
   @EnvironmentObject var playback: PlaybackService
+  @EnvironmentObject var settings: UserSettings
 
   static let iconSize: CGFloat = 14
 
@@ -189,7 +190,9 @@ struct GameStatusBar: View {
   var body: some View {
     HStack {
       self.scoreDisplay
-      self.speedDisplay
+      if self.settings.gameMode == GameMode.receptive.rawValue {
+        self.speedDisplay
+      }
       Spacer()
       self.settingsButton
     }
@@ -588,6 +591,8 @@ final class UserSettings: ObservableObject {
     }
   }
 
+  // Note: we use the raw values of the enum so that it can be properly
+  //   serialized to UserDefaults
   @UserDefault("gameMode", defaultValue: GameMode.receptive.rawValue)
   var gameMode: String {
     willSet {
