@@ -236,7 +236,7 @@ struct PlaybackControl: View {
 
   var body: some View {
     Group {
-      if !self.playback.isActive {
+      if !self.playback.isActive && !self.feedback.hasCorrectAnswer {
         Button(action: self.onPlay) {
           Image(systemName: "play.fill")
             .font(.system(size: 18))
@@ -247,7 +247,7 @@ struct PlaybackControl: View {
           Image(systemName: "stop.fill")
             .font(.system(size: 18))
             .modifier(FullWidthGhostButtonContent())
-        }
+        }.disabled(self.feedback.shouldDisableControls)
       }
     }
   }
@@ -636,7 +636,6 @@ final class FeedbackService: ObservableObject {
     self.isShown = false
     self.hasRevealed = false
     self.isRevealed = false
-    self.hasSubmitted = false
   }
 
   func show() {
@@ -704,6 +703,7 @@ final class UserSettings: ObservableObject {
     willSet {
       self.playback.reset()
       self.feedback.reset()
+      self.feedback.hasSubmitted = false
 
       self.objectWillChange.send()
     }
