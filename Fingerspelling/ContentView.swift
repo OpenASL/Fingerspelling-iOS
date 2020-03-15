@@ -336,19 +336,15 @@ struct GameSettings: View {
   var body: some View {
     NavigationView {
       Form {
-        // MARK: Max word length
+        LabeledPicker(selection: self.$settings.gameMode, label: "Mode") {
+          ForEach(GameMode.allCases, id: \.self) {
+            Text($0.rawValue).tag($0.rawValue)
+          }
+        }
 
         LabeledPicker(selection: self.$settings.maxWordLength, label: "Max word length") {
           ForEach(Self.wordLengths, id: \.self) {
             Text($0 == Int.max ? "Any" : "\($0) letters").tag($0)
-          }
-        }
-
-        // MARK: Game Mode
-
-        LabeledPicker(selection: self.$settings.gameMode, label: "Mode") {
-          ForEach(GameMode.allCases, id: \.self) {
-            Text($0.rawValue).tag($0.rawValue)
           }
         }
       }
