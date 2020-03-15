@@ -51,7 +51,7 @@ struct ContentView: View {
           Spacer()
           Button(action: self.handleReveal) {
             Text("Reveal").font(.system(size: 14))
-          }
+          }.disabled(self.playback.isPlaying)
         }
       }
       Spacer()
