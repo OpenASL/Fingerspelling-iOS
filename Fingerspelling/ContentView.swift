@@ -35,7 +35,7 @@ struct ContentView: View {
         score: self.score,
         speed: self.settings.speed,
         isShowingSettings: self.$isShowingSettings
-      )
+      ).modifier(SystemServices())
       Divider().padding(.bottom, 10)
 
       if self.feedback.hasCorrectAnswer || self.feedback.isRevealed {
@@ -134,6 +134,8 @@ struct GameStatusBar: View {
   var speed: Double
   @Binding var isShowingSettings: Bool
 
+  @EnvironmentObject var playback: PlaybackService
+
   static let iconSize: CGFloat = 14
 
   var scoreDisplay: some View {
@@ -153,7 +155,10 @@ struct GameStatusBar: View {
   }
 
   var settingsButton: some View {
-    Button(action: { self.isShowingSettings.toggle() }) {
+    Button(action: {
+      self.playback.stop()
+      self.isShowingSettings.toggle()
+    }) {
       Image(systemName: "gear")
     }
   }
