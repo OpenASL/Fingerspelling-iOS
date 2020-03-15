@@ -39,7 +39,8 @@ struct ContentView: View {
           onStop: self.handleStop,
           onSubmit: self.handleSubmit,
           onReveal: self.handleReveal,
-          showInput: !self.isShowingSettings
+          showInput: !self.isShowingSettings,
+          isCorrect: self.answerIsCorrect
         )
       } else if self.settings.gameMode == GameMode.expressive.rawValue {
         ExpressiveGameDisplay(
@@ -96,15 +97,16 @@ struct ContentView: View {
     if self.feedback.hasCorrectAnswer {
       return
     }
-    self.handleStop()
     self.feedback.show()
     if self.answerIsCorrect {
+      self.handleStop()
       self.feedback.markCorrect()
       self.receptiveScore += 1
       delayFor(Self.postSubmitDelay) {
         self.handleNextWord()
       }
     } else {
+      self.feedback.markIncorrect()
       delayFor(0.5) {
         self.feedback.hide()
       }
@@ -182,6 +184,7 @@ struct ReceptiveGameDisplay: View {
   var onSubmit: () -> Void
   var onReveal: () -> Void
   var showInput: Bool
+  var isCorrect: Bool
 
   @EnvironmentObject private var playback: PlaybackService
   @EnvironmentObject private var feedback: FeedbackService
@@ -198,7 +201,7 @@ struct ReceptiveGameDisplay: View {
 
       HStack {
         if self.showInput {
-          AnswerInput(value: self.$feedback.answer, onSubmit: self.onSubmit).modifier(SystemServices())
+          AnswerInput(value: self.$feedback.answer, onSubmit: self.onSubmit, isCorrect: self.isCorrect).modifier(SystemServices())
         }
         if !self.feedback.shouldDisableControls {
           Spacer()
@@ -360,6 +363,7 @@ struct CurrentWordDisplay: View {
 struct AnswerInput: View {
   @Binding var value: String
   var onSubmit: () -> Void
+  var isCorrect: Bool = true
 
   @EnvironmentObject var feedback: FeedbackService
 
@@ -375,6 +379,7 @@ struct AnswerInput: View {
         },
         modifyTextField: { textField in
           textField.borderStyle = .roundedRect
+
           textField.autocapitalizationType = .allCharacters
           textField.autocorrectionType = .no
           textField.returnKeyType = .done
@@ -382,6 +387,17 @@ struct AnswerInput: View {
           textField.font = .monospacedSystemFont(ofSize: 18.0, weight: .regular)
           textField.clearButtonMode = .whileEditing
           return textField
+        },
+        onUpdate: { textField in
+          if self.feedback.isShown, !self.isCorrect {
+            textField.layer.cornerRadius = 4.0
+            textField.layer.borderColor = UIColor.red.cgColor
+            textField.layer.borderWidth = 2.0
+          } else {
+            textField.layer.cornerRadius = 8.0
+            textField.layer.borderColor = nil
+            textField.layer.borderWidth = 0
+          }
         }
       )
       // Hide input after success.
@@ -402,7 +418,7 @@ struct MainDisplay: View {
   var body: some View {
     VStack {
       if !self.playback.isPlaying {
-        if !self.playback.hasPlayed {
+        if !self.playback.hasPlayed && !self.feedback.hasSubmitted {
           Button(action: self.onPlay) {
             HStack {
               Text("Press ").foregroundColor(Color.primary)
@@ -460,10 +476,6 @@ struct FeedbackDisplay: View {
         Image(systemName: "checkmark.circle")
           .modifier(MainDisplayIcon())
           .foregroundColor(Color.green)
-      } else {
-        Image(systemName: "xmark.circle")
-          .modifier(MainDisplayIcon())
-          .foregroundColor(Color.red)
       }
     }
   }
@@ -607,6 +619,7 @@ final class FeedbackService: ObservableObject {
   @Published var isShown: Bool = false
   @Published var hasCorrectAnswer: Bool = false
   @Published var hasRevealed: Bool = false
+  @Published var hasSubmitted: Bool = false
   @Published var isRevealed: Bool = false
 
   var shouldDisableControls: Bool {
@@ -623,6 +636,7 @@ final class FeedbackService: ObservableObject {
     self.isShown = false
     self.hasRevealed = false
     self.isRevealed = false
+    self.hasSubmitted = false
   }
 
   func show() {
@@ -642,6 +656,12 @@ final class FeedbackService: ObservableObject {
 
   func markCorrect() {
     self.hasCorrectAnswer = true
+    self.hasSubmitted = true
+  }
+
+  func markIncorrect() {
+    self.hasCorrectAnswer = false
+    self.hasSubmitted = true
   }
 }
 
