@@ -695,6 +695,7 @@ final class UserSettings: ObservableObject {
       Words = AllWords.filter { $0.count <= newValue }
       self.playback.setNextWord()
 
+      self.feedback.reset()
       self.objectWillChange.send()
     }
   }
