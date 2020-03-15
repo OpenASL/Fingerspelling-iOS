@@ -39,7 +39,6 @@ struct ContentView: View {
           onStop: self.handleStop,
           onSubmit: self.handleSubmit,
           onReveal: self.handleReveal,
-          showInput: !self.isShowingSettings,
           isCorrect: self.answerIsCorrect
         )
       } else if self.settings.gameMode == GameMode.expressive.rawValue {
@@ -146,7 +145,7 @@ struct GameStatusBar: View {
     var body: some View {
       HStack {
         Image(systemName: self.iconName).foregroundColor(.primary)
-        Text(self.textContent).font(.system(size: GameStatusBar.fontSize)).bold()
+        Text(self.textContent).font(.system(size: GameStatusBar.fontSize, design: .monospaced))
       }
       .foregroundColor(Color.primary)
     }
@@ -155,8 +154,9 @@ struct GameStatusBar: View {
   var body: some View {
     HStack {
       Button(action: self.handleShowSettings) {
-        Text("Fingerspelling - \(self.settings.gameMode)").font(.system(size: Self.fontSize))
-      }
+        Text("Fingerspelling - \(self.settings.gameMode)")
+          .font(.system(size: Self.fontSize)).bold()
+      }.foregroundColor(Color.primary)
       Spacer()
 
       if self.settings.gameMode == GameMode.receptive.rawValue {
@@ -183,7 +183,6 @@ struct ReceptiveGameDisplay: View {
   var onStop: () -> Void
   var onSubmit: () -> Void
   var onReveal: () -> Void
-  var showInput: Bool
   var isCorrect: Bool
 
   @EnvironmentObject private var playback: PlaybackService
@@ -200,9 +199,7 @@ struct ReceptiveGameDisplay: View {
       }
 
       HStack {
-        if self.showInput {
-          AnswerInput(value: self.$feedback.answer, onSubmit: self.onSubmit, isCorrect: self.isCorrect).modifier(SystemServices())
-        }
+        AnswerInput(value: self.$feedback.answer, onSubmit: self.onSubmit, isCorrect: self.isCorrect).modifier(SystemServices())
         if !self.feedback.shouldDisableControls {
           Spacer()
           Button(action: self.onReveal) {
@@ -364,48 +361,46 @@ struct AnswerInput: View {
   @Binding var value: String
   var onSubmit: () -> Void
   var isCorrect: Bool = true
+  var disabled: Bool = false
 
   @EnvironmentObject var feedback: FeedbackService
 
   var body: some View {
-    HStack {
-      FocusableTextField(
-        text: self.$value,
-        isFirstResponder: true,
-        placeholder: "WORD",
-        textFieldShouldReturn: { _ in
-          self.onSubmit()
-          return true
-        },
-        modifyTextField: { textField in
-          textField.borderStyle = .roundedRect
-
-          textField.autocapitalizationType = .allCharacters
-          textField.autocorrectionType = .no
-          textField.returnKeyType = .done
-          textField.keyboardType = .asciiCapable
-          textField.font = .monospacedSystemFont(ofSize: 18.0, weight: .regular)
-          textField.clearButtonMode = .whileEditing
-          return textField
-        },
-        onUpdate: { textField in
-          if self.feedback.isShown, !self.isCorrect {
-            textField.layer.cornerRadius = 4.0
-            textField.layer.borderColor = UIColor.red.cgColor
-            textField.layer.borderWidth = 2.0
-          } else {
-            textField.layer.cornerRadius = 8.0
-            textField.layer.borderColor = nil
-            textField.layer.borderWidth = 0
-          }
+    FocusableTextField(
+      text: self.$value,
+      isFirstResponder: true,
+      placeholder: "WORD",
+      textFieldShouldReturn: { _ in
+        self.onSubmit()
+        return true
+      },
+      modifyTextField: { textField in
+        textField.borderStyle = .roundedRect
+        textField.autocapitalizationType = .allCharacters
+        textField.autocorrectionType = .no
+        textField.returnKeyType = .done
+        textField.keyboardType = .asciiCapable
+        textField.font = .monospacedSystemFont(ofSize: 18.0, weight: .regular)
+        textField.clearButtonMode = .whileEditing
+        return textField
+      },
+      onUpdate: { textField in
+        if self.feedback.isShown, !self.isCorrect {
+          textField.layer.cornerRadius = 4.0
+          textField.layer.borderColor = UIColor.red.cgColor
+          textField.layer.borderWidth = 2.0
+        } else {
+          textField.layer.cornerRadius = 8.0
+          textField.layer.borderColor = nil
+          textField.layer.borderWidth = 0
         }
-      )
-      // Hide input after success.
-      // Note: we use opacity to hide because the text field needs to be present for the keyboard
-      //   to remain on the screen and we set the frame to 0 to make room for the correct word display.
-      .frame(width: self.feedback.shouldDisableControls ? 0 : 280, height: self.feedback.hasCorrectAnswer ? 0 : 30)
-      .opacity(self.feedback.shouldDisableControls ? 0 : 1)
-    }
+      }
+    )
+    // Hide input after success.
+    // Note: we use opacity to hide because the text field needs to be present for the keyboard
+    //   to remain on the screen and we set the frame to 0 to make room for the correct word display.
+    .frame(width: self.feedback.shouldDisableControls ? 0 : 280, height: self.feedback.hasCorrectAnswer ? 0 : 30)
+    .opacity(self.feedback.shouldDisableControls ? 0 : 1)
   }
 }
 
