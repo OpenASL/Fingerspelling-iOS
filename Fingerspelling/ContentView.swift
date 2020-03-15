@@ -4,7 +4,8 @@ import SwiftUI
 // MARK: Views
 
 struct ContentView: View {
-  @State private var score = 0
+  @State private var receptiveScore = 0
+  @State private var expressiveScore = 0
   /// Timer used to delay playing the next word
   @State private var delayTimer: Timer? = nil
   @State private var isShowingSettings: Bool = false
@@ -34,7 +35,8 @@ struct ContentView: View {
   var body: some View {
     VStack {
       GameStatusBar(
-        score: self.score,
+        receptiveScore: self.receptiveScore,
+        expressiveScore: self.expressiveScore,
         speed: self.settings.speed,
         isShowingSettings: self.$isShowingSettings
       ).modifier(SystemServices())
@@ -130,7 +132,7 @@ struct ContentView: View {
     self.feedback.show()
     if self.answerIsCorrect {
       self.feedback.markCorrect()
-      self.score += 1
+      self.receptiveScore += 1
       delayFor(Self.postSubmitDelay) {
         self.handleNextWord()
       }
@@ -148,12 +150,13 @@ struct ContentView: View {
   private func handleNextSpellingWord() {
     self.playback.setNextWord()
     self.feedback.reset()
-    self.score += 1
+    self.expressiveScore += 1
   }
 }
 
 struct GameStatusBar: View {
-  var score: Int
+  var receptiveScore: Int
+  var expressiveScore: Int
   var speed: Double
   @Binding var isShowingSettings: Bool
 
@@ -162,10 +165,18 @@ struct GameStatusBar: View {
 
   static let iconSize: CGFloat = 14
 
-  private var scoreDisplay: some View {
+  private var receptiveScoreDisplay: some View {
     HStack {
       Image(systemName: "checkmark").foregroundColor(.primary)
-      Text(String(self.score)).font(.system(size: Self.iconSize)).bold()
+      Text(String(self.receptiveScore)).font(.system(size: Self.iconSize)).bold()
+    }
+    .foregroundColor(Color.primary)
+  }
+
+  private var expressiveScoreDisplay: some View {
+    HStack {
+      Image(systemName: "hand.raised").foregroundColor(.primary)
+      Text(String(self.expressiveScore)).font(.system(size: Self.iconSize)).bold()
     }
     .foregroundColor(Color.primary)
   }
@@ -189,9 +200,11 @@ struct GameStatusBar: View {
 
   var body: some View {
     HStack {
-      self.scoreDisplay
       if self.settings.gameMode == GameMode.receptive.rawValue {
+        self.receptiveScoreDisplay
         self.speedDisplay
+      } else {
+        self.expressiveScoreDisplay
       }
       Spacer()
       self.settingsButton
