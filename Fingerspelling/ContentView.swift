@@ -439,7 +439,7 @@ struct PlaybackControl: View {
   @EnvironmentObject var feedback: FeedbackService
 
   var body: some View {
-    HStack {
+    Group {
       if !self.playback.isActive {
         Button(action: self.onPlay) {
           Image(systemName: "play.fill")
