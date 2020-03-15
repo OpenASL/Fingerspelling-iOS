@@ -598,7 +598,7 @@ final class UserSettings: ObservableObject {
     }
   }
 
-  @UserDefault("maxWordLength", defaultValue: -1)
+  @UserDefault("maxWordLength", defaultValue: Int.max)
   var maxWordLength: Int {
     willSet {
       Words = AllWords.filter { $0.count <= newValue }
