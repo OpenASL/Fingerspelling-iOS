@@ -289,7 +289,7 @@ struct ExpressiveControl: View {
     VStack {
       if self.hasRevealed {
         Button(action: self.onContinue) {
-          Text("Next word").modifier(FullWidthButtonContent(background: Color.green)).padding(.bottom)
+          Text("Next word").modifier(FullWidthButtonContent()).padding(.bottom)
         }
       }
       if self.isRevealed {
@@ -298,7 +298,7 @@ struct ExpressiveControl: View {
         }
       } else {
         Button(action: self.onReveal) {
-          Text("Reveal").modifier(FullWidthButtonContent())
+          Text("Reveal").modifier(FullWidthGhostButtonContent())
         }
       }
     }
