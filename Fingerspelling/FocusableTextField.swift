@@ -8,12 +8,14 @@ struct FocusableTextField: UIViewRepresentable {
     var _textFieldShouldReturn: (_ textField: UITextField) -> Bool
 
     init(text: Binding<String>, textFieldShouldReturn: @escaping (_ textField: UITextField) -> Bool) {
-      _text = text
+      self._text = text
       self._textFieldShouldReturn = textFieldShouldReturn
     }
 
     func textFieldDidChangeSelection(_ textField: UITextField) {
-      self.text = textField.text ?? ""
+      DispatchQueue.main.async {
+        self.text = textField.text ?? ""
+      }
     }
 
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
