@@ -301,7 +301,7 @@ struct PlaybackControl: View {
 // MARK: State/service objects
 
 final class PlaybackService: ObservableObject {
-  @Published var currentWord = ""
+  @Published var currentWord = getRandomWord()
   @Published var letterIndex = 0
   @Published var isPlaying = false
   @Published var playTimer: LoadingTimer?
@@ -312,7 +312,6 @@ final class PlaybackService: ObservableObject {
   private static let numerator = 2.0 // Higher value = slower speeds
 
   init() {
-    self.currentWord = getNextWord()
     self.playTimer = self.getTimer()
   }
 
@@ -356,7 +355,7 @@ final class PlaybackService: ObservableObject {
   }
 
   func setNextWord() {
-    self.currentWord = getNextWord()
+    self.currentWord = getRandomWord()
     self.isPendingNextWord = true
   }
 
@@ -471,6 +470,12 @@ struct FullWidthGhostButtonContent: ViewModifier {
 
 // MARK: Utilities
 
+private func getRandomWord() -> String {
+  let word = Words.randomElement()!
+  print("current word: " + word)
+  return word
+}
+
 class LoadingTimer {
   var publisher: Timer.TimerPublisher
   private var timerCancellable: Cancellable?
@@ -487,12 +492,6 @@ class LoadingTimer {
   func cancel() {
     self.timerCancellable?.cancel()
   }
-}
-
-private func getNextWord() -> String {
-  let word = Words.randomElement()!
-  print("current word: " + word)
-  return word
 }
 
 @discardableResult
