@@ -43,7 +43,8 @@ struct ContentView: View {
         )
       } else if self.settings.gameMode == GameMode.expressive.rawValue {
         ExpressiveGameDisplay(
-          onRevealSpelling: self.handleRevealSpelling,
+          onReveal: self.handleRevealSpelling,
+          onHide: self.handleHideSpelling,
           onContinue: self.handleNextSpellingWord
         )
       }
@@ -112,6 +113,10 @@ struct ContentView: View {
 
   private func handleRevealSpelling() {
     self.feedback.reveal()
+  }
+
+  private func handleHideSpelling() {
+    self.feedback.hide()
   }
 
   private func handleNextSpellingWord() {
@@ -220,8 +225,35 @@ struct ReceptiveGameDisplay: View {
   }
 }
 
+struct PlaybackControl: View {
+  var onPlay: () -> Void
+  var onStop: () -> Void
+
+  @EnvironmentObject var playback: PlaybackService
+  @EnvironmentObject var feedback: FeedbackService
+
+  var body: some View {
+    Group {
+      if !self.playback.isActive {
+        Button(action: self.onPlay) {
+          Image(systemName: "play.fill")
+            .font(.system(size: 18))
+            .modifier(FullWidthButtonContent(disabled: self.feedback.shouldDisableControls))
+        }.disabled(self.feedback.shouldDisableControls)
+      } else {
+        Button(action: self.onStop) {
+          Image(systemName: "stop.fill")
+            .font(.system(size: 18))
+            .modifier(FullWidthGhostButtonContent())
+        }
+      }
+    }
+  }
+}
+
 struct ExpressiveGameDisplay: View {
-  var onRevealSpelling: () -> Void
+  var onReveal: () -> Void
+  var onHide: () -> Void
   var onContinue: () -> Void
 
   @EnvironmentObject private var feedback: FeedbackService
@@ -232,15 +264,44 @@ struct ExpressiveGameDisplay: View {
       Spacer()
       if self.feedback.isRevealed {
         SpellingDisplay()
-      } else {
+      } else if !self.feedback.hasRevealed {
         Text("Fingerspell the word above.")
       }
       Spacer()
       ExpressiveControl(
         isRevealed: self.feedback.isRevealed,
-        onReveal: self.onRevealSpelling,
+        hasRevealed: self.feedback.hasRevealed,
+        onReveal: self.onReveal,
+        onHide: self.onHide,
         onContinue: self.onContinue
       ).padding(.bottom)
+    }
+  }
+}
+
+struct ExpressiveControl: View {
+  var isRevealed: Bool
+  var hasRevealed: Bool
+  var onReveal: () -> Void
+  var onHide: () -> Void
+  var onContinue: () -> Void
+
+  var body: some View {
+    VStack {
+      if self.hasRevealed {
+        Button(action: self.onContinue) {
+          Text("Next word").modifier(FullWidthButtonContent(background: Color.green)).padding(.bottom)
+        }
+      }
+      if self.isRevealed {
+        Button(action: self.onHide) {
+          Text("Hide").modifier(FullWidthGhostButtonContent())
+        }
+      } else {
+        Button(action: self.onReveal) {
+          Text("Reveal").modifier(FullWidthButtonContent())
+        }
+      }
     }
   }
 }
@@ -439,52 +500,6 @@ struct SpeedControl: View {
   }
 }
 
-struct PlaybackControl: View {
-  var onPlay: () -> Void
-  var onStop: () -> Void
-
-  @EnvironmentObject var playback: PlaybackService
-  @EnvironmentObject var feedback: FeedbackService
-
-  var body: some View {
-    Group {
-      if !self.playback.isActive {
-        Button(action: self.onPlay) {
-          Image(systemName: "play.fill")
-            .font(.system(size: 18))
-            .modifier(FullWidthButtonContent(disabled: self.feedback.shouldDisableControls))
-        }.disabled(self.feedback.shouldDisableControls)
-      } else {
-        Button(action: self.onStop) {
-          Image(systemName: "stop.fill")
-            .font(.system(size: 18))
-            .modifier(FullWidthGhostButtonContent())
-        }
-      }
-    }
-  }
-}
-
-struct ExpressiveControl: View {
-  var isRevealed: Bool
-  var onReveal: () -> Void
-  var onContinue: () -> Void
-
-  var body: some View {
-    Group {
-      if self.isRevealed {
-        Button(action: self.onContinue) {
-          Text("Next word").modifier(FullWidthGhostButtonContent())
-        }
-      } else {
-        Button(action: self.onReveal) {
-          Text("Reveal").modifier(FullWidthButtonContent(disabled: false))
-        }
-      }
-    }
-  }
-}
-
 // MARK: State/service objects
 
 // https://medium.com/better-programming/swiftui-microservices-c7002228710
@@ -579,6 +594,7 @@ final class FeedbackService: ObservableObject {
   @Published var answer: String = ""
   @Published var isShown: Bool = false
   @Published var hasCorrectAnswer: Bool = false
+  @Published var hasRevealed: Bool = false
   @Published var isRevealed: Bool = false
 
   var shouldDisableControls: Bool {
@@ -587,6 +603,14 @@ final class FeedbackService: ObservableObject {
 
   var answerTrimmed: String {
     self.answer.trimmingCharacters(in: .whitespaces)
+  }
+
+  func reset() {
+    self.answer = ""
+    self.hasCorrectAnswer = false
+    self.isShown = false
+    self.hasRevealed = false
+    self.isRevealed = false
   }
 
   func show() {
@@ -599,19 +623,13 @@ final class FeedbackService: ObservableObject {
   }
 
   func reveal() {
+    self.hasRevealed = true
     self.isRevealed = true
     self.isShown = false
   }
 
   func markCorrect() {
     self.hasCorrectAnswer = true
-  }
-
-  func reset() {
-    self.answer = ""
-    self.hasCorrectAnswer = false
-    self.isShown = false
-    self.isRevealed = false
   }
 }
 
