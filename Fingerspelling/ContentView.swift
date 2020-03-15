@@ -312,12 +312,6 @@ struct GameSettings: View {
 
   static let wordLengths = Array(3 ... 6) + [Int.max]
 
-  private var dismissButton: some View {
-    Button(action: { self.isPresented = false }) {
-      Text("Done")
-    }
-  }
-
   struct LabeledPicker<SelectionValue: Hashable, Content: View>: View {
     var selection: Binding<SelectionValue>
     var label: String
@@ -347,8 +341,7 @@ struct GameSettings: View {
           }
         }
       }
-      .navigationBarTitle(Text("Settings"), displayMode: .inline)
-      .navigationBarItems(trailing: self.dismissButton)
+      .navigationBarTitle(Text("Fingerspelling"), displayMode: .inline)
     }
   }
 }
