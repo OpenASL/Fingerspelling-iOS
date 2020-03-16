@@ -4,17 +4,35 @@ import SwiftUI
 // MARK: Views
 
 struct ContentView: View {
-  @State private var receptiveScore = 0
-  @State private var expressiveScore = 0
+  @ObservedObject private var keyboard = KeyboardResponder()
+
+  @EnvironmentObject private var settings: UserSettings
+
+  var body: some View {
+    Group {
+      if self.settings.gameMode == GameMode.receptive.rawValue {
+        ReceptiveGame().modifier(SystemServices())
+      } else if self.settings.gameMode == GameMode.expressive.rawValue {
+        ExpressiveGame().modifier(SystemServices())
+      }
+    }
+    // Move the current UI up when the keyboard is active
+    .padding(.bottom, self.keyboard.currentHeight)
+    .padding(.top, 10)
+    .padding(.horizontal, 20)
+  }
+}
+
+// MARK: Receptive game views
+
+struct ReceptiveGame: View {
   /// Timer used to delay playing the next word
   @State private var delayTimer: Timer? = nil
-  @State private var isShowingSettings: Bool = false
 
+  @EnvironmentObject private var game: GameState
   @EnvironmentObject private var playback: PlaybackService
   @EnvironmentObject private var feedback: FeedbackService
   @EnvironmentObject private var settings: UserSettings
-
-  @ObservedObject private var keyboard = KeyboardResponder()
 
   private static let postSubmitDelay = 2.0 // seconds
   private static let nextWordDelay = 1.0 // seconds
@@ -25,35 +43,21 @@ struct ContentView: View {
 
   var body: some View {
     VStack {
-      GameStatusBar(
-        receptiveScore: self.receptiveScore,
-        expressiveScore: self.expressiveScore,
-        speed: self.settings.speed,
-        isShowingSettings: self.$isShowingSettings
-      ).modifier(SystemServices())
+      GameStatusBar {
+        HStack {
+          Indicator(iconName: "checkmark", textContent: String(self.game.receptiveScore))
+          Indicator(iconName: "metronome", textContent: String(Int(self.settings.speed)))
+        }
+      }.modifier(SystemServices())
       Divider().padding(.bottom, 10)
-
-      if self.settings.gameMode == GameMode.receptive.rawValue {
-        ReceptiveGameDisplay(
-          onPlay: self.handlePlay,
-          onStop: self.handleStop,
-          onSubmit: self.handleSubmit,
-          onReveal: self.handleReveal,
-          isCorrect: self.answerIsCorrect
-        )
-      } else if self.settings.gameMode == GameMode.expressive.rawValue {
-        ExpressiveGameDisplay(
-          onReveal: self.handleRevealSpelling,
-          onHide: self.handleHideSpelling,
-          onContinue: self.handleNextSpellingWord
-        )
-      }
+      ReceptiveGameDisplay(
+        onPlay: self.handlePlay,
+        onStop: self.handleStop,
+        onSubmit: self.handleSubmit,
+        onReveal: self.handleReveal,
+        isCorrect: self.answerIsCorrect
+      )
     }
-
-    // Move the current UI up when the keyboard is active
-    .padding(.bottom, keyboard.currentHeight)
-    .padding(.top, 10)
-    .padding(.horizontal, 20)
   }
 
   private func playWord() {
@@ -100,7 +104,7 @@ struct ContentView: View {
     if self.answerIsCorrect {
       self.handleStop()
       self.feedback.markCorrect()
-      self.receptiveScore += 1
+      self.game.receptiveScore += 1
       delayFor(Self.postSubmitDelay) {
         self.handleNextWord()
       }
@@ -110,71 +114,6 @@ struct ContentView: View {
         self.feedback.hide()
       }
     }
-  }
-
-  private func handleRevealSpelling() {
-    self.feedback.reveal()
-  }
-
-  private func handleHideSpelling() {
-    self.feedback.hide()
-  }
-
-  private func handleNextSpellingWord() {
-    self.playback.setNextWord()
-    self.feedback.reset()
-    self.expressiveScore += 1
-  }
-}
-
-struct GameStatusBar: View {
-  var receptiveScore: Int
-  var expressiveScore: Int
-  var speed: Double
-  @Binding var isShowingSettings: Bool
-
-  @EnvironmentObject var playback: PlaybackService
-  @EnvironmentObject var settings: UserSettings
-
-  static let fontSize: CGFloat = 14
-
-  struct Indicator: View {
-    var iconName: String
-    var textContent: String
-
-    var body: some View {
-      HStack {
-        Image(systemName: self.iconName).foregroundColor(.primary)
-        Text(self.textContent).font(.system(size: GameStatusBar.fontSize, design: .monospaced))
-      }
-      .foregroundColor(Color.primary)
-    }
-  }
-
-  var body: some View {
-    HStack {
-      Button(action: self.handleShowSettings) {
-        Text("Fingerspelling - \(self.settings.gameMode)")
-          .font(.system(size: Self.fontSize)).bold()
-      }.foregroundColor(Color.primary)
-      Spacer()
-
-      if self.settings.gameMode == GameMode.receptive.rawValue {
-        Indicator(iconName: "checkmark", textContent: String(self.receptiveScore)).padding(.trailing, 10)
-        Indicator(iconName: "metronome", textContent: String(Int(self.speed)))
-      } else {
-        Indicator(iconName: "hand.raised", textContent: String(self.expressiveScore))
-      }
-    }
-    .sheet(isPresented: self.$isShowingSettings) {
-      GameSettings(isPresented: self.$isShowingSettings)
-        .modifier(SystemServices())
-    }
-  }
-
-  func handleShowSettings() {
-    self.playback.stop()
-    self.isShowingSettings.toggle()
   }
 }
 
@@ -247,160 +186,6 @@ struct PlaybackControl: View {
         }.disabled(self.feedback.shouldDisableControls)
       }
     }
-  }
-}
-
-struct ExpressiveGameDisplay: View {
-  var onReveal: () -> Void
-  var onHide: () -> Void
-  var onContinue: () -> Void
-
-  @EnvironmentObject private var feedback: FeedbackService
-
-  var body: some View {
-    Group {
-      CurrentWordDisplay()
-      Spacer()
-      if self.feedback.isRevealed {
-        SpellingDisplay()
-      } else if !self.feedback.hasRevealed {
-        Text("Fingerspell the word above.")
-      }
-      Spacer()
-      ExpressiveControl(
-        isRevealed: self.feedback.isRevealed,
-        hasRevealed: self.feedback.hasRevealed,
-        onReveal: self.onReveal,
-        onHide: self.onHide,
-        onContinue: self.onContinue
-      ).padding(.bottom)
-    }
-  }
-}
-
-struct ExpressiveControl: View {
-  var isRevealed: Bool
-  var hasRevealed: Bool
-  var onReveal: () -> Void
-  var onHide: () -> Void
-  var onContinue: () -> Void
-
-  var body: some View {
-    VStack {
-      if self.hasRevealed {
-        Button(action: self.onContinue) {
-          Text("Next word").modifier(FullWidthButtonContent()).padding(.bottom)
-        }
-      }
-      if self.isRevealed {
-        Button(action: self.onHide) {
-          Text("Hide").modifier(FullWidthGhostButtonContent())
-        }
-      } else {
-        Button(action: self.onReveal) {
-          Text("Reveal").modifier(FullWidthGhostButtonContent())
-        }
-      }
-    }
-  }
-}
-
-struct GameSettings: View {
-  @Binding var isPresented: Bool
-
-  @EnvironmentObject private var settings: UserSettings
-
-  static let wordLengths = Array(3 ... 6) + [Int.max]
-
-  struct LabeledPicker<SelectionValue: Hashable, Content: View>: View {
-    var selection: Binding<SelectionValue>
-    var label: String
-    var content: () -> Content
-
-    var body: some View {
-      Section(header: Text(self.label.uppercased())) {
-        Picker(selection: self.selection, label: Text(self.label)) {
-          self.content()
-        }.pickerStyle(SegmentedPickerStyle())
-      }
-    }
-  }
-
-  var body: some View {
-    NavigationView {
-      Form {
-        LabeledPicker(selection: self.$settings.gameMode, label: "Mode") {
-          ForEach(GameMode.allCases, id: \.self) {
-            Text($0.rawValue).tag($0.rawValue)
-          }
-        }
-
-        LabeledPicker(selection: self.$settings.maxWordLength, label: "Max word length") {
-          ForEach(Self.wordLengths, id: \.self) {
-            Text($0 == Int.max ? "Any" : "\($0) letters").tag($0)
-          }
-        }
-      }
-      .navigationBarTitle(Text("Fingerspelling"), displayMode: .inline)
-    }
-  }
-}
-
-struct CurrentWordDisplay: View {
-  @EnvironmentObject var playback: PlaybackService
-
-  var body: some View {
-    Text(self.playback.currentWord.uppercased())
-      .font(.system(.title, design: .monospaced))
-      .minimumScaleFactor(0.8)
-      .scaledToFill()
-  }
-}
-
-struct AnswerInput: View {
-  @Binding var value: String
-  var onSubmit: () -> Void
-  var isCorrect: Bool = true
-  var disabled: Bool = false
-
-  @EnvironmentObject var feedback: FeedbackService
-
-  var body: some View {
-    FocusableTextField(
-      text: self.$value,
-      isFirstResponder: true,
-      placeholder: "WORD",
-      textFieldShouldReturn: { _ in
-        self.onSubmit()
-        return true
-      },
-      modifyTextField: { textField in
-        textField.borderStyle = .roundedRect
-        textField.autocapitalizationType = .allCharacters
-        textField.autocorrectionType = .no
-        textField.returnKeyType = .done
-        textField.keyboardType = .asciiCapable
-        textField.font = .monospacedSystemFont(ofSize: 18.0, weight: .regular)
-        textField.clearButtonMode = .whileEditing
-        return textField
-      },
-      onUpdate: { textField in
-        if self.feedback.isShown, !self.isCorrect {
-          textField.layer.cornerRadius = 4.0
-          textField.layer.borderColor = UIColor.red.cgColor
-          textField.layer.borderWidth = 2.0
-        } else {
-          textField.layer.cornerRadius = 8.0
-          textField.layer.borderColor = nil
-          textField.layer.borderWidth = 0
-        }
-      }
-    )
-    // Hide input after success.
-    // Note: we use opacity to hide because the text field needs to be present for the keyboard
-    //   to remain on the screen and we set the frame to 0 to make room for the correct word display.
-    .frame(width: self.feedback.shouldDisableControls ? 0 : 280, height: self.feedback.hasCorrectAnswer ? 0 : 30)
-    .opacity(self.feedback.shouldDisableControls ? 0 : 1)
   }
 }
 
@@ -508,6 +293,265 @@ struct CheckmarkAnimation: View {
   }
 }
 
+struct SpeedControl: View {
+  @Binding var value: Double
+
+  var minSpeed: Double
+  var maxSpeed: Double
+  var disabled: Bool
+
+  var body: some View {
+    HStack {
+      Image(systemName: "tortoise").foregroundColor(.gray)
+      Slider(value: self.$value, in: self.minSpeed ... self.maxSpeed, step: 1)
+        .disabled(self.disabled)
+      Image(systemName: "hare").foregroundColor(.gray)
+    }
+  }
+}
+
+struct AnswerInput: View {
+  @Binding var value: String
+  var onSubmit: () -> Void
+  var isCorrect: Bool = true
+  var disabled: Bool = false
+
+  @EnvironmentObject var feedback: FeedbackService
+
+  var body: some View {
+    FocusableTextField(
+      text: self.$value,
+      isFirstResponder: true,
+      placeholder: "WORD",
+      textFieldShouldReturn: { _ in
+        self.onSubmit()
+        return true
+      },
+      modifyTextField: { textField in
+        textField.borderStyle = .roundedRect
+        textField.autocapitalizationType = .allCharacters
+        textField.autocorrectionType = .no
+        textField.returnKeyType = .done
+        textField.keyboardType = .asciiCapable
+        textField.font = .monospacedSystemFont(ofSize: 18.0, weight: .regular)
+        textField.clearButtonMode = .whileEditing
+        return textField
+      },
+      onUpdate: { textField in
+        if self.feedback.isShown, !self.isCorrect {
+          textField.layer.cornerRadius = 4.0
+          textField.layer.borderColor = UIColor.red.cgColor
+          textField.layer.borderWidth = 2.0
+        } else {
+          textField.layer.cornerRadius = 8.0
+          textField.layer.borderColor = nil
+          textField.layer.borderWidth = 0
+        }
+      }
+    )
+    // Hide input after success.
+    // Note: we use opacity to hide because the text field needs to be present for the keyboard
+    //   to remain on the screen and we set the frame to 0 to make room for the correct word display.
+    .frame(width: self.feedback.shouldDisableControls ? 0 : 280, height: self.feedback.hasCorrectAnswer ? 0 : 30)
+    .opacity(self.feedback.shouldDisableControls ? 0 : 1)
+  }
+}
+
+// MARK: Expressive game views
+
+struct ExpressiveGame: View {
+  @EnvironmentObject private var game: GameState
+  @EnvironmentObject private var playback: PlaybackService
+  @EnvironmentObject private var feedback: FeedbackService
+
+  var body: some View {
+    VStack {
+      GameStatusBar {
+        HStack {
+          Indicator(iconName: "hand.raised", textContent: String(self.game.expressiveScore))
+        }
+      }.modifier(SystemServices())
+      Divider().padding(.bottom, 10)
+      ExpressiveGameDisplay(
+        onReveal: self.handleRevealSpelling,
+        onHide: self.handleHideSpelling,
+        onContinue: self.handleNextSpellingWord
+      )
+    }
+  }
+
+  private func playWord() {
+    self.playback.play()
+    self.feedback.hide()
+  }
+
+  // MARK: Handlers
+
+  private func handleRevealSpelling() {
+    self.feedback.reveal()
+  }
+
+  private func handleHideSpelling() {
+    self.feedback.hide()
+  }
+
+  private func handleNextSpellingWord() {
+    self.playback.setNextWord()
+    self.feedback.reset()
+    self.game.expressiveScore += 1
+  }
+}
+
+struct ExpressiveGameDisplay: View {
+  var onReveal: () -> Void
+  var onHide: () -> Void
+  var onContinue: () -> Void
+
+  @EnvironmentObject private var feedback: FeedbackService
+
+  var body: some View {
+    Group {
+      CurrentWordDisplay()
+      Spacer()
+      if self.feedback.isRevealed {
+        SpellingDisplay()
+      } else if !self.feedback.hasRevealed {
+        Text("Fingerspell the word above.")
+      }
+      Spacer()
+      ExpressiveControl(
+        isRevealed: self.feedback.isRevealed,
+        hasRevealed: self.feedback.hasRevealed,
+        onReveal: self.onReveal,
+        onHide: self.onHide,
+        onContinue: self.onContinue
+      ).padding(.bottom)
+    }
+  }
+}
+
+struct ExpressiveControl: View {
+  var isRevealed: Bool
+  var hasRevealed: Bool
+  var onReveal: () -> Void
+  var onHide: () -> Void
+  var onContinue: () -> Void
+
+  var body: some View {
+    VStack {
+      if self.hasRevealed {
+        Button(action: self.onContinue) {
+          Text("Next word").modifier(FullWidthButtonContent()).padding(.bottom)
+        }
+      }
+      if self.isRevealed {
+        Button(action: self.onHide) {
+          Text("Hide").modifier(FullWidthGhostButtonContent())
+        }
+      } else {
+        Button(action: self.onReveal) {
+          Text("Reveal").modifier(FullWidthGhostButtonContent())
+        }
+      }
+    }
+  }
+}
+
+// MARK: Common views
+
+struct Indicator: View {
+  var iconName: String
+  var textContent: String
+  var fontSize: CGFloat = 14
+
+  var body: some View {
+    HStack {
+      Image(systemName: self.iconName).foregroundColor(.primary)
+      Text(self.textContent).font(.system(size: self.fontSize, design: .monospaced))
+    }
+    .foregroundColor(Color.primary)
+  }
+}
+
+struct GameStatusBar<Content: View>: View {
+  var fontSize: CGFloat = 14
+  var content: () -> Content
+
+  @EnvironmentObject private var game: GameState
+  @EnvironmentObject private var playback: PlaybackService
+  @EnvironmentObject private var settings: UserSettings
+
+  var body: some View {
+    HStack {
+      Button(action: self.handleShowSettings) {
+        Text("Fingerspelling - \(self.settings.gameMode)")
+          .font(.system(size: self.fontSize)).bold()
+      }.foregroundColor(Color.primary)
+      Spacer()
+      self.content()
+    }
+    .sheet(isPresented: self.$game.isShowingSettings) {
+      GameSettings()
+        .modifier(SystemServices())
+    }
+  }
+
+  private func handleShowSettings() {
+    self.playback.stop()
+    self.game.isShowingSettings.toggle()
+  }
+}
+
+struct GameSettings: View {
+  @EnvironmentObject private var settings: UserSettings
+
+  static let wordLengths = Array(3 ... 6) + [Int.max]
+
+  struct LabeledPicker<SelectionValue: Hashable, Content: View>: View {
+    var selection: Binding<SelectionValue>
+    var label: String
+    var content: () -> Content
+
+    var body: some View {
+      Section(header: Text(self.label.uppercased())) {
+        Picker(selection: self.selection, label: Text(self.label)) {
+          self.content()
+        }.pickerStyle(SegmentedPickerStyle())
+      }
+    }
+  }
+
+  var body: some View {
+    NavigationView {
+      Form {
+        LabeledPicker(selection: self.$settings.gameMode, label: "Mode") {
+          ForEach(GameMode.allCases, id: \.self) {
+            Text($0.rawValue).tag($0.rawValue)
+          }
+        }
+
+        LabeledPicker(selection: self.$settings.maxWordLength, label: "Max word length") {
+          ForEach(Self.wordLengths, id: \.self) {
+            Text($0 == Int.max ? "Any" : "\($0) letters").tag($0)
+          }
+        }
+      }
+      .navigationBarTitle(Text("Fingerspelling"), displayMode: .inline)
+    }
+  }
+}
+
+struct CurrentWordDisplay: View {
+  @EnvironmentObject var playback: PlaybackService
+
+  var body: some View {
+    Text(self.playback.currentWord.uppercased())
+      .font(.system(.title, design: .monospaced))
+      .minimumScaleFactor(0.8)
+      .scaledToFill()
+  }
+}
+
 struct SpellingDisplay: View {
   @EnvironmentObject var playback: PlaybackService
 
@@ -531,26 +575,15 @@ struct SpellingDisplay: View {
   }
 }
 
-struct SpeedControl: View {
-  @Binding var value: Double
-
-  var minSpeed: Double
-  var maxSpeed: Double
-  var disabled: Bool
-
-  var body: some View {
-    HStack {
-      Image(systemName: "tortoise").foregroundColor(.gray)
-      Slider(value: self.$value, in: self.minSpeed ... self.maxSpeed, step: 1)
-        .disabled(self.disabled)
-      Image(systemName: "hare").foregroundColor(.gray)
-    }
-  }
-}
-
 // MARK: State/service objects
 
 // https://medium.com/better-programming/swiftui-microservices-c7002228710
+
+final class GameState: ObservableObject {
+  @Published var receptiveScore = 0
+  @Published var expressiveScore = 0
+  @Published var isShowingSettings = false
+}
 
 final class PlaybackService: ObservableObject {
   @Published var currentWord = ""
@@ -752,12 +785,14 @@ final class UserSettings: ObservableObject {
 
 // https://medium.com/swlh/swiftui-and-the-missing-environment-object-1a4bf8913ba7
 struct SystemServices: ViewModifier {
+  static var game = GameState()
   static var playback = PlaybackService()
   static var feedback = FeedbackService()
   static var settings = UserSettings()
 
   func body(content: Content) -> some View {
     content
+      .environmentObject(Self.game)
       .environmentObject(Self.settings)
       .environmentObject(Self.playback)
       .environmentObject(Self.feedback)
