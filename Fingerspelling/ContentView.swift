@@ -7,19 +7,37 @@ struct ContentView: View {
   @ObservedObject private var keyboard = KeyboardResponder()
 
   @EnvironmentObject private var settings: UserSettings
+  @EnvironmentObject private var game: GameState
+
+  struct GameDisplay: ViewModifier {
+    func body(content: Content) -> some View {
+      content
+        .padding()
+        .font(.system(size: 24))
+    }
+  }
 
   var body: some View {
-    Group {
-      if self.settings.gameMode == GameMode.receptive.rawValue {
-        ReceptiveGame().modifier(SystemServices())
-      } else if self.settings.gameMode == GameMode.expressive.rawValue {
-        ExpressiveGame().modifier(SystemServices())
+    ZStack {
+      if self.game.isShowingSettings {
+        GameSettings().modifier(SystemServices())
+      } else {
+        Group {
+          if self.game.mode == GameMode.receptive {
+            ReceptiveGame().modifier(SystemServices())
+          } else if self.game.mode == GameMode.expressive {
+            ExpressiveGame().modifier(SystemServices())
+          }
+        }
+        .padding(.top, 10)
+        .padding(.horizontal, 20)
+        // Move the current UI up when the keyboard is active
+        .padding(.bottom, self.keyboard.currentHeight)
       }
+      SideMenu(width: 250,
+               isOpen: self.game.isMenuOpen,
+               onClose: { self.game.isMenuOpen.toggle() })
     }
-    // Move the current UI up when the keyboard is active
-    .padding(.bottom, self.keyboard.currentHeight)
-    .padding(.top, 10)
-    .padding(.horizontal, 20)
   }
 }
 
@@ -47,7 +65,7 @@ struct ReceptiveGame: View {
     VStack {
       GameStatusBar {
         HStack {
-          Indicator(iconName: "checkmark", textContent: String(self.game.receptiveScore))
+          Indicator(iconName: "checkmark", textContent: String(self.game.receptiveScore)).padding(.trailing, 10)
           Indicator(iconName: "metronome", textContent: String(Int(self.settings.speed)))
         }
       }.modifier(SystemServices())
@@ -58,7 +76,9 @@ struct ReceptiveGame: View {
       }
 
       HStack {
-        AnswerInput(value: self.$feedback.answer, onSubmit: self.handleSubmit, isCorrect: self.answerIsCorrect).modifier(SystemServices())
+        if !self.game.isMenuOpen {
+          AnswerInput(value: self.$feedback.answer, onSubmit: self.handleSubmit, isCorrect: self.answerIsCorrect).modifier(SystemServices())
+        }
         if !self.feedback.shouldDisableControls {
           Spacer()
           Button(action: self.handleReveal) {
@@ -441,26 +461,26 @@ struct GameStatusBar<Content: View>: View {
 
   var body: some View {
     HStack {
-      Button(action: self.handleShowSettings) {
-        Text("Fingerspelling - \(self.settings.gameMode)")
+      Button(action: self.handleOpenMenu) {
+        Image(systemName: "line.horizontal.3")
+        Text(self.game.mode.rawValue)
           .font(.system(size: self.fontSize)).bold()
-      }.foregroundColor(Color.primary)
+      }
       Spacer()
+
       self.content()
     }
-    .sheet(isPresented: self.$game.isShowingSettings) {
-      GameSettings()
-        .modifier(SystemServices())
-    }
+    .foregroundColor(.primary)
   }
 
-  private func handleShowSettings() {
+  func handleOpenMenu() {
+    self.game.isMenuOpen.toggle()
     self.playback.stop()
-    self.game.isShowingSettings.toggle()
   }
 }
 
 struct GameSettings: View {
+  @EnvironmentObject private var game: GameState
   @EnvironmentObject private var settings: UserSettings
 
   static let wordLengths = Array(3 ... 6) + [Int.max]
@@ -482,19 +502,23 @@ struct GameSettings: View {
   var body: some View {
     NavigationView {
       Form {
-        LabeledPicker(selection: self.$settings.gameMode, label: "Mode") {
-          ForEach(GameMode.allCases, id: \.self) {
-            Text($0.rawValue).tag($0.rawValue)
-          }
-        }
-
         LabeledPicker(selection: self.$settings.maxWordLength, label: "Max word length") {
           ForEach(Self.wordLengths, id: \.self) {
             Text($0 == Int.max ? "Any" : "\($0) letters").tag($0)
           }
         }
       }
-      .navigationBarTitle(Text("Fingerspelling"), displayMode: .inline)
+      .navigationBarTitle(Text("Settings"), displayMode: .inline)
+      // TODO: Make this navigation animation better
+      .navigationBarItems(trailing: Button(action: self.handleClose) {
+        Image(systemName: "xmark").padding()
+      })
+    }
+  }
+
+  func handleClose() {
+    withAnimation {
+      self.game.isShowingSettings.toggle()
     }
   }
 }
@@ -533,6 +557,96 @@ struct SpellingDisplay: View {
   }
 }
 
+struct SideMenu: View {
+  let width: CGFloat
+  let isOpen: Bool
+  let onClose: () -> Void
+
+  @Environment(\.colorScheme) var colorScheme
+
+  struct MenuContent: View {
+    @EnvironmentObject var game: GameState
+    @EnvironmentObject var feedback: FeedbackService
+    @EnvironmentObject var playback: PlaybackService
+
+    var body: some View {
+      VStack(alignment: .leading) {
+        Text("ASL Fingerspelling")
+          .font(.system(size: 18))
+          .fontWeight(.light)
+          .padding(.top, 50)
+
+        Button(action: {
+          self.changeGameMode(.receptive)
+        }) {
+          Image(systemName: "play")
+            .imageScale(.large)
+          Text("Receptive")
+            .font(.headline)
+        }
+        .padding(.top, 50)
+
+        Button(action: {
+          self.changeGameMode(.expressive)
+        }) {
+          Image(systemName: "hand.raised")
+            .imageScale(.large)
+          Text("Expressive")
+            .font(.headline)
+        }
+        .padding(.top, 30)
+
+        Button(action: {
+          self.game.isShowingSettings.toggle()
+          self.game.isMenuOpen.toggle()
+        }) {
+          Image(systemName: "gear")
+            .imageScale(.large)
+          Text("Settings")
+            .font(.headline)
+        }
+        .padding(.top, 30)
+        Spacer()
+      }
+      .foregroundColor(.primary)
+      .padding()
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .edgesIgnoringSafeArea(.all)
+    }
+
+    func changeGameMode(_ gameMode: GameMode) {
+      self.game.mode = gameMode
+      self.game.isMenuOpen.toggle()
+      self.playback.reset()
+      self.feedback.reset()
+      self.feedback.hasSubmitted = false
+    }
+  }
+
+  var body: some View {
+    ZStack {
+      GeometryReader { _ in
+        EmptyView()
+      }
+      .background(Color.gray.opacity(0.3))
+      .opacity(self.isOpen ? 1.0 : 0.0)
+      .animation(Animation.easeIn(duration: 0.2))
+      .onTapGesture {
+        self.onClose()
+      }
+
+      HStack {
+        MenuContent()
+          .frame(width: self.width)
+          .background(self.colorScheme == .dark ? Color.black : Color.white)
+          .offset(x: self.isOpen ? 0 : -self.width)
+          .animation(.easeOut(duration: 0.2))
+        Spacer()
+      }
+    }
+  }
+}
+
 // MARK: State/service objects
 
 // https://medium.com/better-programming/swiftui-microservices-c7002228710
@@ -541,6 +655,8 @@ final class GameState: ObservableObject {
   @Published var receptiveScore = 0
   @Published var expressiveScore = 0
   @Published var isShowingSettings = false
+  @Published var isMenuOpen = false
+  @Published var mode = GameMode.receptive
 }
 
 final class PlaybackService: ObservableObject {
