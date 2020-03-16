@@ -368,7 +368,7 @@ struct ExpressiveGame: View {
     VStack {
       GameStatusBar {
         HStack {
-          Indicator(iconName: "hand.raised", textContent: String(self.game.expressiveScore))
+          Indicator(iconName: "checkmark", textContent: String(self.game.expressiveScore))
         }
       }.modifier(SystemServices())
       Divider().padding(.bottom, 10)
@@ -467,8 +467,7 @@ struct GameStatusBar<Content: View>: View {
     HStack {
       Button(action: self.handleOpenMenu) {
         Image(systemName: "line.horizontal.3")
-        Text(self.game.mode.rawValue)
-          .font(.system(size: self.fontSize)).bold()
+        Image(systemName: self.game.mode == GameMode.receptive ? "eyeglasses" : "hand.raised")
       }
       Spacer()
 
@@ -583,10 +582,10 @@ struct SideMenu: View {
         Button(action: {
           self.changeGameMode(.receptive)
         }) {
-          Image(systemName: "play")
+          Image(systemName: "eyeglasses")
             .imageScale(.large)
           Text("Receptive")
-            .font(.headline)
+            .fontWeight(self.game.mode == GameMode.receptive ? .bold : .regular)
         }
         .padding(.top, 50)
 
@@ -596,7 +595,7 @@ struct SideMenu: View {
           Image(systemName: "hand.raised")
             .imageScale(.large)
           Text("Expressive")
-            .font(.headline)
+            .fontWeight(self.game.mode == GameMode.expressive ? .bold : .regular)
         }
         .padding(.top, 30)
 
@@ -607,11 +606,11 @@ struct SideMenu: View {
           Image(systemName: "gear")
             .imageScale(.large)
           Text("Settings")
-            .font(.headline)
         }
         .padding(.top, 30)
         Spacer()
       }
+      .font(.system(size: 18))
       .foregroundColor(.primary)
       .padding()
       .frame(maxWidth: .infinity, alignment: .leading)
@@ -660,7 +659,7 @@ final class GameState: ObservableObject {
   @Published var expressiveScore = 0
   @Published var isShowingSettings = false
   @Published var isMenuOpen = false
-  @Published var mode = GameMode.receptive
+  @Published var mode: GameMode = GameMode.receptive
 }
 
 final class PlaybackService: ObservableObject {
