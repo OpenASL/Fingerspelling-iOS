@@ -82,7 +82,7 @@ struct ReceptiveGame: View {
         if !self.feedback.shouldDisableControls {
           Spacer()
           Button(action: self.handleReveal) {
-            Text("Reveal").font(.system(size: 14))
+            Text("Reveal").font(.system(size: 14)).foregroundColor(.primary)
           }.disabled(self.playback.isPlaying)
         }
       }
