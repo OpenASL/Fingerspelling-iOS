@@ -36,6 +36,8 @@ struct ReceptiveGame: View {
 
   private static let postSubmitDelay = 2.0 // seconds
   private static let nextWordDelay = 1.0 // seconds
+  private static let minSpeed = 1.0
+  private static let maxSpeed = 11.0
 
   private var answerIsCorrect: Bool {
     self.feedback.answerTrimmed.lowercased() == self.playback.currentWord.lowercased()
@@ -50,13 +52,33 @@ struct ReceptiveGame: View {
         }
       }.modifier(SystemServices())
       Divider().padding(.bottom, 10)
-      ReceptiveGameDisplay(
-        onPlay: self.handlePlay,
-        onStop: self.handleStop,
-        onSubmit: self.handleSubmit,
-        onReveal: self.handleReveal,
-        isCorrect: self.answerIsCorrect
+
+      if self.feedback.hasCorrectAnswer || self.feedback.isRevealed {
+        CurrentWordDisplay()
+      }
+
+      HStack {
+        AnswerInput(value: self.$feedback.answer, onSubmit: self.handleSubmit, isCorrect: self.answerIsCorrect).modifier(SystemServices())
+        if !self.feedback.shouldDisableControls {
+          Spacer()
+          Button(action: self.handleReveal) {
+            Text("Reveal").font(.system(size: 14))
+          }.disabled(self.playback.isPlaying)
+        }
+      }
+      Spacer()
+
+      MainDisplay(onPlay: self.handlePlay).frame(width: 100, height: 150)
+
+      Spacer()
+      SpeedControl(
+        value: self.$settings.speed,
+        minSpeed: Self.minSpeed,
+        maxSpeed: Self.maxSpeed,
+        disabled: self.playback.isPlaying
       )
+      .padding(.bottom, 10)
+      PlaybackControl(onPlay: self.handlePlay, onStop: self.handleStop).padding(.bottom, 10)
     }
   }
 
@@ -113,52 +135,6 @@ struct ReceptiveGame: View {
       delayFor(0.5) {
         self.feedback.hide()
       }
-    }
-  }
-}
-
-struct ReceptiveGameDisplay: View {
-  var onPlay: () -> Void
-  var onStop: () -> Void
-  var onSubmit: () -> Void
-  var onReveal: () -> Void
-  var isCorrect: Bool
-
-  @EnvironmentObject private var playback: PlaybackService
-  @EnvironmentObject private var feedback: FeedbackService
-  @EnvironmentObject private var settings: UserSettings
-
-  private static let minSpeed = 1.0
-  private static let maxSpeed = 11.0
-
-  var body: some View {
-    Group {
-      if self.feedback.hasCorrectAnswer || self.feedback.isRevealed {
-        CurrentWordDisplay()
-      }
-
-      HStack {
-        AnswerInput(value: self.$feedback.answer, onSubmit: self.onSubmit, isCorrect: self.isCorrect).modifier(SystemServices())
-        if !self.feedback.shouldDisableControls {
-          Spacer()
-          Button(action: self.onReveal) {
-            Text("Reveal").font(.system(size: 14))
-          }.disabled(self.playback.isPlaying)
-        }
-      }
-      Spacer()
-
-      MainDisplay(onPlay: self.onPlay).frame(width: 100, height: 150)
-
-      Spacer()
-      SpeedControl(
-        value: self.$settings.speed,
-        minSpeed: Self.minSpeed,
-        maxSpeed: Self.maxSpeed,
-        disabled: self.playback.isPlaying
-      )
-      .padding(.bottom, 10)
-      PlaybackControl(onPlay: self.onPlay, onStop: self.onStop).padding(.bottom, 10)
     }
   }
 }
@@ -372,11 +348,21 @@ struct ExpressiveGame: View {
         }
       }.modifier(SystemServices())
       Divider().padding(.bottom, 10)
-      ExpressiveGameDisplay(
+      CurrentWordDisplay()
+      Spacer()
+      if self.feedback.isRevealed {
+        SpellingDisplay()
+      } else if !self.feedback.hasRevealed {
+        Text("Fingerspell the word above.")
+      }
+      Spacer()
+      ExpressiveControl(
+        isRevealed: self.feedback.isRevealed,
+        hasRevealed: self.feedback.hasRevealed,
         onReveal: self.handleRevealSpelling,
         onHide: self.handleHideSpelling,
-        onContinue: self.handleNextSpellingWord
-      )
+        onContinue: self.handleContinue
+      ).padding(.bottom)
     }
   }
 
@@ -395,38 +381,10 @@ struct ExpressiveGame: View {
     self.feedback.hide()
   }
 
-  private func handleNextSpellingWord() {
+  private func handleContinue() {
     self.playback.setNextWord()
     self.feedback.reset()
     self.game.expressiveScore += 1
-  }
-}
-
-struct ExpressiveGameDisplay: View {
-  var onReveal: () -> Void
-  var onHide: () -> Void
-  var onContinue: () -> Void
-
-  @EnvironmentObject private var feedback: FeedbackService
-
-  var body: some View {
-    Group {
-      CurrentWordDisplay()
-      Spacer()
-      if self.feedback.isRevealed {
-        SpellingDisplay()
-      } else if !self.feedback.hasRevealed {
-        Text("Fingerspell the word above.")
-      }
-      Spacer()
-      ExpressiveControl(
-        isRevealed: self.feedback.isRevealed,
-        hasRevealed: self.feedback.hasRevealed,
-        onReveal: self.onReveal,
-        onHide: self.onHide,
-        onContinue: self.onContinue
-      ).padding(.bottom)
-    }
   }
 }
 
