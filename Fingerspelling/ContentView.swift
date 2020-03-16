@@ -194,13 +194,17 @@ struct MainDisplay: View {
   var body: some View {
     VStack {
       if !self.playback.isPlaying {
-        if !self.playback.hasPlayed && !self.feedback.hasSubmitted {
-          Button(action: self.onPlay) {
-            HStack {
-              Text("Press ").foregroundColor(Color.primary)
-              Image(systemName: "play").foregroundColor(Color.accentColor)
-              Text(" to begin.").foregroundColor(Color.primary)
-            }.frame(width: 200, height: 150)
+        if !self.feedback.hasSubmitted {
+          if !self.playback.hasPlayed {
+            Button(action: self.onPlay) {
+              HStack {
+                Text("Press ").foregroundColor(Color.primary)
+                Image(systemName: "play").foregroundColor(Color.accentColor)
+                Text(" to begin.").foregroundColor(Color.primary)
+              }.frame(width: 200, height: 150)
+            }
+          } else {
+            Text("Enter the word you saw.").frame(width: 200, height: 150)
           }
         }
         if self.feedback.isShown || self.feedback.hasCorrectAnswer {
