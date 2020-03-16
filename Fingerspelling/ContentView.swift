@@ -9,14 +9,6 @@ struct ContentView: View {
   @EnvironmentObject private var settings: UserSettings
   @EnvironmentObject private var game: GameState
 
-  struct GameDisplay: ViewModifier {
-    func body(content: Content) -> some View {
-      content
-        .padding()
-        .font(.system(size: 24))
-    }
-  }
-
   var body: some View {
     ZStack {
       if self.game.isShowingSettings {
@@ -34,9 +26,11 @@ struct ContentView: View {
         // Move the current UI up when the keyboard is active
         .padding(.bottom, self.keyboard.currentHeight)
       }
-      SideMenu(width: 250,
-               isOpen: self.game.isMenuOpen,
-               onClose: { self.game.isMenuOpen.toggle() })
+      SideMenu(
+        width: 250,
+        isOpen: self.game.isMenuOpen,
+        onClose: { self.game.isMenuOpen.toggle() }
+      )
     }
   }
 }
@@ -466,8 +460,8 @@ struct GameStatusBar<Content: View>: View {
   var body: some View {
     HStack {
       Button(action: self.handleOpenMenu) {
-        Image(systemName: "line.horizontal.3")
-        Image(systemName: self.game.mode == GameMode.receptive ? "eyeglasses" : "hand.raised")
+        Image(systemName: "line.horizontal.3").padding(.trailing, 5)
+        GameModeIcon(mode: self.game.mode).padding(.trailing)
       }
       Spacer()
 
@@ -511,15 +505,16 @@ struct GameSettings: View {
           }
         }
       }
-      .navigationBarTitle(Text("Settings"), displayMode: .inline)
-      // TODO: Make this navigation animation better
-      .navigationBarItems(trailing: Button(action: self.handleClose) {
-        Image(systemName: "xmark").padding()
-      })
+      .navigationBarTitle("Settings")
+      .navigationBarItems(leading: Button(action: self.handleClose) {
+        Image(systemName: "chevron.left")
+        Text("Back")
+      }.padding(.trailing))
     }
   }
 
   func handleClose() {
+    // TODO: Make this navigation animation better
     withAnimation {
       self.game.isShowingSettings.toggle()
     }
@@ -572,42 +567,53 @@ struct SideMenu: View {
     @EnvironmentObject var feedback: FeedbackService
     @EnvironmentObject var playback: PlaybackService
 
+    struct ItemButton<Content: View>: View {
+      var action: () -> Void
+      var content: () -> Content
+
+      var body: some View {
+        Button(action: self.action) {
+          HStack {
+            self.content()
+            Spacer()
+          }.frame(minWidth: 0, maxWidth: .infinity)
+        }
+        .padding(.top, 30)
+      }
+    }
+
     var body: some View {
       VStack(alignment: .leading) {
         Text("ASL Fingerspelling")
           .font(.system(size: 18))
           .fontWeight(.light)
           .padding(.top, 50)
+          .padding(.bottom, 20)
 
-        Button(action: {
-          self.changeGameMode(.receptive)
-        }) {
-          Image(systemName: "eyeglasses")
-            .imageScale(.large)
-          Text("Receptive")
-            .fontWeight(self.game.mode == GameMode.receptive ? .bold : .regular)
+        ForEach(GameMode.allCases, id: \.self) { mode in
+          ItemButton(action: {
+            self.changeGameMode(mode)
+          }) {
+            Group {
+              GameModeIcon(mode: mode)
+                .imageScale(.large).frame(minWidth: 35)
+              Text(mode.rawValue)
+                .fontWeight(self.game.mode == mode ? .bold : .regular)
+            }
+          }
         }
-        .padding(.top, 50)
 
-        Button(action: {
-          self.changeGameMode(.expressive)
-        }) {
-          Image(systemName: "hand.raised")
-            .imageScale(.large)
-          Text("Expressive")
-            .fontWeight(self.game.mode == GameMode.expressive ? .bold : .regular)
-        }
-        .padding(.top, 30)
-
-        Button(action: {
+        ItemButton(action: {
           self.game.isShowingSettings.toggle()
           self.game.isMenuOpen.toggle()
+          self.playback.stop()
         }) {
-          Image(systemName: "gear")
-            .imageScale(.large)
-          Text("Settings")
+          Group {
+            Image(systemName: "gear")
+              .imageScale(.large).frame(minWidth: 35)
+            Text("Settings")
+          }
         }
-        .padding(.top, 30)
         Spacer()
       }
       .font(.system(size: 18))
@@ -653,6 +659,24 @@ struct SideMenu: View {
 // MARK: State/service objects
 
 // https://medium.com/better-programming/swiftui-microservices-c7002228710
+
+enum GameMode: String, CaseIterable {
+  case receptive = "Receptive"
+  case expressive = "Expressive"
+}
+
+struct GameModeIcon: View {
+  var mode: GameMode
+
+  private let gameModeIcons = [
+    GameMode.receptive: "eyeglasses",
+    GameMode.expressive: "hand.raised",
+  ]
+
+  var body: some View {
+    Image(systemName: self.gameModeIcons[self.mode]!)
+  }
+}
 
 final class GameState: ObservableObject {
   @Published var receptiveScore = 0
@@ -803,11 +827,6 @@ final class FeedbackService: ObservableObject {
 
 // MARK: User settings
 
-enum GameMode: String, CaseIterable {
-  case receptive = "Receptive"
-  case expressive = "Expressive"
-}
-
 /// Simple wrapper around UserDefaults to make settings observables
 final class UserSettings: ObservableObject {
   let objectWillChange = PassthroughSubject<Void, Never>()
@@ -829,19 +848,6 @@ final class UserSettings: ObservableObject {
   @UserDefault("speed", defaultValue: 3.0)
   var speed: Double {
     willSet {
-      self.objectWillChange.send()
-    }
-  }
-
-  // Note: we use the raw values of the enum so that it can be properly
-  //   serialized to UserDefaults
-  @UserDefault("gameMode", defaultValue: GameMode.receptive.rawValue)
-  var gameMode: String {
-    willSet {
-      self.playback.reset()
-      self.feedback.reset()
-      self.feedback.hasSubmitted = false
-
       self.objectWillChange.send()
     }
   }
