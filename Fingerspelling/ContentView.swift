@@ -7,19 +7,27 @@ struct ContentView: View {
   @ObservedObject private var keyboard = KeyboardResponder()
 
   @EnvironmentObject private var settings: UserSettings
+  @EnvironmentObject private var game: GameState
 
   var body: some View {
-    Group {
-      if self.settings.gameMode == GameMode.receptive.rawValue {
-        ReceptiveGame().modifier(SystemServices())
-      } else if self.settings.gameMode == GameMode.expressive.rawValue {
-        ExpressiveGame().modifier(SystemServices())
+    ZStack {
+      Group {
+        if self.game.mode == GameMode.receptive {
+          ReceptiveGame().modifier(SystemServices())
+        } else if self.game.mode == GameMode.expressive {
+          ExpressiveGame().modifier(SystemServices())
+        }
       }
+      .padding(.top, 10)
+      .padding(.horizontal, 20)
+      // Move the current UI up when the keyboard is active
+      .padding(.bottom, self.keyboard.currentHeight)
+      SideMenu(
+        width: 250,
+        isOpen: self.game.isMenuOpen,
+        onClose: { self.game.isMenuOpen.toggle() }
+      )
     }
-    // Move the current UI up when the keyboard is active
-    .padding(.bottom, self.keyboard.currentHeight)
-    .padding(.top, 10)
-    .padding(.horizontal, 20)
   }
 }
 
@@ -47,10 +55,19 @@ struct ReceptiveGame: View {
     VStack {
       GameStatusBar {
         HStack {
-          Indicator(iconName: "checkmark", textContent: String(self.game.receptiveScore))
-          Indicator(iconName: "metronome", textContent: String(Int(self.settings.speed)))
+          ScoreIndicator(
+            textContent: String(self.game.receptiveScore),
+            isHighlighted: self.feedback.hasCorrectAnswer
+          )
+          .padding(.horizontal, 5)
+          HStack {
+            Image(systemName: "metronome").foregroundColor(.secondary)
+            Text(String(Int(self.settings.speed))).modifier(IndicatorStyle())
+          }
+          .padding(.horizontal, 5)
         }
       }.modifier(SystemServices())
+
       Divider().padding(.bottom, 10)
 
       if self.feedback.hasCorrectAnswer || self.feedback.isRevealed {
@@ -58,11 +75,16 @@ struct ReceptiveGame: View {
       }
 
       HStack {
-        AnswerInput(value: self.$feedback.answer, onSubmit: self.handleSubmit, isCorrect: self.answerIsCorrect).modifier(SystemServices())
+        if !self.game.isMenuOpen {
+          AnswerInput(value: self.$feedback.answer, onSubmit: self.handleSubmit, isCorrect: self.answerIsCorrect).modifier(SystemServices())
+        }
         if !self.feedback.shouldDisableControls {
           Spacer()
           Button(action: self.handleReveal) {
-            Text("Reveal").font(.system(size: 14))
+            Text("Reveal")
+              .font(.system(size: 14))
+              .foregroundColor(.primary)
+              .frame(height: 30)
           }.disabled(self.playback.isPlaying)
         }
       }
@@ -174,13 +196,17 @@ struct MainDisplay: View {
   var body: some View {
     VStack {
       if !self.playback.isPlaying {
-        if !self.playback.hasPlayed && !self.feedback.hasSubmitted {
-          Button(action: self.onPlay) {
-            HStack {
-              Text("Press ").foregroundColor(Color.primary)
-              Image(systemName: "play").foregroundColor(Color.accentColor)
-              Text(" to begin.").foregroundColor(Color.primary)
-            }.frame(width: 200, height: 150)
+        if !self.feedback.hasSubmitted {
+          if !self.playback.hasPlayed {
+            Button(action: self.onPlay) {
+              HStack {
+                Text("Press ").foregroundColor(Color.primary)
+                Image(systemName: "play").foregroundColor(Color.accentColor)
+                Text(" to begin.").foregroundColor(Color.primary)
+              }.frame(width: 200, height: 150)
+            }
+          } else {
+            Text("Enter the word you saw.").frame(width: 200, height: 150)
           }
         }
         if self.feedback.isShown || self.feedback.hasCorrectAnswer {
@@ -336,6 +362,8 @@ struct AnswerInput: View {
 // MARK: Expressive game views
 
 struct ExpressiveGame: View {
+  @State var isHighlightingScore = false
+
   @EnvironmentObject private var game: GameState
   @EnvironmentObject private var playback: PlaybackService
   @EnvironmentObject private var feedback: FeedbackService
@@ -343,9 +371,10 @@ struct ExpressiveGame: View {
   var body: some View {
     VStack {
       GameStatusBar {
-        HStack {
-          Indicator(iconName: "hand.raised", textContent: String(self.game.expressiveScore))
-        }
+        ScoreIndicator(
+          textContent: String(self.game.expressiveScore),
+          isHighlighted: self.isHighlightingScore
+        )
       }.modifier(SystemServices())
       Divider().padding(.bottom, 10)
       CurrentWordDisplay()
@@ -385,6 +414,10 @@ struct ExpressiveGame: View {
     self.playback.setNextWord()
     self.feedback.reset()
     self.game.expressiveScore += 1
+    self.isHighlightingScore = true
+    delayFor(1.0) {
+      self.isHighlightingScore = false
+    }
   }
 }
 
@@ -417,20 +450,6 @@ struct ExpressiveControl: View {
 
 // MARK: Common views
 
-struct Indicator: View {
-  var iconName: String
-  var textContent: String
-  var fontSize: CGFloat = 14
-
-  var body: some View {
-    HStack {
-      Image(systemName: self.iconName).foregroundColor(.primary)
-      Text(self.textContent).font(.system(size: self.fontSize, design: .monospaced))
-    }
-    .foregroundColor(Color.primary)
-  }
-}
-
 struct GameStatusBar<Content: View>: View {
   var fontSize: CGFloat = 14
   var content: () -> Content
@@ -440,27 +459,39 @@ struct GameStatusBar<Content: View>: View {
   @EnvironmentObject private var settings: UserSettings
 
   var body: some View {
-    HStack {
-      Button(action: self.handleShowSettings) {
-        Text("Fingerspelling - \(self.settings.gameMode)")
-          .font(.system(size: self.fontSize)).bold()
-      }.foregroundColor(Color.primary)
-      Spacer()
+    ZStack {
+      HStack {
+        Button(action: self.handleOpenMenu) {
+          Image(systemName: "line.horizontal.3").padding(.trailing, 5)
+          GameModeIcon(mode: self.game.mode).padding(.trailing)
+        }
+        Spacer()
+        Button(action: self.handleOpenSettings) {
+          Image(systemName: "gear").padding(.leading, 5)
+        }
+      }
       self.content()
     }
     .sheet(isPresented: self.$game.isShowingSettings) {
       GameSettings()
         .modifier(SystemServices())
     }
+    .foregroundColor(.primary)
   }
 
-  private func handleShowSettings() {
-    self.playback.stop()
+  func handleOpenSettings() {
     self.game.isShowingSettings.toggle()
+    self.playback.stop()
+  }
+
+  func handleOpenMenu() {
+    self.game.isMenuOpen.toggle()
+    self.playback.stop()
   }
 }
 
 struct GameSettings: View {
+  @EnvironmentObject private var game: GameState
   @EnvironmentObject private var settings: UserSettings
 
   static let wordLengths = Array(3 ... 6) + [Int.max]
@@ -482,19 +513,13 @@ struct GameSettings: View {
   var body: some View {
     NavigationView {
       Form {
-        LabeledPicker(selection: self.$settings.gameMode, label: "Mode") {
-          ForEach(GameMode.allCases, id: \.self) {
-            Text($0.rawValue).tag($0.rawValue)
-          }
-        }
-
         LabeledPicker(selection: self.$settings.maxWordLength, label: "Max word length") {
           ForEach(Self.wordLengths, id: \.self) {
             Text($0 == Int.max ? "Any" : "\($0) letters").tag($0)
           }
         }
       }
-      .navigationBarTitle(Text("Fingerspelling"), displayMode: .inline)
+      .navigationBarTitle("Settings", displayMode: .inline)
     }
   }
 }
@@ -533,14 +558,138 @@ struct SpellingDisplay: View {
   }
 }
 
+struct ScoreIndicator: View {
+  var textContent: String
+  var isHighlighted: Bool = false
+
+  var body: some View {
+    HStack {
+      Image(systemName: "checkmark")
+        .foregroundColor(self.isHighlighted ? Color.green : .secondary)
+      Text(self.textContent)
+        .fontWeight(self.isHighlighted ? .bold : .regular)
+        .modifier(IndicatorStyle())
+    }
+  }
+}
+
+struct SideMenu: View {
+  let width: CGFloat
+  let isOpen: Bool
+  let onClose: () -> Void
+
+  @Environment(\.colorScheme) var colorScheme
+
+  struct MenuContent: View {
+    @EnvironmentObject var game: GameState
+    @EnvironmentObject var feedback: FeedbackService
+    @EnvironmentObject var playback: PlaybackService
+
+    struct ItemButton<Content: View>: View {
+      var action: () -> Void
+      var content: () -> Content
+
+      var body: some View {
+        Button(action: self.action) {
+          HStack {
+            self.content()
+            Spacer()
+          }.frame(minWidth: 0, maxWidth: .infinity)
+        }
+        .padding(.top, 30)
+      }
+    }
+
+    var body: some View {
+      VStack(alignment: .leading) {
+        Text("ASL Fingerspelling")
+          .font(.system(size: 18))
+          .fontWeight(.light)
+          .padding(.top, 50)
+          .padding(.bottom, 20)
+
+        ForEach(GameMode.allCases, id: \.self) { mode in
+          ItemButton(action: {
+            self.changeGameMode(mode)
+          }) {
+            Group {
+              GameModeIcon(mode: mode)
+                .imageScale(.large).frame(minWidth: 35)
+              Text(mode.rawValue)
+                .fontWeight(self.game.mode == mode ? .bold : .regular)
+            }
+          }
+        }
+        Spacer()
+      }
+      .font(.system(size: 18))
+      .foregroundColor(.primary)
+      .padding()
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .edgesIgnoringSafeArea(.all)
+    }
+
+    func changeGameMode(_ gameMode: GameMode) {
+      self.game.mode = gameMode
+      self.game.isMenuOpen.toggle()
+      self.playback.reset()
+      self.feedback.reset()
+      self.feedback.hasSubmitted = false
+    }
+  }
+
+  var body: some View {
+    ZStack {
+      GeometryReader { _ in
+        EmptyView()
+      }
+      .background(Color.gray.opacity(0.3))
+      .opacity(self.isOpen ? 1.0 : 0.0)
+      .animation(Animation.easeIn(duration: 0.2))
+      .onTapGesture {
+        self.onClose()
+      }
+
+      HStack {
+        MenuContent()
+          .frame(width: self.width)
+          .background(self.colorScheme == .dark ? Color.black : Color.white)
+          .offset(x: self.isOpen ? 0 : -self.width)
+          .animation(.easeOut(duration: 0.2))
+        Spacer()
+      }
+    }
+  }
+}
+
 // MARK: State/service objects
 
 // https://medium.com/better-programming/swiftui-microservices-c7002228710
+
+enum GameMode: String, CaseIterable {
+  case receptive = "Receptive"
+  case expressive = "Expressive"
+}
+
+struct GameModeIcon: View {
+  var mode: GameMode
+
+  private let gameModeIcons = [
+    GameMode.receptive: "eyeglasses",
+    GameMode.expressive: "hand.raised",
+  ]
+
+  var body: some View {
+    Image(systemName: self.gameModeIcons[self.mode]!)
+  }
+}
 
 final class GameState: ObservableObject {
   @Published var receptiveScore = 0
   @Published var expressiveScore = 0
   @Published var isShowingSettings = false
+  @Published var isMenuOpen = false
+  @Published var mode: GameMode = GameMode.receptive
 }
 
 final class PlaybackService: ObservableObject {
@@ -684,11 +833,6 @@ final class FeedbackService: ObservableObject {
 
 // MARK: User settings
 
-enum GameMode: String, CaseIterable {
-  case receptive = "Receptive"
-  case expressive = "Expressive"
-}
-
 /// Simple wrapper around UserDefaults to make settings observables
 final class UserSettings: ObservableObject {
   let objectWillChange = PassthroughSubject<Void, Never>()
@@ -714,25 +858,14 @@ final class UserSettings: ObservableObject {
     }
   }
 
-  // Note: we use the raw values of the enum so that it can be properly
-  //   serialized to UserDefaults
-  @UserDefault("gameMode", defaultValue: GameMode.receptive.rawValue)
-  var gameMode: String {
-    willSet {
-      self.playback.reset()
-      self.feedback.reset()
-      self.feedback.hasSubmitted = false
-
-      self.objectWillChange.send()
-    }
-  }
-
   @UserDefault("maxWordLength", defaultValue: Int.max)
   var maxWordLength: Int {
     willSet {
       Words = AllWords.filter { $0.count <= newValue }
       self.playback.setNextWord()
-
+      if !self.feedback.hasSubmitted {
+        self.playback.hasPlayed = false
+      }
       self.feedback.reset()
       self.objectWillChange.send()
     }
@@ -762,6 +895,13 @@ struct IconButton: ViewModifier {
     content
       .padding()
       .font(.system(size: 24))
+  }
+}
+
+struct IndicatorStyle: ViewModifier {
+  func body(content: Content) -> some View {
+    content
+      .font(.system(size: 14, design: .monospaced))
   }
 }
 
