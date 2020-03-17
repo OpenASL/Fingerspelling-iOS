@@ -11,21 +11,17 @@ struct ContentView: View {
 
   var body: some View {
     ZStack {
-      if self.game.isShowingSettings {
-        GameSettings().modifier(SystemServices())
-      } else {
-        Group {
-          if self.game.mode == GameMode.receptive {
-            ReceptiveGame().modifier(SystemServices())
-          } else if self.game.mode == GameMode.expressive {
-            ExpressiveGame().modifier(SystemServices())
-          }
+      Group {
+        if self.game.mode == GameMode.receptive {
+          ReceptiveGame().modifier(SystemServices())
+        } else if self.game.mode == GameMode.expressive {
+          ExpressiveGame().modifier(SystemServices())
         }
-        .padding(.top, 10)
-        .padding(.horizontal, 20)
-        // Move the current UI up when the keyboard is active
-        .padding(.bottom, self.keyboard.currentHeight)
       }
+      .padding(.top, 10)
+      .padding(.horizontal, 20)
+      // Move the current UI up when the keyboard is active
+      .padding(.bottom, self.keyboard.currentHeight)
       SideMenu(
         width: 250,
         isOpen: self.game.isMenuOpen,
@@ -59,7 +55,7 @@ struct ReceptiveGame: View {
     VStack {
       GameStatusBar {
         HStack {
-          Indicator(iconName: "checkmark", textContent: String(self.game.receptiveScore)).padding(.trailing, 10)
+          Indicator(iconName: "checkmark", textContent: String(self.game.receptiveScore))
           Indicator(iconName: "metronome", textContent: String(Int(self.settings.speed)))
         }
       }.modifier(SystemServices())
@@ -442,10 +438,11 @@ struct Indicator: View {
 
   var body: some View {
     HStack {
-      Image(systemName: self.iconName).foregroundColor(.primary)
+      Image(systemName: self.iconName).foregroundColor(.secondary)
       Text(self.textContent).font(.system(size: self.fontSize, design: .monospaced))
     }
     .foregroundColor(Color.primary)
+    .padding(.horizontal, 5)
   }
 }
 
@@ -458,16 +455,30 @@ struct GameStatusBar<Content: View>: View {
   @EnvironmentObject private var settings: UserSettings
 
   var body: some View {
-    HStack {
-      Button(action: self.handleOpenMenu) {
-        Image(systemName: "line.horizontal.3").padding(.trailing, 5)
-        GameModeIcon(mode: self.game.mode).padding(.trailing)
+    ZStack {
+      HStack {
+        Button(action: self.handleOpenMenu) {
+          Image(systemName: "line.horizontal.3").padding(.trailing, 5)
+          GameModeIcon(mode: self.game.mode).padding(.trailing)
+        }
+        Spacer()
+        Button(action: self.handleOpenSettings) {
+          Image(systemName: "gear").padding(.leading, 5)
+        }
       }
-      Spacer()
-
       self.content()
     }
+
+    .sheet(isPresented: self.$game.isShowingSettings) {
+      GameSettings()
+        .modifier(SystemServices())
+    }
     .foregroundColor(.primary)
+  }
+
+  func handleOpenSettings() {
+    self.game.isShowingSettings.toggle()
+    self.playback.stop()
   }
 
   func handleOpenMenu() {
@@ -505,18 +516,7 @@ struct GameSettings: View {
           }
         }
       }
-      .navigationBarTitle("Settings")
-      .navigationBarItems(leading: Button(action: self.handleClose) {
-        Image(systemName: "chevron.left")
-        Text("Back")
-      }.padding(.trailing))
-    }
-  }
-
-  func handleClose() {
-    // TODO: Make this navigation animation better
-    withAnimation {
-      self.game.isShowingSettings.toggle()
+      .navigationBarTitle("Settings", displayMode: .inline)
     }
   }
 }
@@ -600,18 +600,6 @@ struct SideMenu: View {
               Text(mode.rawValue)
                 .fontWeight(self.game.mode == mode ? .bold : .regular)
             }
-          }
-        }
-
-        ItemButton(action: {
-          self.game.isShowingSettings.toggle()
-          self.game.isMenuOpen.toggle()
-          self.playback.stop()
-        }) {
-          Group {
-            Image(systemName: "gear")
-              .imageScale(.large).frame(minWidth: 35)
-            Text("Settings")
           }
         }
         Spacer()
