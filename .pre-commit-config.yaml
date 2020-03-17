@@ -3,4 +3,4 @@ repos:
   rev: 0.44.4
   hooks:
   - id: swiftformat
-    exclude: ^Fingerspelling/Words.swift
+    exclude: ^Fingerspelling/Data/Words.swift
