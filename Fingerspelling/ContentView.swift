@@ -55,15 +55,11 @@ struct ReceptiveGame: View {
     VStack {
       GameStatusBar {
         HStack {
-          HStack {
-            Image(systemName: "checkmark")
-              .foregroundColor(self.feedback.hasCorrectAnswer ? Color.green : Color.secondary)
-            Text(String(self.game.receptiveScore))
-              .fontWeight(self.feedback.hasCorrectAnswer ? .bold : .regular)
-              .modifier(IndicatorStyle())
-          }
+          ScoreIndicator(
+            textContent: String(self.game.receptiveScore),
+            isHighlighted: self.feedback.hasCorrectAnswer
+          )
           .padding(.horizontal, 5)
-
           HStack {
             Image(systemName: "metronome").foregroundColor(.secondary)
             Text(String(Int(self.settings.speed))).modifier(IndicatorStyle())
@@ -71,6 +67,7 @@ struct ReceptiveGame: View {
           .padding(.horizontal, 5)
         }
       }.modifier(SystemServices())
+
       Divider().padding(.bottom, 10)
 
       if self.feedback.hasCorrectAnswer || self.feedback.isRevealed {
@@ -84,7 +81,10 @@ struct ReceptiveGame: View {
         if !self.feedback.shouldDisableControls {
           Spacer()
           Button(action: self.handleReveal) {
-            Text("Reveal").font(.system(size: 14)).foregroundColor(.primary)
+            Text("Reveal")
+              .font(.system(size: 14))
+              .foregroundColor(.primary)
+              .frame(height: 30)
           }.disabled(self.playback.isPlaying)
         }
       }
@@ -371,14 +371,10 @@ struct ExpressiveGame: View {
   var body: some View {
     VStack {
       GameStatusBar {
-        HStack {
-          Image(systemName: "checkmark")
-            .foregroundColor(self.isHighlightingScore ? Color.green : .secondary)
-          Text(String(self.game.expressiveScore))
-            .fontWeight(self.isHighlightingScore ? .bold : .regular)
-            .modifier(IndicatorStyle())
-        }
-        .padding(.horizontal, 5)
+        ScoreIndicator(
+          textContent: String(self.game.expressiveScore),
+          isHighlighted: self.isHighlightingScore
+        )
       }.modifier(SystemServices())
       Divider().padding(.bottom, 10)
       CurrentWordDisplay()
@@ -476,7 +472,6 @@ struct GameStatusBar<Content: View>: View {
       }
       self.content()
     }
-
     .sheet(isPresented: self.$game.isShowingSettings) {
       GameSettings()
         .modifier(SystemServices())
@@ -560,6 +555,21 @@ struct SpellingDisplay: View {
       }
     }
     .frame(height: 185)
+  }
+}
+
+struct ScoreIndicator: View {
+  var textContent: String
+  var isHighlighted: Bool = false
+
+  var body: some View {
+    HStack {
+      Image(systemName: "checkmark")
+        .foregroundColor(self.isHighlighted ? Color.green : .secondary)
+      Text(self.textContent)
+        .fontWeight(self.isHighlighted ? .bold : .regular)
+        .modifier(IndicatorStyle())
+    }
   }
 }
 
