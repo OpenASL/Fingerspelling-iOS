@@ -55,8 +55,20 @@ struct ReceptiveGame: View {
     VStack {
       GameStatusBar {
         HStack {
-          Indicator(iconName: "checkmark", textContent: String(self.game.receptiveScore))
-          Indicator(iconName: "metronome", textContent: String(Int(self.settings.speed)))
+          HStack {
+            Image(systemName: "checkmark")
+              .foregroundColor(self.feedback.hasCorrectAnswer ? Color.green : Color.secondary)
+            Text(String(self.game.receptiveScore))
+              .fontWeight(self.feedback.hasCorrectAnswer ? .bold : .regular)
+              .modifier(IndicatorStyle())
+          }
+          .padding(.horizontal, 5)
+
+          HStack {
+            Image(systemName: "metronome").foregroundColor(.secondary)
+            Text(String(Int(self.settings.speed))).modifier(IndicatorStyle())
+          }
+          .padding(.horizontal, 5)
         }
       }.modifier(SystemServices())
       Divider().padding(.bottom, 10)
@@ -350,6 +362,8 @@ struct AnswerInput: View {
 // MARK: Expressive game views
 
 struct ExpressiveGame: View {
+  @State var isHighlightingScore = false
+
   @EnvironmentObject private var game: GameState
   @EnvironmentObject private var playback: PlaybackService
   @EnvironmentObject private var feedback: FeedbackService
@@ -358,8 +372,13 @@ struct ExpressiveGame: View {
     VStack {
       GameStatusBar {
         HStack {
-          Indicator(iconName: "checkmark", textContent: String(self.game.expressiveScore))
+          Image(systemName: "checkmark")
+            .foregroundColor(self.isHighlightingScore ? Color.green : .secondary)
+          Text(String(self.game.expressiveScore))
+            .fontWeight(self.isHighlightingScore ? .bold : .regular)
+            .modifier(IndicatorStyle())
         }
+        .padding(.horizontal, 5)
       }.modifier(SystemServices())
       Divider().padding(.bottom, 10)
       CurrentWordDisplay()
@@ -399,6 +418,10 @@ struct ExpressiveGame: View {
     self.playback.setNextWord()
     self.feedback.reset()
     self.game.expressiveScore += 1
+    self.isHighlightingScore = true
+    delayFor(1.0) {
+      self.isHighlightingScore = false
+    }
   }
 }
 
@@ -430,21 +453,6 @@ struct ExpressiveControl: View {
 }
 
 // MARK: Common views
-
-struct Indicator: View {
-  var iconName: String
-  var textContent: String
-  var fontSize: CGFloat = 14
-
-  var body: some View {
-    HStack {
-      Image(systemName: self.iconName).foregroundColor(.secondary)
-      Text(self.textContent).font(.system(size: self.fontSize, design: .monospaced))
-    }
-    .foregroundColor(Color.primary)
-    .padding(.horizontal, 5)
-  }
-}
 
 struct GameStatusBar<Content: View>: View {
   var fontSize: CGFloat = 14
@@ -845,7 +853,9 @@ final class UserSettings: ObservableObject {
     willSet {
       Words = AllWords.filter { $0.count <= newValue }
       self.playback.setNextWord()
-
+      if !self.feedback.hasSubmitted {
+        self.playback.hasPlayed = false
+      }
       self.feedback.reset()
       self.objectWillChange.send()
     }
@@ -875,6 +885,13 @@ struct IconButton: ViewModifier {
     content
       .padding()
       .font(.system(size: 24))
+  }
+}
+
+struct IndicatorStyle: ViewModifier {
+  func body(content: Content) -> some View {
+    content
+      .font(.system(size: 14, design: .monospaced))
   }
 }
 
