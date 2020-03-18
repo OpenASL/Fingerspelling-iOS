@@ -2,11 +2,22 @@ import Combine
 import Foundation
 import SwiftUI
 
+private var __wordIndexForTesting = 0
+
 /// Get a random word from the Words list
 func getRandomWord() -> String {
+  if isUITesting() {
+    let word = Words[__wordIndexForTesting]
+    __wordIndexForTesting += 1
+    return word
+  }
   let word = Words.randomElement()!
   print("current word: " + word)
   return word
+}
+
+func isUITesting() -> Bool {
+  ProcessInfo.processInfo.arguments.contains("testing")
 }
 
 class LoadingTimer {
