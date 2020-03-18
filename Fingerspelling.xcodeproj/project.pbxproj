@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4321ECC32421812B00DBA702 /* FingerspellingUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4321ECC22421812B00DBA702 /* FingerspellingUITests.swift */; };
+		4321ECCD2421A56200DBA702 /* SnapshotHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4321ECCC2421A56200DBA702 /* SnapshotHelper.swift */; };
 		43BCEB3A2421053A0033A56B /* ReceptiveGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43BCEB392421053A0033A56B /* ReceptiveGameView.swift */; };
 		43BCEB3C24210AB40033A56B /* ExpressiveGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43BCEB3B24210AB40033A56B /* ExpressiveGameView.swift */; };
 		43BCEB3E24210E4C0033A56B /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43BCEB3D24210E4C0033A56B /* SettingsView.swift */; };
@@ -26,7 +28,21 @@
 		43D6108A2413D8680089DE4D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 43D610892413D8680089DE4D /* Preview Assets.xcassets */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		4321ECC52421812B00DBA702 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 43D610752413D8630089DE4D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 43D6107C2413D8630089DE4D;
+			remoteInfo = Fingerspelling;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		4321ECC02421812B00DBA702 /* FingerspellingUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FingerspellingUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4321ECC22421812B00DBA702 /* FingerspellingUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FingerspellingUITests.swift; sourceTree = "<group>"; };
+		4321ECC42421812B00DBA702 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		4321ECCC2421A56200DBA702 /* SnapshotHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SnapshotHelper.swift; path = fastlane/SnapshotHelper.swift; sourceTree = SOURCE_ROOT; };
 		43BCEB392421053A0033A56B /* ReceptiveGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceptiveGameView.swift; sourceTree = "<group>"; };
 		43BCEB3B24210AB40033A56B /* ExpressiveGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpressiveGameView.swift; sourceTree = "<group>"; };
 		43BCEB3D24210E4C0033A56B /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -49,6 +65,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		4321ECBD2421812B00DBA702 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		43D6107A2413D8630089DE4D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -59,6 +82,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4321ECC12421812B00DBA702 /* FingerspellingUITests */ = {
+			isa = PBXGroup;
+			children = (
+				4321ECCC2421A56200DBA702 /* SnapshotHelper.swift */,
+				4321ECC22421812B00DBA702 /* FingerspellingUITests.swift */,
+				4321ECC42421812B00DBA702 /* Info.plist */,
+			);
+			path = FingerspellingUITests;
+			sourceTree = "<group>";
+		};
 		43BCEB4F24211E9D0033A56B /* Data */ = {
 			isa = PBXGroup;
 			children = (
@@ -71,6 +104,7 @@
 			isa = PBXGroup;
 			children = (
 				43D6107F2413D8640089DE4D /* Fingerspelling */,
+				4321ECC12421812B00DBA702 /* FingerspellingUITests */,
 				43D6107E2413D8640089DE4D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -79,6 +113,7 @@
 			isa = PBXGroup;
 			children = (
 				43D6107D2413D8640089DE4D /* Fingerspelling.app */,
+				4321ECC02421812B00DBA702 /* FingerspellingUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -119,6 +154,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		4321ECBF2421812B00DBA702 /* FingerspellingUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4321ECC92421812B00DBA702 /* Build configuration list for PBXNativeTarget "FingerspellingUITests" */;
+			buildPhases = (
+				4321ECBC2421812B00DBA702 /* Sources */,
+				4321ECBD2421812B00DBA702 /* Frameworks */,
+				4321ECBE2421812B00DBA702 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4321ECC62421812B00DBA702 /* PBXTargetDependency */,
+			);
+			name = FingerspellingUITests;
+			productName = FingerspellingUITests;
+			productReference = 4321ECC02421812B00DBA702 /* FingerspellingUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		43D6107C2413D8630089DE4D /* Fingerspelling */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 43D6109C2413D8690089DE4D /* Build configuration list for PBXNativeTarget "Fingerspelling" */;
@@ -145,6 +198,10 @@
 				LastSwiftUpdateCheck = 1130;
 				LastUpgradeCheck = 1130;
 				TargetAttributes = {
+					4321ECBF2421812B00DBA702 = {
+						CreatedOnToolsVersion = 11.3.1;
+						TestTargetID = 43D6107C2413D8630089DE4D;
+					};
 					43D6107C2413D8630089DE4D = {
 						CreatedOnToolsVersion = 11.3.1;
 					};
@@ -164,11 +221,19 @@
 			projectRoot = "";
 			targets = (
 				43D6107C2413D8630089DE4D /* Fingerspelling */,
+				4321ECBF2421812B00DBA702 /* FingerspellingUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		4321ECBE2421812B00DBA702 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		43D6107B2413D8630089DE4D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -181,6 +246,15 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		4321ECBC2421812B00DBA702 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4321ECC32421812B00DBA702 /* FingerspellingUITests.swift in Sources */,
+				4321ECCD2421A56200DBA702 /* SnapshotHelper.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		43D610792413D8630089DE4D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -205,7 +279,53 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		4321ECC62421812B00DBA702 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 43D6107C2413D8630089DE4D /* Fingerspelling */;
+			targetProxy = 4321ECC52421812B00DBA702 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		4321ECC72421812B00DBA702 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = X3SA8TV77Y;
+				INFOPLIST_FILE = FingerspellingUITests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.openasl.FingerspellingUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Fingerspelling;
+			};
+			name = Debug;
+		};
+		4321ECC82421812B00DBA702 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = X3SA8TV77Y;
+				INFOPLIST_FILE = FingerspellingUITests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.openasl.FingerspellingUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Fingerspelling;
+			};
+			name = Release;
+		};
 		43D6109A2413D8690089DE4D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -327,6 +447,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Fingerspelling/Preview Content\"";
 				DEVELOPMENT_TEAM = X3SA8TV77Y;
 				ENABLE_PREVIEWS = YES;
@@ -339,6 +460,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
 		};
@@ -347,6 +469,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Fingerspelling/Preview Content\"";
 				DEVELOPMENT_TEAM = X3SA8TV77Y;
 				ENABLE_PREVIEWS = YES;
@@ -359,12 +482,22 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		4321ECC92421812B00DBA702 /* Build configuration list for PBXNativeTarget "FingerspellingUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4321ECC72421812B00DBA702 /* Debug */,
+				4321ECC82421812B00DBA702 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		43D610782413D8630089DE4D /* Build configuration list for PBXProject "Fingerspelling" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

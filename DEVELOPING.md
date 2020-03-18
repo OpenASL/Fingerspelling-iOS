@@ -19,3 +19,17 @@ To manually run formatters on all files:
 ```
 pre-commit run --all-files
 ```
+
+## Generating screenshots
+
+Install fastlane:
+
+```
+brew install fastlane
+```
+
+Run the screenshots:
+
+```
+fastlane screenshots
+```
