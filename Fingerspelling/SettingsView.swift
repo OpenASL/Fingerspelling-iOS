@@ -29,6 +29,13 @@ struct SettingsView: View {
             Text($0 == Int.max ? "Any" : "\($0) letters").tag($0)
           }
         }
+        
+        Section {
+          NavigationLink(destination: PrivacyPolicyView()) {
+            Text("Privacy Policy")
+          }
+          NavigationLink(destination: AboutView()) { Text("About") }
+        }
       }
       .navigationBarTitle("Settings")
       .navigationBarItems(trailing: Button(action: self.onClose) { Text("Done") })
