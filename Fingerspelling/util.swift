@@ -2,28 +2,28 @@ import Combine
 import Foundation
 import SwiftUI
 
-private var __wordIndexForTesting = 0
-private var __testWords = [
-  "turkey",
-  "fly",
-  "heavy",
-]
-
 /// Get a random word from the Words list
 func getRandomWord() -> String {
-  if isUITesting() {
-    let word = __testWords[__wordIndexForTesting % __testWords.count]
-    __wordIndexForTesting += 1
-    return word
-  }
+  #if DEBUG
+    if isUITesting() {
+      let word = __testWords[__wordIndexForTesting % __testWords.count]
+      __wordIndexForTesting += 1
+      return word
+    }
+  #endif
   let word = Words.randomElement()!
   print("current word: " + word)
   return word
 }
 
-func isUITesting() -> Bool {
-  ProcessInfo.processInfo.arguments.contains("testing")
-}
+#if DEBUG
+  private var __wordIndexForTesting = 0
+  private var __testWords = ["turkey", "fly", "heavy"]
+
+  func isUITesting() -> Bool {
+    ProcessInfo.processInfo.arguments.contains("testing")
+  }
+#endif
 
 class LoadingTimer {
   var publisher: Timer.TimerPublisher
@@ -139,7 +139,6 @@ struct FocusableTextField: UIViewRepresentable {
   }
 
   func updateUIView(_ uiView: UITextField, context: UIViewRepresentableContext<FocusableTextField>) {
-    uiView.text = self.text.uppercased() // autocapitalize input
     if self.isFirstResponder, !context.coordinator.didBecomeFirstResponder {
       uiView.becomeFirstResponder()
       context.coordinator.didBecomeFirstResponder = true

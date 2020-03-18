@@ -313,6 +313,7 @@ private struct AnswerInput: View {
         return textField
       },
       onUpdate: { textField in
+        textField.text = self.value.uppercased()
         if self.feedback.isShown, !self.isCorrect {
           textField.layer.cornerRadius = 4.0
           textField.layer.borderColor = UIColor.red.cgColor
