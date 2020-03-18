@@ -21,7 +21,7 @@ struct AppView: View {
         // Move the current UI up when the keyboard is active
         .padding(.bottom, self.keyboard.currentHeight)
       SideMenuView(
-        width: 250,
+        width: 280,
         isOpen: self.game.isMenuOpen,
         onClose: { self.game.isMenuOpen.toggle() }
       )

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4321ECC32421812B00DBA702 /* FingerspellingUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4321ECC22421812B00DBA702 /* FingerspellingUITests.swift */; };
+		4321ECCD2421A56200DBA702 /* SnapshotHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4321ECCC2421A56200DBA702 /* SnapshotHelper.swift */; };
 		43BCEB3A2421053A0033A56B /* ReceptiveGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43BCEB392421053A0033A56B /* ReceptiveGameView.swift */; };
 		43BCEB3C24210AB40033A56B /* ExpressiveGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43BCEB3B24210AB40033A56B /* ExpressiveGameView.swift */; };
 		43BCEB3E24210E4C0033A56B /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43BCEB3D24210E4C0033A56B /* SettingsView.swift */; };
@@ -41,6 +42,7 @@
 		4321ECC02421812B00DBA702 /* FingerspellingUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FingerspellingUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4321ECC22421812B00DBA702 /* FingerspellingUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FingerspellingUITests.swift; sourceTree = "<group>"; };
 		4321ECC42421812B00DBA702 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		4321ECCC2421A56200DBA702 /* SnapshotHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SnapshotHelper.swift; path = fastlane/SnapshotHelper.swift; sourceTree = SOURCE_ROOT; };
 		43BCEB392421053A0033A56B /* ReceptiveGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceptiveGameView.swift; sourceTree = "<group>"; };
 		43BCEB3B24210AB40033A56B /* ExpressiveGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpressiveGameView.swift; sourceTree = "<group>"; };
 		43BCEB3D24210E4C0033A56B /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -83,6 +85,7 @@
 		4321ECC12421812B00DBA702 /* FingerspellingUITests */ = {
 			isa = PBXGroup;
 			children = (
+				4321ECCC2421A56200DBA702 /* SnapshotHelper.swift */,
 				4321ECC22421812B00DBA702 /* FingerspellingUITests.swift */,
 				4321ECC42421812B00DBA702 /* Info.plist */,
 			);
@@ -248,6 +251,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4321ECC32421812B00DBA702 /* FingerspellingUITests.swift in Sources */,
+				4321ECCD2421A56200DBA702 /* SnapshotHelper.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -443,6 +447,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Fingerspelling/Preview Content\"";
 				DEVELOPMENT_TEAM = X3SA8TV77Y;
 				ENABLE_PREVIEWS = YES;
@@ -455,6 +460,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
 		};
@@ -463,6 +469,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Fingerspelling/Preview Content\"";
 				DEVELOPMENT_TEAM = X3SA8TV77Y;
 				ENABLE_PREVIEWS = YES;
@@ -475,6 +482,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
 		};

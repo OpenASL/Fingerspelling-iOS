@@ -1,0 +1,16 @@
+devices([
+  # "iPhone 7",
+  "iPhone 8 Plus",
+  # "iPhone SE",
+  # "iPhone Xs",
+  # "iPad Pro (12.9-inch)",
+  # "iPad Pro (9.7-inch)",
+  "iPhone 11 Pro Max"
+])
+
+languages([
+  "en-US",
+])
+
+clear_previous_screenshots(true)
+launch_arguments(["-testing YES"])

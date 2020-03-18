@@ -92,9 +92,9 @@ struct SideMenuView: View {
 struct SideMenuView_Previews: PreviewProvider {
   static var previews: some View {
     Group {
-      SideMenuView(width: 250, isOpen: true, onClose: {})
+      SideMenuView(width: 280, isOpen: true, onClose: {})
         .modifier(SystemServices())
-      SideMenuView(width: 250, isOpen: true, onClose: {})
+      SideMenuView(width: 280, isOpen: true, onClose: {})
         .environment(\.colorScheme, .dark)
         .modifier(SystemServices())
     }
