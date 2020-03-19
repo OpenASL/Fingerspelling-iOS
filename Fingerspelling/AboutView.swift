@@ -1,22 +1,6 @@
 
 import SwiftUI
 
-struct AttributedText: UIViewRepresentable {
-  var attributedText: NSAttributedString
-
-  init(_ attributedText: NSAttributedString) {
-    self.attributedText = attributedText
-  }
-
-  func makeUIView(context _: Context) -> UITextView {
-    UITextView()
-  }
-
-  func updateUIView(_ label: UITextView, context _: Context) {
-    label.attributedText = self.attributedText
-  }
-}
-
 struct AboutView: View {
   var appVersion: String {
     Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
