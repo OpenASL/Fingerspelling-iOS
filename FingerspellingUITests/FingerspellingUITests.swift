@@ -47,13 +47,6 @@ class FingerspellingUITests: XCTestCase {
     settingsNavigationBar.buttons["Done"].tap()
   }
 
-  func testDarkMode() {
-    let app = XCUIApplication()
-    app.launchArguments.append("-AppleInterfaceStyle")
-    app.launchArguments.append("Dark")
-    app.launch()
-  }
-
   private func waitForElement(_ element: XCUIElement, timeout: TimeInterval = 10) {
     let existsPredicate = NSPredicate(format: "exists == true")
     expectation(for: existsPredicate, evaluatedWith: element, handler: nil)
