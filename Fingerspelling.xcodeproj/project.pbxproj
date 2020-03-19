@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		4321ECC32421812B00DBA702 /* FingerspellingUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4321ECC22421812B00DBA702 /* FingerspellingUITests.swift */; };
 		4321ECCD2421A56200DBA702 /* SnapshotHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4321ECCC2421A56200DBA702 /* SnapshotHelper.swift */; };
+		4321ECCF2421DC6D00DBA702 /* PrivacyPolicyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4321ECCE2421DC6D00DBA702 /* PrivacyPolicyView.swift */; };
+		43422CA32421DED30026D68D /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43422CA22421DED30026D68D /* AboutView.swift */; };
 		43BCEB3A2421053A0033A56B /* ReceptiveGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43BCEB392421053A0033A56B /* ReceptiveGameView.swift */; };
 		43BCEB3C24210AB40033A56B /* ExpressiveGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43BCEB3B24210AB40033A56B /* ExpressiveGameView.swift */; };
 		43BCEB3E24210E4C0033A56B /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43BCEB3D24210E4C0033A56B /* SettingsView.swift */; };
@@ -43,6 +45,8 @@
 		4321ECC22421812B00DBA702 /* FingerspellingUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FingerspellingUITests.swift; sourceTree = "<group>"; };
 		4321ECC42421812B00DBA702 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4321ECCC2421A56200DBA702 /* SnapshotHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SnapshotHelper.swift; path = fastlane/SnapshotHelper.swift; sourceTree = SOURCE_ROOT; };
+		4321ECCE2421DC6D00DBA702 /* PrivacyPolicyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyPolicyView.swift; sourceTree = "<group>"; };
+		43422CA22421DED30026D68D /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		43BCEB392421053A0033A56B /* ReceptiveGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceptiveGameView.swift; sourceTree = "<group>"; };
 		43BCEB3B24210AB40033A56B /* ExpressiveGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpressiveGameView.swift; sourceTree = "<group>"; };
 		43BCEB3D24210E4C0033A56B /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -139,6 +143,8 @@
 				43BCEB492421151E0033A56B /* appState.swift */,
 				43BCEB4B242115CA0033A56B /* util.swift */,
 				43BCEB4D242116810033A56B /* viewModifiers.swift */,
+				4321ECCE2421DC6D00DBA702 /* PrivacyPolicyView.swift */,
+				43422CA22421DED30026D68D /* AboutView.swift */,
 			);
 			path = Fingerspelling;
 			sourceTree = "<group>";
@@ -261,6 +267,7 @@
 			files = (
 				43D610812413D8640089DE4D /* AppDelegate.swift in Sources */,
 				43D610832413D8640089DE4D /* SceneDelegate.swift in Sources */,
+				43422CA32421DED30026D68D /* AboutView.swift in Sources */,
 				43BCEB4C242115CA0033A56B /* util.swift in Sources */,
 				43BCEB3E24210E4C0033A56B /* SettingsView.swift in Sources */,
 				43BCEB48242114040033A56B /* GameModeIconView.swift in Sources */,
@@ -270,6 +277,7 @@
 				43BCEB44242111AE0033A56B /* ScoreIndicatorView.swift in Sources */,
 				43BCEB51242126900033A56B /* Words.swift in Sources */,
 				43BCEB4A2421151E0033A56B /* appState.swift in Sources */,
+				4321ECCF2421DC6D00DBA702 /* PrivacyPolicyView.swift in Sources */,
 				43BCEB4E242116810033A56B /* viewModifiers.swift in Sources */,
 				43BCEB3C24210AB40033A56B /* ExpressiveGameView.swift in Sources */,
 				43BCEB3A2421053A0033A56B /* ReceptiveGameView.swift in Sources */,
@@ -447,7 +455,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"Fingerspelling/Preview Content\"";
 				DEVELOPMENT_TEAM = X3SA8TV77Y;
 				ENABLE_PREVIEWS = YES;
@@ -469,7 +477,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"Fingerspelling/Preview Content\"";
 				DEVELOPMENT_TEAM = X3SA8TV77Y;
 				ENABLE_PREVIEWS = YES;
