@@ -33,3 +33,17 @@ Run the screenshots:
 ```
 fastlane screenshots
 ```
+
+## Bumping version
+
+Bump build number:
+
+```
+xcrun agvtool next-version -all
+```
+
+Bump marketing version:
+
+```
+xcrun agvtool new-marketing-version YYYY.X
+```
