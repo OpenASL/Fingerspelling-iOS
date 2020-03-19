@@ -58,8 +58,7 @@ struct AboutView: View {
   }
 
   func handleDonate() {
-    print("in here")
-    if let url = URL(string: "https://www.paypal.com/donate/?token=8ILenZgsucVJWbq19FtYA1SF07fV0vElAbVRHzgS7p5S4wHBLn5obcJ6az-zflmMp4u8jW&country.x=US&locale.x=US") {
+    if let url = URL(string: "https://www.lifeprint.com/donate.htm") {
       UIApplication.shared.open(url)
     }
   }
