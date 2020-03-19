@@ -1,5 +1,17 @@
 # Developing
 
+## Running tests
+
+From the command line:
+
+```
+xcodebuild test -project Fingerspelling.xcodeproj \
+           -scheme "FingerspellingUITests" \
+           -destination 'platform=iOS Simulator,name=iPhone 8 Plus,OS=13.3'
+```
+
+Or press Cmd+U in Xcode.
+
 ## Adding pre-commit hooks
 
 Ensure pre-commit is installed:
@@ -47,3 +59,10 @@ Bump marketing version:
 ```
 xcrun agvtool new-marketing-version YYYY.X
 ```
+
+## Releasing
+
+1. In Xcode, choose the "Fingerspelling" scheme and "Generic iOS Device" as the device.
+1. Click Product > Archive and wait for the build to finish (this takes a while).
+1. Click "Distribute app". Hit Next through the following Menus.
+1. Add a new version on App Store Connect then submit the new version.
