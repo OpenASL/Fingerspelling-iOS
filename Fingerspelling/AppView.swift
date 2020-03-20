@@ -37,6 +37,19 @@ struct AppView: View {
         onClose: { self.game.isMenuOpen.toggle() }
       )
     }
+    // Swipe to hide menu
+    .gesture(
+      DragGesture()
+        .onEnded {
+          let didOpen = $0.startLocation.x < 100 && $0.translation.width > 100
+          let didClose = $0.translation.width < -100
+          if didOpen || didClose {
+            withAnimation {
+              self.game.isMenuOpen.toggle()
+            }
+          }
+        }
+    )
   }
 }
 

@@ -32,7 +32,7 @@ struct SideMenuView: View {
         Text("Mode")
           .font(.title)
           .fontWeight(.heavy)
-          .padding(.top, 50)
+          .padding(.top, 40)
           .padding(.bottom, 15)
 
         ForEach(GameMode.allCases, id: \.self) { mode in
