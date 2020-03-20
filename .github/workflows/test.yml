@@ -8,6 +8,6 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - name: Run tests
-        run: xcodebuild clean test -project Fingerspelling.xcodeproj -scheme FingerspellingUITests -destination "${destination}" 
+        run: ./scripts/test.sh "${destination}" 
         env: 
          destination: ${{ matrix.destination }}
