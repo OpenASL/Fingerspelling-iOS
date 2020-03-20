@@ -1,0 +1,13 @@
+on: pull_request
+jobs:
+  test:
+    runs-on: macOS-latest
+    strategy:
+        matrix:
+          destination: ['platform=iOS Simulator,OS=13.3,name=iPhone 11']
+    steps:
+      - uses: actions/checkout@master
+      - name: Run tests
+        run: xcodebuild clean test -project Fingerspelling.xcodeproj -scheme FingerspellingUITests -destination "${destination}" 
+        env: 
+         destination: ${{ matrix.destination }}
