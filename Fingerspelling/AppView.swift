@@ -28,6 +28,7 @@ struct AppView: View {
         .modifier(RootStyle())
         // Move the current UI up when the keyboard is active
         .padding(.bottom, self.keyboard.currentHeight)
+        .padding(.top, 20)
         .sheet(isPresented: self.$game.isShowingSheet) {
           self.currentSheet.modifier(SystemServices())
         }
@@ -37,6 +38,8 @@ struct AppView: View {
         onClose: { self.game.isMenuOpen.toggle() }
       )
     }
+    .edgesIgnoringSafeArea(.all)
+    .statusBar(hidden: self.game.isMenuOpen)
   }
 }
 

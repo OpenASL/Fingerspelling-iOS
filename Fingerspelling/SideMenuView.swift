@@ -23,16 +23,16 @@ struct SideMenuView: View {
             Spacer()
           }.frame(minWidth: 0, maxWidth: .infinity)
         }
-        .padding(.top, 30)
+        .padding(.vertical, 20)
       }
     }
 
     var body: some View {
-      VStack(alignment: .leading) {
+      VStack(alignment: .leading, spacing: 0) {
         Text("Mode")
           .font(.title)
-          .fontWeight(.heavy)
-          .padding(.top, 40)
+          .fontWeight(.bold)
+          .padding(.top, 70)
           .padding(.bottom, 15)
 
         ForEach(GameMode.allCases, id: \.self) { mode in
@@ -98,5 +98,7 @@ struct SideMenuView_Previews: PreviewProvider {
         .environment(\.colorScheme, .dark)
         .modifier(SystemServices())
     }
+    .edgesIgnoringSafeArea(.all)
+    .statusBar(hidden: true)
   }
 }
