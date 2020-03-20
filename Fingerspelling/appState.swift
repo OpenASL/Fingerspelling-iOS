@@ -23,12 +23,42 @@ enum GameMode: String, CaseIterable {
   case expressive = "Expressive"
 }
 
+enum Sheet {
+  case settings
+  case receptiveStats
+  case expressiveStats
+}
+
+struct CompletedWord {
+  var word: String
+  var speed: Double
+
+  init(_ word: String, speed: Double) {
+    self.word = word
+    self.speed = speed
+  }
+}
+
 final class GameState: ObservableObject {
-  @Published var receptiveScore = 0
-  @Published var expressiveScore = 0
-  @Published var isShowingSettings = false
+  @Published var receptiveCompletedWords: [CompletedWord] = []
+  @Published var expressiveCompletedWords: [String] = []
+  @Published var isShowingSheet = false
   @Published var isMenuOpen = false
   @Published var mode: GameMode = .receptive
+  @Published var currentSheet: Sheet = .settings
+
+  var receptiveScore: Int {
+    self.receptiveCompletedWords.count
+  }
+
+  var expressiveScore: Int {
+    self.expressiveCompletedWords.count
+  }
+
+  func toggleSheet(_ sheet: Sheet) {
+    self.currentSheet = sheet
+    self.isShowingSheet.toggle()
+  }
 }
 
 final class PlaybackService: ObservableObject {
@@ -181,6 +211,10 @@ final class UserSettings: ObservableObject {
 
   private var feedback: FeedbackService {
     SystemServices.feedback
+  }
+
+  var speedDisplay: String {
+    String(Int(self.speed))
   }
 
   init() {

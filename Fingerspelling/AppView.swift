@@ -14,12 +14,23 @@ struct AppView: View {
     }
   }
 
+  private var currentSheet: AnyView {
+    switch self.game.currentSheet {
+    case .settings: return AnyView(SettingsView())
+    case .receptiveStats: return AnyView(ReceptiveStatsView())
+    case .expressiveStats: return AnyView(ExpressiveStatsView())
+    }
+  }
+
   var body: some View {
     ZStack {
       self.currentView
         .modifier(RootStyle())
         // Move the current UI up when the keyboard is active
         .padding(.bottom, self.keyboard.currentHeight)
+        .sheet(isPresented: self.$game.isShowingSheet) {
+          self.currentSheet.modifier(SystemServices())
+        }
       SideMenuView(
         width: 280,
         isOpen: self.game.isMenuOpen,

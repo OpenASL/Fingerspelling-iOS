@@ -25,15 +25,11 @@ struct NavbarView<Content: View>: View {
       }
       Divider().padding(.bottom, 10)
     }
-    .sheet(isPresented: self.$game.isShowingSettings) {
-      SettingsView(onClose: self.handleToggleSettings)
-        .modifier(SystemServices())
-    }
     .foregroundColor(.primary)
   }
 
   func handleToggleSettings() {
-    self.game.isShowingSettings.toggle()
+    self.game.toggleSheet(.settings)
     self.playback.stop()
   }
 

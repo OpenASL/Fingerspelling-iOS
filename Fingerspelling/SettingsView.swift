@@ -1,9 +1,9 @@
 import SwiftUI
 
 struct SettingsView: View {
-  var onClose: () -> Void
-
   @EnvironmentObject private var settings: UserSettings
+  @EnvironmentObject private var game: GameState
+  @EnvironmentObject private var playback: PlaybackService
 
   static let wordLengths = Array(3 ... 6) + [Int.max]
 
@@ -38,13 +38,18 @@ struct SettingsView: View {
         }
       }
       .navigationBarTitle("Settings")
-      .navigationBarItems(trailing: Button(action: self.onClose) { Text("Done") })
+      .navigationBarItems(trailing: Button(action: self.handleToggleSettings) { Text("Done") })
     }
+  }
+
+  func handleToggleSettings() {
+    self.game.toggleSheet(.settings)
+    self.playback.stop()
   }
 }
 
 struct SettingsView_Previews: PreviewProvider {
   static var previews: some View {
-    SettingsView(onClose: {}).modifier(SystemServices())
+    SettingsView().modifier(SystemServices())
   }
 }

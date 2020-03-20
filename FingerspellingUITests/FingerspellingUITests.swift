@@ -25,7 +25,6 @@ class FingerspellingUITests: XCTestCase {
 
     self.app.buttons["Done"].tap()
     self.waitForElement(self.app.staticTexts["TURKEY"])
-    XCTAssert(self.app.staticTexts["29"].exists)
   }
 
   func testExpressive() {
@@ -38,6 +37,12 @@ class FingerspellingUITests: XCTestCase {
     self.app.buttons["Reveal"].tap()
 
     snapshot("06Expressive")
+  }
+
+  func testStatsReceptive() {
+    self.app.buttons["28\n3"].tap()
+    self.waitForElement(self.app.staticTexts["Stats (Receptive)"])
+    snapshot("07Stats")
   }
 
   func testOpenCloseSettings() {

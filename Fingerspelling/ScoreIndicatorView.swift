@@ -8,7 +8,7 @@ struct ScoreIndicatorView: View {
   var body: some View {
     HStack {
       Image(systemName: "checkmark")
-        .foregroundColor(self.isHighlighted ? Color.green : .secondary)
+        .foregroundColor(self.isHighlighted ? Color.green : .primary)
       Text(self.textContent)
         .fontWeight(self.isHighlighted ? .bold : .regular)
         .modifier(IndicatorStyle())

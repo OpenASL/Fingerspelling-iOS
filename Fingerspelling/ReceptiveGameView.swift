@@ -22,16 +22,19 @@ struct ReceptiveGameView: View {
     VStack {
       NavbarView {
         HStack {
-          ScoreIndicatorView(
-            textContent: String(self.game.receptiveScore),
-            isHighlighted: self.feedback.hasCorrectAnswer
-          )
-          .padding(.horizontal, 5)
-          HStack {
-            Image(systemName: "metronome").foregroundColor(.secondary)
-            Text(String(Int(self.settings.speed))).modifier(IndicatorStyle())
+          Button(action: self.handleToggleStats) {
+            ScoreIndicatorView(
+              textContent: String(self.game.receptiveScore),
+              isHighlighted: self.feedback.hasCorrectAnswer
+            )
+            .padding(.horizontal, 5)
+            HStack {
+              Image(systemName: "metronome")
+              Text(self.settings.speedDisplay)
+                .modifier(IndicatorStyle())
+            }
+            .padding(.horizontal, 5)
           }
-          .padding(.horizontal, 5)
         }
       }.modifier(SystemServices())
 
@@ -113,7 +116,12 @@ struct ReceptiveGameView: View {
     if self.answerIsCorrect {
       self.handleStop()
       self.feedback.markCorrect()
-      self.game.receptiveScore += 1
+      self.game.receptiveCompletedWords.append(
+        CompletedWord(
+          self.playback.currentWord,
+          speed: self.settings.speed
+        )
+      )
       delayFor(Self.postSubmitDelay) {
         self.handleNextWord()
       }
@@ -123,6 +131,11 @@ struct ReceptiveGameView: View {
         self.feedback.hide()
       }
     }
+  }
+
+  private func handleToggleStats() {
+    self.game.toggleSheet(.receptiveStats)
+    self.playback.stop()
   }
 }
 
