@@ -39,6 +39,12 @@ class FingerspellingUITests: XCTestCase {
     snapshot("06Expressive")
   }
 
+  func testStatsReceptive() {
+    self.app.buttons["28\n3"].tap()
+    self.waitForElement(self.app.staticTexts["Stats (Receptive)"])
+    snapshot("07Stats")
+  }
+
   func testOpenCloseSettings() {
     self.app.buttons["gear"].tap()
 //    snapshot("07Settings")

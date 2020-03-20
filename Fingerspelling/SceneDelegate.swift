@@ -10,9 +10,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
       if isUITesting() {
         let game = SystemServices.game
         let settings = SystemServices.settings
-        for _ in 0 ..< 28 {
+        for _ in 0 ..< 27 {
           game.receptiveCompletedWords.append(CompletedWord("abcde", speed: 4.0))
         }
+        game.receptiveCompletedWords.append(CompletedWord("turkey", speed: 8.0))
         for _ in 0 ..< 12 {
           game.expressiveCompletedWords.append("abcde")
         }
