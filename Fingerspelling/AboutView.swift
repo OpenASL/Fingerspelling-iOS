@@ -2,6 +2,8 @@
 import SwiftUI
 
 struct AboutView: View {
+  @Environment(\.colorScheme) var colorScheme
+
   var appVersion: String {
     Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
   }
@@ -15,10 +17,11 @@ struct AboutView: View {
       string: "This app was inspired by the website http://asl.ms/ created by Dr. Bill Vicars. If you find this app useful, check out ASLU and consider making a donation.",
       attributes: [
         NSAttributedString.Key.font: UIFont.systemFont(ofSize: 18),
+        NSAttributedString.Key.foregroundColor: self.colorScheme == .dark ? UIColor.white : UIColor.black,
       ]
     )
     let parStyle = NSMutableParagraphStyle()
-    parStyle.lineSpacing = 1.5
+    parStyle.lineSpacing = 2.0
     parStyle.lineBreakMode = .byWordWrapping
     attributedString.addAttribute(
       .paragraphStyle,
