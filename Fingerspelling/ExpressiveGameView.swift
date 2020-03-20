@@ -29,10 +29,12 @@ struct ExpressiveGameView: View {
   var body: some View {
     VStack {
       NavbarView {
-        ScoreIndicatorView(
-          textContent: String(self.game.expressiveScore),
-          isHighlighted: self.isHighlightingScore
-        )
+        Button(action: self.handleToggleStats) {
+          ScoreIndicatorView(
+            textContent: String(self.game.expressiveScore),
+            isHighlighted: self.isHighlightingScore
+          )
+        }
       }.modifier(SystemServices())
 
       CurrentWordDisplayView()
@@ -60,11 +62,16 @@ struct ExpressiveGameView: View {
   private func handleContinue() {
     self.playback.setNextWord()
     self.feedback.reset()
-    self.game.expressiveScore += 1
+    self.game.expressiveCompletedWords.append(self.playback.currentWord)
     self.isHighlightingScore = true
     delayFor(1.0) {
       self.isHighlightingScore = false
     }
+  }
+
+  private func handleToggleStats() {
+    self.game.toggleSheet(.expressiveStats)
+    self.playback.stop()
   }
 }
 

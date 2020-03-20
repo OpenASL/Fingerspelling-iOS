@@ -162,3 +162,25 @@ struct AttributedText: UIViewRepresentable {
     label.attributedText = self.attributedText
   }
 }
+
+func rounded(_ number: Double, places: Int) -> Double {
+  let factor = pow(10.0, Double(places))
+  return Double(round(factor * number) / factor)
+}
+
+// MARK: Extensions
+
+extension Collection where Element: Numeric {
+  /// Returns the total sum of all elements in the array
+  var total: Element { reduce(0, +) }
+}
+
+extension Collection where Element: BinaryInteger {
+  /// Returns the average of all elements in the array
+  var average: Double { isEmpty ? 0 : Double(self.total) / Double(count) }
+}
+
+extension Collection where Element: BinaryFloatingPoint {
+  /// Returns the average of all elements in the array
+  var average: Element { isEmpty ? 0 : self.total / Element(count) }
+}

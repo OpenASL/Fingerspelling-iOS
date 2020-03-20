@@ -10,8 +10,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
       if isUITesting() {
         let game = SystemServices.game
         let settings = SystemServices.settings
-        game.receptiveScore = 28
-        game.expressiveScore = 12
+        for _ in 0 ..< 28 {
+          game.receptiveCompletedWords.append(CompletedWord("abcde", speed: 4.0))
+        }
+        for _ in 0 ..< 12 {
+          game.expressiveCompletedWords.append("abcde")
+        }
         settings.speed = 3.0
       }
     #endif
