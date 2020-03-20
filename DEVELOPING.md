@@ -5,9 +5,7 @@
 From the command line:
 
 ```
-xcodebuild test -project Fingerspelling.xcodeproj \
-           -scheme "FingerspellingUITests" \
-           -destination 'platform=iOS Simulator,name=iPhone 8 Plus,OS=13.3'
+./scripts/tests.sh
 ```
 
 Or press Cmd+U in Xcode.
