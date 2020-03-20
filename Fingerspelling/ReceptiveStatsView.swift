@@ -4,6 +4,11 @@ struct ReceptiveStatsView: View {
   @EnvironmentObject var game: GameState
   @EnvironmentObject var settings: UserSettings
 
+  init() {
+    // Remove extra separators below the list
+    UITableView.appearance().tableFooterView = UIView()
+  }
+
   private var longestWord: String {
     self.game.receptiveCompletedWords.max(by: { $0.word.count < $1.word.count })?.word ?? ""
   }
@@ -52,6 +57,7 @@ struct ReceptiveStatsView: View {
       }
       .navigationBarTitle("Stats (Receptive)")
       .navigationBarItems(trailing: Button(action: self.handleToggle) { Text("Done") })
+      .listRowInsets(nil)
     }
   }
 

@@ -3,6 +3,11 @@ import SwiftUI
 struct ExpressiveStatsView: View {
   @EnvironmentObject var game: GameState
 
+  init() {
+    // Remove extra separators below the list
+    UITableView.appearance().tableFooterView = UIView()
+  }
+
   private var longestWord: String {
     self.game.expressiveCompletedWords.max(by: { $0.count < $1.count }) ?? ""
   }
