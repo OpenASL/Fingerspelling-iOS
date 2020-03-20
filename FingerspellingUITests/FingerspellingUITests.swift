@@ -23,7 +23,7 @@ class FingerspellingUITests: XCTestCase {
     self.app.typeText("turkey")
     snapshot("02Receptive")
 
-    self.app/*@START_MENU_TOKEN@*/ .buttons["Done"]/*[[".keyboards",".buttons[\"done\"]",".buttons[\"Done\"]"],[[[-1,2],[-1,1],[-1,0,1]],[[-1,2],[-1,1]]],[0]]@END_MENU_TOKEN@*/ .tap()
+    self.app.buttons["Done"].tap()
     self.waitForElement(self.app.staticTexts["TURKEY"])
     XCTAssert(self.app.staticTexts["29"].exists)
   }
