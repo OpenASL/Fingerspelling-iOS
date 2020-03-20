@@ -29,11 +29,11 @@ struct SideMenuView: View {
 
     var body: some View {
       VStack(alignment: .leading) {
-        Text("ASL Fingerspelling")
-          .font(.system(size: 18))
-          .fontWeight(.light)
+        Text("Mode")
+          .font(.title)
+          .fontWeight(.heavy)
           .padding(.top, 50)
-          .padding(.bottom, 20)
+          .padding(.bottom, 15)
 
         ForEach(GameMode.allCases, id: \.self) { mode in
           ItemButtonView(action: {
