@@ -168,6 +168,11 @@ func rounded(_ number: Double, places: Int) -> Double {
   return Double(round(factor * number) / factor)
 }
 
+func formatNumber(_ number: Double, places: Int = 1) -> String {
+  let roundedNumber = rounded(number, places: places)
+  return roundedNumber == number ? String(Int(number)) : String(roundedNumber)
+}
+
 // MARK: Extensions
 
 extension Collection where Element: Numeric {

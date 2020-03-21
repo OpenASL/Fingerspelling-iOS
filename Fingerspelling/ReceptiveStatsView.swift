@@ -17,6 +17,10 @@ struct ReceptiveStatsView: View {
     (self.game.receptiveCompletedWords.map { $0.word.count }).average
   }
 
+  private var fastestSpeed: Double {
+    self.game.receptiveCompletedWords.max(by: { $0.speed < $1.speed })?.speed ?? 0.0
+  }
+
   private var averageSpeed: Double {
     (self.game.receptiveCompletedWords.map { $0.speed }).average
   }
@@ -46,12 +50,17 @@ struct ReceptiveStatsView: View {
           HStack {
             Text("Average word length")
             Spacer()
-            Text(String(rounded(self.averageWordLength, places: 1)))
+            Text(formatNumber(self.averageWordLength))
+          }
+          HStack {
+            Text("Fastest speed")
+            Spacer()
+            Text(formatNumber(self.fastestSpeed))
           }
           HStack {
             Text("Average speed")
             Spacer()
-            Text(String(rounded(self.averageSpeed, places: 1)))
+            Text(formatNumber(self.averageSpeed))
           }
         }
       }

@@ -36,7 +36,7 @@ struct ExpressiveStatsView: View {
           HStack {
             Text("Average word length")
             Spacer()
-            Text(String(rounded(self.averageWordLength, places: 1)))
+            Text(formatNumber(self.averageWordLength))
           }
         }
       }
