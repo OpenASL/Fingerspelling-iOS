@@ -32,7 +32,6 @@ struct SideMenuView: View {
         Text("Mode")
           .font(.title)
           .fontWeight(.bold)
-          .padding(.top, 70)
           .padding(.bottom, 15)
 
         ForEach(GameMode.allCases, id: \.self) { mode in
@@ -80,6 +79,7 @@ struct SideMenuView: View {
       HStack {
         MenuContentView()
           .frame(width: self.width)
+          .padding(.top, 50)
           .background(self.colorScheme == .dark ? Color.black : Color.white)
           .offset(x: self.isOpen ? 0 : -self.width)
           .animation(.easeOut(duration: 0.2))
