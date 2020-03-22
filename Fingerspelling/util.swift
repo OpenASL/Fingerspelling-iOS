@@ -176,6 +176,10 @@ func formatNumber(_ number: Double, places: Int = 1) -> String {
 
 // MARK: Extensions
 
+extension Color {
+  static let darkGrey = Color(red: 40 / 255, green: 40 / 255, blue: 40 / 255)
+}
+
 extension Collection where Element: Numeric {
   /// Returns the total sum of all elements in the array
   var total: Element { reduce(0, +) }

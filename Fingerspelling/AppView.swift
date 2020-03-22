@@ -38,6 +38,7 @@ struct AppView: View {
       )
       .edgesIgnoringSafeArea(.all)
       .gesture(
+        // TODO: Make menu move when dragged
         DragGesture()
           .onEnded {
             if $0.translation.width < -100 {
