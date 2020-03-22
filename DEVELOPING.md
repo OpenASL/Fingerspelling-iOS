@@ -44,23 +44,20 @@ Run the screenshots:
 fastlane screenshots
 ```
 
-## Bumping version
+## Bumping version and build number
 
-Bump build number:
-
-```
-xcrun agvtool next-version -all
-```
-
-Bump marketing version:
+Replacy `X` with release number.
 
 ```
-xcrun agvtool new-marketing-version YYYY.X
+./scripts/bump.sh 2020.X
 ```
 
 ## Releasing
 
+1. Bump version: `./scripts/bump.sh 2020.X`.
+1. Push: `git push origin master`
 1. In Xcode, choose the "Fingerspelling" scheme and "Generic iOS Device" as the device.
 1. Click Product > Archive and wait for the build to finish (this takes a while).
 1. Click "Distribute app". Hit Next through the following Menus.
-1. Add a new version on App Store Connect then submit the new version.
+1. Add a new version on App Store Connect. If necessary, regenerate snapshots (see above) and upload them.
+1. Submit the new version.
