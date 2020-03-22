@@ -19,23 +19,19 @@ struct ExpressiveStatsView: View {
   var body: some View {
     NavigationView {
       List {
-        HStack {
-          Image(systemName: "checkmark")
-          Text("Words completed")
-          Spacer()
+        StatItemWithIconView(
+          iconName: "checkmark",
+          label: "Words completed"
+        ) {
           Text(String(self.game.expressiveScore))
         }
 
         if !self.game.expressiveCompletedWords.isEmpty {
-          HStack {
-            Text("Longest word")
-            Spacer()
+          StatItemView(label: "Longest word") {
             Text(self.longestWord.uppercased())
               .font(.system(size: 18, design: .monospaced))
           }
-          HStack {
-            Text("Average word length")
-            Spacer()
+          StatItemView(label: "Average word length") {
             Text(formatNumber(self.averageWordLength))
           }
         }
