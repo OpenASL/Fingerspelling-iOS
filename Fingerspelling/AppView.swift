@@ -37,6 +37,14 @@ struct AppView: View {
         onClose: { self.game.isMenuOpen.toggle() }
       )
       .edgesIgnoringSafeArea(.all)
+      .gesture(
+        DragGesture()
+          .onEnded {
+            if $0.translation.width < -100 {
+              self.game.isMenuOpen = false
+            }
+          }
+      )
     }
     .statusBar(hidden: self.game.isMenuOpen)
   }
