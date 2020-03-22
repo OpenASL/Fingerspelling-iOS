@@ -82,6 +82,7 @@ struct SideMenuView: View {
           .padding(.top, 50)
           .background(self.colorScheme == .dark ? Color.black : Color.white)
           .offset(x: self.isOpen ? 0 : -self.width)
+          .cornerRadius(16, corners: [.topRight, .bottomRight])
           .animation(.easeOut(duration: 0.2))
         Spacer()
       }
