@@ -326,15 +326,19 @@ private struct AnswerInput: View {
         return textField
       },
       onUpdate: { textField in
+        // Uppercase all input
         textField.text = self.value.uppercased()
+
         if self.feedback.isShown, !self.isCorrect {
-          textField.layer.cornerRadius = 4.0
-          textField.layer.borderColor = UIColor.red.cgColor
-          textField.layer.borderWidth = 2.0
-        } else {
-          textField.layer.cornerRadius = 8.0
-          textField.layer.borderColor = nil
-          textField.layer.borderWidth = 0
+          // Shake input if incorrect
+          let shake = CABasicAnimation(keyPath: "position")
+          shake.duration = 0.05
+          shake.repeatCount = 2
+          shake.autoreverses = true
+          let displacement: CGFloat = 7
+          shake.fromValue = NSValue(cgPoint: CGPoint(x: textField.center.x - displacement, y: textField.center.y))
+          shake.toValue = NSValue(cgPoint: CGPoint(x: textField.center.x + displacement, y: textField.center.y))
+          textField.layer.add(shake, forKey: "position")
         }
       }
     )
