@@ -31,9 +31,6 @@ struct SettingsView: View {
         }
 
         Section {
-          NavigationLink(destination: PrivacyPolicyView()) {
-            Text("Privacy Policy")
-          }
           NavigationLink(destination: AboutView()) { Text("About") }
         }
       }
