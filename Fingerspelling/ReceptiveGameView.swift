@@ -369,7 +369,7 @@ private struct AnswerInput: View {
           textField.layer.add(shake, forKey: "position")
 
         } else {
-          textField.layer.cornerRadius = 8.0
+          // Remove highlight
           textField.layer.borderColor = nil
           textField.layer.borderWidth = 0
         }
