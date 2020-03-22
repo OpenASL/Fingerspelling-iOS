@@ -8,6 +8,7 @@ struct SystemServices: ViewModifier {
   static var playback = PlaybackService()
   static var feedback = FeedbackService()
   static var settings = UserSettings()
+  static var haptics = HapticFeedbackGenerator()
 
   func body(content: Content) -> some View {
     content
@@ -15,6 +16,7 @@ struct SystemServices: ViewModifier {
       .environmentObject(Self.settings)
       .environmentObject(Self.playback)
       .environmentObject(Self.feedback)
+      .environmentObject(Self.haptics)
   }
 }
 
@@ -241,5 +243,23 @@ final class UserSettings: ObservableObject {
       self.feedback.reset()
       self.objectWillChange.send()
     }
+  }
+
+  @UserDefault("enableHaptics", defaultValue: true)
+  var enableHaptics: Bool {
+    willSet {
+      self.objectWillChange.send()
+    }
+  }
+}
+
+/// UINotificationFeedbackGenerator proxy that reads UserDefaults for the haptics preference
+final class HapticFeedbackGenerator: ObservableObject {
+  private var settings = SystemServices.settings
+
+  private static var generator = UINotificationFeedbackGenerator()
+
+  func generate(_ type: UINotificationFeedbackGenerator.FeedbackType) {
+    if self.settings.enableHaptics { Self.generator.notificationOccurred(type) }
   }
 }

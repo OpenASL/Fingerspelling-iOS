@@ -26,9 +26,15 @@ struct SettingsView: View {
   var body: some View {
     NavigationView {
       Form {
-        LabeledPicker(selection: self.$settings.maxWordLength, label: "Max word length") {
+        LabeledPicker(selection: self.$settings.maxWordLength, label: "Max Word Length") {
           ForEach(Self.wordLengths, id: \.self) {
             Text($0 == Int.max ? "Any" : "\($0) letters").tag($0)
+          }
+        }
+
+        Section {
+          Toggle(isOn: self.$settings.enableHaptics) {
+            Text("Enable Haptics")
           }
         }
 
