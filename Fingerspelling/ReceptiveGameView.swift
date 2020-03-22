@@ -14,8 +14,23 @@ struct ReceptiveGameView: View {
   private static let minSpeed = 1.0
   private static let maxSpeed = 11.0
 
+  private var answerCleaned: String {
+    self.feedback.answerTrimmed.lowercased()
+  }
+
+  private var currentWordClean: String {
+    self.playback.currentWord.lowercased()
+  }
+
   private var answerIsCorrect: Bool {
-    self.feedback.answerTrimmed.lowercased() == self.playback.currentWord.lowercased()
+    self.answerCleaned == self.currentWordClean
+  }
+
+  private var answerIsAlmostCorrect: Bool {
+    (
+      !self.answerIsCorrect &&
+        self.answerCleaned.levenshteinDistance(to: self.currentWordClean) < 3
+    )
   }
 
   var body: some View {
@@ -44,7 +59,12 @@ struct ReceptiveGameView: View {
 
       HStack {
         if !self.game.isMenuOpen {
-          AnswerInput(value: self.$feedback.answer, onSubmit: self.handleSubmit, isCorrect: self.answerIsCorrect).modifier(SystemServices())
+          AnswerInput(
+            value: self.$feedback.answer,
+            onSubmit: self.handleSubmit,
+            isCorrect: self.answerIsCorrect,
+            isAlmostCorrect: self.answerIsAlmostCorrect
+          ).modifier(SystemServices())
         }
         if !self.feedback.shouldDisableControls {
           Spacer()
@@ -302,6 +322,7 @@ private struct AnswerInput: View {
   @Binding var value: String
   var onSubmit: () -> Void
   var isCorrect: Bool = true
+  var isAlmostCorrect: Bool = true
   var disabled: Bool = false
 
   @EnvironmentObject var feedback: FeedbackService
@@ -330,15 +351,27 @@ private struct AnswerInput: View {
         textField.text = self.value.uppercased()
 
         if self.feedback.isShown, !self.isCorrect {
+          if self.isAlmostCorrect {
+            // Highlight
+            textField.layer.cornerRadius = 4.0
+            textField.layer.borderColor = UIColor.systemYellow.withAlphaComponent(0.4).cgColor
+            textField.layer.borderWidth = 2.0
+          }
+
           // Shake input if incorrect
           let shake = CABasicAnimation(keyPath: "position")
           shake.duration = 0.05
-          shake.repeatCount = 2
+          shake.repeatCount = self.isAlmostCorrect ? 1 : 2
           shake.autoreverses = true
           let displacement: CGFloat = 7
           shake.fromValue = NSValue(cgPoint: CGPoint(x: textField.center.x - displacement, y: textField.center.y))
           shake.toValue = NSValue(cgPoint: CGPoint(x: textField.center.x + displacement, y: textField.center.y))
           textField.layer.add(shake, forKey: "position")
+
+        } else {
+          textField.layer.cornerRadius = 8.0
+          textField.layer.borderColor = nil
+          textField.layer.borderWidth = 0
         }
       }
     )
