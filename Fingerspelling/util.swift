@@ -154,13 +154,34 @@ struct AttributedText: UIViewRepresentable {
     self.attributedText = attributedText
   }
 
-  func makeUIView(context _: Context) -> UITextView {
-    UITextView()
+  func makeUIView(context _: UIViewRepresentableContext<AttributedText>) -> UITextView {
+    let textView = UITextView()
+    textView.isEditable = false
+    return textView
   }
 
   func updateUIView(_ label: UITextView, context _: Context) {
     label.attributedText = self.attributedText
   }
+}
+
+func makeContentString(_ text: String, colorScheme: ColorScheme) -> NSMutableAttributedString {
+  let attributedString = NSMutableAttributedString(
+    string: text,
+    attributes: [
+      NSAttributedString.Key.font: UIFont.systemFont(ofSize: 18),
+      NSAttributedString.Key.foregroundColor: colorScheme == .dark ? UIColor.white : UIColor.black,
+    ]
+  )
+  let parStyle = NSMutableParagraphStyle()
+  parStyle.lineSpacing = 2.0
+  parStyle.lineBreakMode = .byWordWrapping
+  attributedString.addAttribute(
+    .paragraphStyle,
+    value: parStyle,
+    range: NSRange(location: 0, length: attributedString.length)
+  )
+  return attributedString
 }
 
 func rounded(_ number: Double, places: Int) -> Double {

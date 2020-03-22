@@ -7,7 +7,6 @@ struct SettingsView: View {
   @EnvironmentObject private var playback: PlaybackService
 
   static let wordLengths = Array(3 ... 6) + [Int.max]
-  static let feedbackEmail = "sloria1+Fingerspelling@gmail.com"
   static let appId = "id1503242863"
 
   struct LabeledPicker<SelectionValue: Hashable, Content: View>: View {
@@ -34,8 +33,8 @@ struct SettingsView: View {
         }
 
         Section {
-          Button(action: { self.isShowingFeedbackAlert.toggle() }) {
-            Text("Send Feedback").foregroundColor(.primary).fontWeight(.semibold)
+          NavigationLink(destination: FeedbackView()) {
+            Text("Send Feedback").fontWeight(.semibold)
           }
           Button(action: self.handleRate) {
             Text("Rate Fingerspelling").foregroundColor(.primary)
@@ -46,20 +45,11 @@ struct SettingsView: View {
       .navigationBarTitle("Settings")
       .navigationBarItems(trailing: Button(action: self.handleToggleSettings) { Text("Done") })
     }
-    .alert(isPresented: self.$isShowingFeedbackAlert) {
-      Alert(
-        title: Text("Send Feedback"),
-        message: Text("Send your feedback, questions, and ideas to \(Self.feedbackEmail)"),
-        primaryButton: .default(Text("Open Mail").fontWeight(.bold), action: self.handleSendFeedback),
-        secondaryButton: .default(Text("Not Now"))
-      )
-    }
   }
 
-  private func handleSendFeedback() {
-    if let url = URL(string: "mailto:\(Self.feedbackEmail)") {
-      UIApplication.shared.open(url)
-    }
+  private func handleToggleSettings() {
+    self.game.toggleSheet(.settings)
+    self.playback.stop()
   }
 
   private func handleRate() {
@@ -67,11 +57,6 @@ struct SettingsView: View {
       UIApplication.shared.canOpenURL(url) {
       UIApplication.shared.open(url, options: [:], completionHandler: nil)
     }
-  }
-
-  private func handleToggleSettings() {
-    self.game.toggleSheet(.settings)
-    self.playback.stop()
   }
 }
 
