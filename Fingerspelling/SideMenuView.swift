@@ -69,7 +69,7 @@ struct SideMenuView: View {
       GeometryReader { _ in
         EmptyView()
       }
-      .background(Color.gray.opacity(0.3))
+      .background(self.colorScheme == .dark ? Color.black.opacity(0.5) : Color.gray.opacity(0.3))
       .opacity(self.isOpen ? 1.0 : 0.0)
       .animation(.easeIn(duration: 0.2))
       .onTapGesture {
@@ -80,8 +80,9 @@ struct SideMenuView: View {
         MenuContentView()
           .frame(width: self.width)
           .padding(.top, 50)
-          .background(self.colorScheme == .dark ? Color.black : Color.white)
+          .background(self.colorScheme == .dark ? Color.darkGrey : Color.white)
           .offset(x: self.isOpen ? 0 : -self.width)
+          .cornerRadius(16, corners: [.topRight, .bottomRight])
           .animation(.easeOut(duration: 0.2))
         Spacer()
       }
@@ -95,6 +96,7 @@ struct SideMenuView_Previews: PreviewProvider {
       SideMenuView(width: 280, isOpen: true, onClose: {})
         .modifier(SystemServices())
       SideMenuView(width: 280, isOpen: true, onClose: {})
+        .background(Color.black)
         .environment(\.colorScheme, .dark)
         .modifier(SystemServices())
     }
