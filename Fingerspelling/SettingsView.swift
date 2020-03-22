@@ -1,11 +1,13 @@
 import SwiftUI
 
 struct SettingsView: View {
+  @State var isShowingFeedbackAlert = false
   @EnvironmentObject private var settings: UserSettings
   @EnvironmentObject private var game: GameState
   @EnvironmentObject private var playback: PlaybackService
 
   static let wordLengths = Array(3 ... 6) + [Int.max]
+  static let appId = "id1503242863"
 
   struct LabeledPicker<SelectionValue: Hashable, Content: View>: View {
     var selection: Binding<SelectionValue>
@@ -31,6 +33,12 @@ struct SettingsView: View {
         }
 
         Section {
+          NavigationLink(destination: FeedbackView()) {
+            Text("Send Feedback").fontWeight(.semibold)
+          }
+          Button(action: self.handleRate) {
+            Text("Rate Fingerspelling").foregroundColor(.primary)
+          }
           NavigationLink(destination: AboutView()) { Text("About") }
         }
       }
@@ -39,9 +47,16 @@ struct SettingsView: View {
     }
   }
 
-  func handleToggleSettings() {
+  private func handleToggleSettings() {
     self.game.toggleSheet(.settings)
     self.playback.stop()
+  }
+
+  private func handleRate() {
+    if let url = URL(string: "https://itunes.apple.com/us/app/appName/\(Self.appId)?mt=8&action=write-review"),
+      UIApplication.shared.canOpenURL(url) {
+      UIApplication.shared.open(url, options: [:], completionHandler: nil)
+    }
   }
 }
 
