@@ -229,6 +229,9 @@ private struct MainDisplay: View {
 
 private struct WordPlayerView: View {
   @EnvironmentObject var playback: PlaybackService
+  @State private var letterOffset: CGFloat = 0
+
+  static let repeatOffset: CGFloat = -20
 
   var body: some View {
     // XXX: Complicated implementation of an animated image
@@ -238,11 +241,16 @@ private struct WordPlayerView: View {
       .resizable()
       .frame(width: 225, height: 225)
       .scaledToFit()
-      .offset(x: self.playback.currentLetterIsRepeat ? -20 : 0)
+      .offset(CGSize(width: self.letterOffset, height: 0))
       .onReceive(
         self.playback.playTimer!.publisher,
         perform: { _ in
           self.playback.setNextLetter()
+          if self.playback.currentLetterIsRepeat {
+            self.letterOffset += Self.repeatOffset
+          } else {
+            self.letterOffset = 0
+          }
         }
       )
       .onAppear {
