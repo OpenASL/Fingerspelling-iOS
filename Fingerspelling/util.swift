@@ -176,6 +176,23 @@ func formatNumber(_ number: Double, places: Int = 1) -> String {
 
 // MARK: Extensions
 
+extension String {
+  // https://stackoverflow.com/a/44102415/1157536
+  func levenshteinDistance(to: String) -> Int {
+    let empty = [Int](repeating: 0, count: to.count)
+    var last = [Int](0 ... to.count)
+
+    for (i, char1) in self.enumerated() {
+      var cur = [i + 1] + empty
+      for (j, char2) in to.enumerated() {
+        cur[j + 1] = char1 == char2 ? last[j] : Swift.min(last[j], last[j + 1], cur[j]) + 1
+      }
+      last = cur
+    }
+    return last.last!
+  }
+}
+
 extension Color {
   static let darkGrey = Color(red: 40 / 255, green: 40 / 255, blue: 40 / 255)
 }
