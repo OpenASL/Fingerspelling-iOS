@@ -14,23 +14,23 @@ struct ReceptiveGameView: View {
   private static let minSpeed = 1.0
   private static let maxSpeed = 11.0
 
-  private var answerCleaned: String {
-    self.feedback.answerTrimmed.lowercased()
-  }
-
-  private var currentWordClean: String {
-    self.playback.currentWord.lowercased()
-  }
-
   private var answerIsCorrect: Bool {
-    self.answerCleaned == self.currentWordClean
+    self.answerClean == self.currentWordClean
   }
 
   private var answerIsAlmostCorrect: Bool {
     (
       !self.answerIsCorrect &&
-        self.answerCleaned.levenshteinDistance(to: self.currentWordClean) < 3
+        self.answerClean.levenshteinDistance(to: self.currentWordClean) < 3
     )
+  }
+
+  private var answerClean: String {
+    self.feedback.answerTrimmed.lowercased()
+  }
+
+  private var currentWordClean: String {
+    self.playback.currentWord.lowercased()
   }
 
   var body: some View {
