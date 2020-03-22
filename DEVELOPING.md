@@ -55,7 +55,7 @@ Replacy `X` with release number.
 ## Releasing
 
 1. Bump version: `./scripts/bump.sh 2020.X`.
-1. Push: `git push origin master`
+1. Push: `git push --tags origin master`
 1. In Xcode, choose the "Fingerspelling" scheme and "Generic iOS Device" as the device.
 1. Click Product > Archive and wait for the build to finish (this takes a while).
 1. Click "Distribute app". Hit Next through the following Menus.
