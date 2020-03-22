@@ -28,38 +28,34 @@ struct ReceptiveStatsView: View {
   var body: some View {
     NavigationView {
       List {
-        HStack {
-          Image(systemName: "checkmark")
-          Text("Words completed")
-          Spacer()
+        StatItemWithIconView(
+          iconName: "checkmark",
+          label: "Words completed"
+        ) {
           Text(String(self.game.receptiveScore))
         }
-        HStack {
-          Image(systemName: "metronome")
-          Text("Current speed")
-          Spacer()
+        StatItemWithIconView(
+          iconName: "metronome",
+          label: "Current speed"
+        ) {
           Text(self.settings.speedDisplay)
         }
+
         if !self.game.receptiveCompletedWords.isEmpty {
-          HStack {
-            Text("Longest word")
-            Spacer()
+          StatItemView(label: "Longest word") {
             Text(self.longestWord.uppercased())
               .font(.system(size: 18, design: .monospaced))
           }
-          HStack {
-            Text("Average word length")
-            Spacer()
+
+          StatItemView(label: "Average word length") {
             Text(formatNumber(self.averageWordLength))
           }
-          HStack {
-            Text("Fastest speed")
-            Spacer()
+
+          StatItemView(label: "Fastest speed") {
             Text(formatNumber(self.fastestSpeed))
           }
-          HStack {
-            Text("Average speed")
-            Spacer()
+
+          StatItemView(label: "Average speed") {
             Text(formatNumber(self.averageSpeed))
           }
         }

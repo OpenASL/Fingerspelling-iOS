@@ -13,6 +13,7 @@
 		43422CA32421DED30026D68D /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43422CA22421DED30026D68D /* AboutView.swift */; };
 		4365109524246A0700EB8937 /* ReceptiveStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4365109424246A0700EB8937 /* ReceptiveStatsView.swift */; };
 		4365109724246A4D00EB8937 /* ExpressiveStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4365109624246A4D00EB8937 /* ExpressiveStatsView.swift */; };
+		438EEEBE2427D58600F74F9A /* StatItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 438EEEBD2427D58600F74F9A /* StatItemView.swift */; };
 		43BCEB3A2421053A0033A56B /* ReceptiveGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43BCEB392421053A0033A56B /* ReceptiveGameView.swift */; };
 		43BCEB3C24210AB40033A56B /* ExpressiveGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43BCEB3B24210AB40033A56B /* ExpressiveGameView.swift */; };
 		43BCEB3E24210E4C0033A56B /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43BCEB3D24210E4C0033A56B /* SettingsView.swift */; };
@@ -51,6 +52,7 @@
 		43422CA22421DED30026D68D /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		4365109424246A0700EB8937 /* ReceptiveStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceptiveStatsView.swift; sourceTree = "<group>"; };
 		4365109624246A4D00EB8937 /* ExpressiveStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpressiveStatsView.swift; sourceTree = "<group>"; };
+		438EEEBD2427D58600F74F9A /* StatItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatItemView.swift; sourceTree = "<group>"; };
 		43BCEB392421053A0033A56B /* ReceptiveGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReceptiveGameView.swift; sourceTree = "<group>"; };
 		43BCEB3B24210AB40033A56B /* ExpressiveGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpressiveGameView.swift; sourceTree = "<group>"; };
 		43BCEB3D24210E4C0033A56B /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -151,6 +153,7 @@
 				43422CA22421DED30026D68D /* AboutView.swift */,
 				4365109424246A0700EB8937 /* ReceptiveStatsView.swift */,
 				4365109624246A4D00EB8937 /* ExpressiveStatsView.swift */,
+				438EEEBD2427D58600F74F9A /* StatItemView.swift */,
 			);
 			path = Fingerspelling;
 			sourceTree = "<group>";
@@ -282,6 +285,7 @@
 				43D610852413D8640089DE4D /* AppView.swift in Sources */,
 				43BCEB462421127D0033A56B /* SideMenuView.swift in Sources */,
 				43BCEB44242111AE0033A56B /* ScoreIndicatorView.swift in Sources */,
+				438EEEBE2427D58600F74F9A /* StatItemView.swift in Sources */,
 				43BCEB51242126900033A56B /* Words.swift in Sources */,
 				43BCEB4A2421151E0033A56B /* appState.swift in Sources */,
 				4321ECCF2421DC6D00DBA702 /* PrivacyPolicyView.swift in Sources */,
