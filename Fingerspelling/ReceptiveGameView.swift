@@ -195,6 +195,7 @@ private struct MainDisplay: View {
 
   @EnvironmentObject var playback: PlaybackService
   @EnvironmentObject var feedback: FeedbackService
+  @Environment(\.colorScheme) var colorScheme
 
   var onboarding: some View {
     Group {
@@ -217,9 +218,18 @@ private struct MainDisplay: View {
       if !self.playback.isPlaying {
         if !self.feedback.hasSubmitted {
           self.onboarding
-        }
-        if self.feedback.isShown || self.feedback.hasCorrectAnswer {
+        } else if self.feedback.isShown || self.feedback.hasCorrectAnswer {
           FeedbackDisplayView(isCorrect: self.feedback.hasCorrectAnswer)
+        } else {
+          // Tapping center of display area replays
+          GeometryReader { _ in
+            EmptyView()
+          }
+          .frame(width: 200, height: 200)
+          .background(self.colorScheme == .dark ? Color.black : Color.white)
+          .onTapGesture {
+            self.onPlay()
+          }
         }
       } else {
         // Need to pass SystemServices due to a bug in SwiftUI
@@ -402,6 +412,7 @@ struct ReceptiveGameView_Previews: PreviewProvider {
     // Modify these during development to update the preview
     playback.isPlaying = false
     playback.currentWord = "foo"
+    feedback.hasSubmitted = true
     feedback.isShown = false
 
     return ReceptiveGameView().modifier(RootStyle()).modifier(SystemServices())
