@@ -18,7 +18,7 @@ struct NavbarView<Content: View>: View {
           }
           Spacer()
           Button(action: self.handleToggleSettings) {
-            Image(systemName: "gear").padding(.leading, 5)
+            Image(systemName: "gear").font(Font.body.weight(.bold)).padding(.leading, 5)
           }
         }
         self.content()
