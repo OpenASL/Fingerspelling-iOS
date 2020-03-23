@@ -8,11 +8,13 @@ struct ReceptiveGameView: View {
   @EnvironmentObject private var playback: PlaybackService
   @EnvironmentObject private var feedback: FeedbackService
   @EnvironmentObject private var settings: UserSettings
+  @EnvironmentObject var haptics: HapticFeedbackGenerator
 
   private static let postSubmitDelay = 2.0 // seconds
   private static let nextWordDelay = 1.0 // seconds
   private static let minSpeed = 1.0
   private static let maxSpeed = 11.0
+  private static let feedbackGenerator = UINotificationFeedbackGenerator()
 
   private var answerIsCorrect: Bool {
     self.answerClean == self.currentWordClean
@@ -146,6 +148,7 @@ struct ReceptiveGameView: View {
         self.handleNextWord()
       }
     } else {
+      self.haptics.generate(self.answerIsAlmostCorrect ? .warning : .error)
       self.feedback.markIncorrect()
       delayFor(0.5) {
         self.feedback.hide()
