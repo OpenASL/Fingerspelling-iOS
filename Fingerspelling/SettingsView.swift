@@ -6,7 +6,7 @@ struct SettingsView: View {
   @EnvironmentObject private var game: GameState
   @EnvironmentObject private var playback: PlaybackService
 
-  static let wordLengths = Array(3 ... 6) + [Int.max]
+  static let wordLengths = Array(3 ... 8) + [Int.max]
   static let appId = "id1503242863"
 
   struct LabeledPicker<SelectionValue: Hashable, Content: View>: View {
@@ -26,9 +26,9 @@ struct SettingsView: View {
   var body: some View {
     NavigationView {
       Form {
-        LabeledPicker(selection: self.$settings.maxWordLength, label: "Max Word Length") {
+        LabeledPicker(selection: self.$settings.maxWordLength, label: "Max Word Length (Letters)") {
           ForEach(Self.wordLengths, id: \.self) {
-            Text($0 == Int.max ? "Any" : "\($0) letters").tag($0)
+            Text($0 == Int.max ? "Any" : String($0)).tag($0)
           }
         }
 
