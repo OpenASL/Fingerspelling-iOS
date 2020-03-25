@@ -43,7 +43,11 @@ struct SettingsView: View {
             Text("Send Feedback").fontWeight(.semibold)
           }
           Button(action: self.handleRate) {
-            Text("Rate Fingerspelling").foregroundColor(.primary)
+            HStack {
+              Text("Rate Fingerspelling").foregroundColor(.primary)
+              Spacer()
+              Image(systemName: "arrow.up.right").foregroundColor(.gray)
+            }
           }
           NavigationLink(destination: AboutView()) { Text("About") }
         }
