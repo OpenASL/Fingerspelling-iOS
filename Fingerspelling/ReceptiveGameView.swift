@@ -222,14 +222,16 @@ private struct MainDisplay: View {
         } else if self.feedback.isShown || self.feedback.hasCorrectAnswer {
           FeedbackDisplayView(isCorrect: self.feedback.hasCorrectAnswer)
         } else {
-          // Tapping center of display area replays
-          GeometryReader { _ in
-            EmptyView()
-          }
-          .frame(width: 200, height: 200)
-          .background(self.colorScheme == .dark ? Color.black : Color.white)
-          .onTapGesture {
-            self.onPlay()
+          if !self.feedback.isRevealed {
+            // Tapping center of display area replays
+            GeometryReader { _ in
+              EmptyView()
+            }
+            .frame(minWidth: 200, maxWidth: 250, minHeight: 150, maxHeight: 200)
+            .background(self.colorScheme == .dark ? Color.black : Color.white)
+            .onTapGesture {
+              self.onPlay()
+            }
           }
         }
       } else {
@@ -253,7 +255,7 @@ private struct WordPlayerView: View {
     //   SwiftUI yet: https://stackoverflow.com/a/57749621/1157536
     Image(uiImage: self.playback.currentLetterImage)
       .resizable()
-      .frame(minWidth: 225, maxWidth: 350, minHeight: 225, maxHeight: 350)
+      .frame(minWidth: 175, maxWidth: 350, minHeight: 175, maxHeight: 350)
       .scaledToFit()
       .offset(CGSize(width: self.letterOffset, height: 0))
       .onReceive(
