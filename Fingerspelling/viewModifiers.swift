@@ -8,26 +8,10 @@ struct RootStyle: ViewModifier {
   }
 }
 
-struct IconButton: ViewModifier {
-  func body(content: Content) -> some View {
-    content
-      .padding()
-      .font(.system(size: 24))
-  }
-}
-
 struct IndicatorStyle: ViewModifier {
   func body(content: Content) -> some View {
     content
-      .font(.system(size: 14, design: .monospaced))
-  }
-}
-
-struct MainDisplayIcon: ViewModifier {
-  func body(content: Content) -> some View {
-    content
-      .padding()
-      .font(.system(size: 120))
+      .font(.system(.callout, design: .monospaced))
   }
 }
 
