@@ -69,7 +69,7 @@ struct SideMenuView: View {
       GeometryReader { _ in
         EmptyView()
       }
-      .background(self.colorScheme == .dark ? Color.black.opacity(0.5) : Color.gray.opacity(0.3))
+      .background(Color.black.opacity(0.5))
       .opacity(self.isOpen ? 1.0 : 0.0)
       .animation(.easeIn(duration: 0.2))
       .onTapGesture {

@@ -8,7 +8,7 @@ struct CheckmarkAnimationView: View {
 
   var body: some View {
     Image(systemName: "checkmark.circle")
-      .font(.system(size: self.size))
+      .font(Font.system(size: self.size).weight(.light))
       .foregroundColor(.green)
       .scaleEffect(displayCheckmark ? 1.5 : 1)
       .animation(.spring())

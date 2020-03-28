@@ -42,7 +42,7 @@ struct ExpressiveGameView: View {
       if self.feedback.isRevealed {
         SpellingDisplayView()
       } else if !self.feedback.hasRevealed {
-        Text("Fingerspell the word above.").font(.system(size: 24))
+        Text("Fingerspell the word above.").font(.system(size: 20))
       }
       Spacer()
       self.controls.padding(.bottom)

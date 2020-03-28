@@ -198,19 +198,20 @@ private struct MainDisplay: View {
 
   var onboarding: some View {
     Group {
-      if !self.playback.hasPlayed {
-        Button(action: self.onPlay) {
+      Button(action: self.onPlay) {
+        if !self.playback.hasPlayed {
           HStack {
-            Text("Press ").foregroundColor(Color.primary)
+            Text("Press ")
             Image(systemName: "play").foregroundColor(Color.accentColor)
-            Text(" to begin.").foregroundColor(Color.primary)
+            Text(" to begin.")
           }
+        } else {
+          Text("Enter the word you saw.")
         }
-      } else {
-        Text("Enter the word you saw.")
       }
     }
     .font(.system(size: 20))
+    .foregroundColor(Color.primary)
     .frame(width: 300, height: 150)
   }
 
