@@ -283,42 +283,8 @@ private struct FeedbackDisplayView: View {
   var body: some View {
     Group {
       if self.isCorrect {
-        CheckmarkAnimationView(startX: -120, startY: -370)
+        CheckmarkAnimationView()
       }
-    }
-  }
-}
-
-private struct CheckmarkAnimationView: View {
-  @State private var displayBorder = false
-  @State private var displayCheckmark = false
-
-  var startX: CGFloat
-  var startY: CGFloat
-
-  var body: some View {
-    ZStack {
-      Circle()
-        .strokeBorder(style: StrokeStyle(lineWidth: displayBorder ? 5 : 64))
-        .frame(width: 128, height: 128)
-        .foregroundColor(.green)
-        .animation(Animation.easeOut(duration: 0.6).speed(3.0))
-        .onAppear {
-          self.displayBorder.toggle()
-        }
-      Path { path in
-        path.move(to: CGPoint(x: self.startX, y: self.startY))
-        path.addLine(to: CGPoint(x: self.startX, y: self.startY))
-        path.addLine(to: CGPoint(x: self.startX + 20, y: self.startY + 20))
-        path.addLine(to: CGPoint(x: self.startX + 60, y: self.startY - 20))
-      }.trim(from: 0, to: displayCheckmark ? 1 : 0)
-        .stroke(style: StrokeStyle(lineWidth: 10, lineCap: .round, lineJoin: .round))
-        .foregroundColor(displayCheckmark ? .green : .white)
-        .offset(x: 155, y: 450)
-        .animation(Animation.interpolatingSpring(stiffness: 160, damping: 20).delay(0.3))
-        .onAppear {
-          self.displayCheckmark.toggle()
-        }
     }
   }
 }
