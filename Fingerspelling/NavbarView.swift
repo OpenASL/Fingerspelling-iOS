@@ -13,12 +13,16 @@ struct NavbarView<Content: View>: View {
       ZStack {
         HStack {
           Button(action: self.handleOpenMenu) {
-            Image(systemName: "line.horizontal.3").padding(.trailing, 5)
-            GameModeIconView(mode: self.game.mode).padding(.trailing)
+            Image(systemName: "line.horizontal.3")
+              .padding(.trailing, 5)
+            GameModeIconView(mode: self.game.mode)
+              .padding(.trailing)
           }
           Spacer()
           Button(action: self.handleToggleSettings) {
-            Image(systemName: "gear").font(Font.body.weight(.bold)).padding(.leading, 5)
+            Image(systemName: "gear")
+              .font(Font.body.weight(.bold))
+              .padding(.leading, 5)
           }
         }
         self.content()

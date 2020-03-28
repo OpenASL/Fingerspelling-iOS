@@ -48,7 +48,7 @@ struct SideMenuView: View {
         }
         Spacer()
       }
-      .font(.system(size: 18))
+      .font(.system(size: 20))
       .foregroundColor(.primary)
       .padding()
       .frame(maxWidth: .infinity, alignment: .leading)

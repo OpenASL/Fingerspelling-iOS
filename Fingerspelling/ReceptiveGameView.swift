@@ -69,10 +69,9 @@ struct ReceptiveGameView: View {
           ).modifier(SystemServices())
         }
         if !self.feedback.shouldDisableControls {
-          Spacer()
           Button(action: self.handleReveal) {
             Text("Reveal")
-              .font(.system(size: 14))
+              .font(.callout)
               .foregroundColor(self.playback.isPlaying ? .gray : .primary)
               .frame(height: 30)
           }.disabled(self.playback.isPlaying)
@@ -80,7 +79,7 @@ struct ReceptiveGameView: View {
       }
       Spacer()
 
-      MainDisplay(onPlay: self.handlePlay).frame(width: 100, height: 150)
+      MainDisplay(onPlay: self.handlePlay)
 
       Spacer()
       SpeedControlView(
@@ -205,12 +204,14 @@ private struct MainDisplay: View {
             Text("Press ").foregroundColor(Color.primary)
             Image(systemName: "play").foregroundColor(Color.accentColor)
             Text(" to begin.").foregroundColor(Color.primary)
-          }.frame(width: 200, height: 150)
+          }
         }
       } else {
-        Text("Enter the word you saw.").frame(width: 200, height: 150)
+        Text("Enter the word you saw.")
       }
     }
+    .font(.system(size: 20))
+    .frame(width: 300, height: 150)
   }
 
   var body: some View {
@@ -252,7 +253,7 @@ private struct WordPlayerView: View {
     //   SwiftUI yet: https://stackoverflow.com/a/57749621/1157536
     Image(uiImage: self.playback.currentLetterImage)
       .resizable()
-      .frame(width: 225, height: 225)
+      .frame(minWidth: 225, maxWidth: 350, minHeight: 225, maxHeight: 350)
       .scaledToFit()
       .offset(CGSize(width: self.letterOffset, height: 0))
       .onReceive(
@@ -282,42 +283,8 @@ private struct FeedbackDisplayView: View {
   var body: some View {
     Group {
       if self.isCorrect {
-        CheckmarkAnimationView(startX: -120, startY: -370)
+        CheckmarkAnimationView()
       }
-    }
-  }
-}
-
-private struct CheckmarkAnimationView: View {
-  @State private var displayBorder = false
-  @State private var displayCheckmark = false
-
-  var startX: CGFloat
-  var startY: CGFloat
-
-  var body: some View {
-    ZStack {
-      Circle()
-        .strokeBorder(style: StrokeStyle(lineWidth: displayBorder ? 5 : 64))
-        .frame(width: 128, height: 128)
-        .foregroundColor(.green)
-        .animation(Animation.easeOut(duration: 0.6).speed(3.0))
-        .onAppear {
-          self.displayBorder.toggle()
-        }
-      Path { path in
-        path.move(to: CGPoint(x: self.startX, y: self.startY))
-        path.addLine(to: CGPoint(x: self.startX, y: self.startY))
-        path.addLine(to: CGPoint(x: self.startX + 20, y: self.startY + 20))
-        path.addLine(to: CGPoint(x: self.startX + 60, y: self.startY - 20))
-      }.trim(from: 0, to: displayCheckmark ? 1 : 0)
-        .stroke(style: StrokeStyle(lineWidth: 10, lineCap: .round, lineJoin: .round))
-        .foregroundColor(displayCheckmark ? .green : .white)
-        .offset(x: 155, y: 450)
-        .animation(Animation.interpolatingSpring(stiffness: 160, damping: 20).delay(0.3))
-        .onAppear {
-          self.displayCheckmark.toggle()
-        }
     }
   }
 }
@@ -363,7 +330,8 @@ private struct AnswerInput: View {
         textField.autocorrectionType = .no
         textField.returnKeyType = .done
         textField.keyboardType = .asciiCapable
-        textField.font = .monospacedSystemFont(ofSize: 18.0, weight: .regular)
+        let font = UIFont.preferredFont(forTextStyle: .title3)
+        textField.font = .monospacedSystemFont(ofSize: font.pointSize, weight: .regular)
         textField.clearButtonMode = .whileEditing
         return textField
       },
@@ -399,7 +367,10 @@ private struct AnswerInput: View {
     // Hide input after success.
     // Note: we use opacity to hide because the text field needs to be present for the keyboard
     //   to remain on the screen and we set the frame to 0 to make room for the correct word display.
-    .frame(width: self.feedback.shouldDisableControls ? 0 : 280, height: self.feedback.hasCorrectAnswer ? 0 : 30)
+    .frame(
+      maxWidth: self.feedback.shouldDisableControls ? 0 : 280,
+      maxHeight: self.feedback.hasCorrectAnswer ? 0 : 30
+    )
     .opacity(self.feedback.shouldDisableControls ? 0 : 1)
   }
 }
@@ -412,7 +383,7 @@ struct ReceptiveGameView_Previews: PreviewProvider {
     // Modify these during development to update the preview
     playback.isPlaying = false
     playback.currentWord = "foo"
-    feedback.hasSubmitted = true
+    feedback.hasSubmitted = false
     feedback.isShown = false
 
     return ReceptiveGameView().modifier(RootStyle()).modifier(SystemServices())

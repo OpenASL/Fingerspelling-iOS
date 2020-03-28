@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4315BFF12427F9CC002E2C38 /* FeedbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4315BFF02427F9CC002E2C38 /* FeedbackView.swift */; };
+		4317BBB8242FB99D00A2093D /* CheckmarkAnimationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4317BBB7242FB99D00A2093D /* CheckmarkAnimationView.swift */; };
 		4321ECC32421812B00DBA702 /* FingerspellingUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4321ECC22421812B00DBA702 /* FingerspellingUITests.swift */; };
 		4321ECCD2421A56200DBA702 /* SnapshotHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4321ECCC2421A56200DBA702 /* SnapshotHelper.swift */; };
 		43422CA32421DED30026D68D /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43422CA22421DED30026D68D /* AboutView.swift */; };
@@ -45,6 +46,7 @@
 
 /* Begin PBXFileReference section */
 		4315BFF02427F9CC002E2C38 /* FeedbackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackView.swift; sourceTree = "<group>"; };
+		4317BBB7242FB99D00A2093D /* CheckmarkAnimationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckmarkAnimationView.swift; sourceTree = "<group>"; };
 		4321ECC02421812B00DBA702 /* FingerspellingUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FingerspellingUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4321ECC22421812B00DBA702 /* FingerspellingUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FingerspellingUITests.swift; sourceTree = "<group>"; };
 		4321ECC42421812B00DBA702 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -154,6 +156,7 @@
 				4365109624246A4D00EB8937 /* ExpressiveStatsView.swift */,
 				438EEEBD2427D58600F74F9A /* StatItemView.swift */,
 				4315BFF02427F9CC002E2C38 /* FeedbackView.swift */,
+				4317BBB7242FB99D00A2093D /* CheckmarkAnimationView.swift */,
 			);
 			path = Fingerspelling;
 			sourceTree = "<group>";
@@ -275,6 +278,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				43D610812413D8640089DE4D /* AppDelegate.swift in Sources */,
+				4317BBB8242FB99D00A2093D /* CheckmarkAnimationView.swift in Sources */,
 				4315BFF12427F9CC002E2C38 /* FeedbackView.swift in Sources */,
 				43D610832413D8640089DE4D /* SceneDelegate.swift in Sources */,
 				4365109524246A0700EB8937 /* ReceptiveStatsView.swift in Sources */,
@@ -479,7 +483,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.openasl.Fingerspelling;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
@@ -501,7 +505,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.openasl.Fingerspelling;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
