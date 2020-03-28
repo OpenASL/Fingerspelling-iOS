@@ -69,7 +69,6 @@ struct ReceptiveGameView: View {
           ).modifier(SystemServices())
         }
         if !self.feedback.shouldDisableControls {
-          Spacer()
           Button(action: self.handleReveal) {
             Text("Reveal")
               .font(.system(size: 14))
@@ -80,7 +79,7 @@ struct ReceptiveGameView: View {
       }
       Spacer()
 
-      MainDisplay(onPlay: self.handlePlay).frame(width: 100, height: 150)
+      MainDisplay(onPlay: self.handlePlay)
 
       Spacer()
       SpeedControlView(
@@ -252,7 +251,7 @@ private struct WordPlayerView: View {
     //   SwiftUI yet: https://stackoverflow.com/a/57749621/1157536
     Image(uiImage: self.playback.currentLetterImage)
       .resizable()
-      .frame(width: 225, height: 225)
+      .frame(minWidth: 225, maxWidth: 350, minHeight: 225, maxHeight: 350)
       .scaledToFit()
       .offset(CGSize(width: self.letterOffset, height: 0))
       .onReceive(
@@ -410,7 +409,7 @@ struct ReceptiveGameView_Previews: PreviewProvider {
     let feedback = SystemServices.feedback
 
     // Modify these during development to update the preview
-    playback.isPlaying = false
+    playback.isPlaying = true
     playback.currentWord = "foo"
     feedback.hasSubmitted = true
     feedback.isShown = false
