@@ -17,7 +17,7 @@ class FingerspellingUITests: XCTestCase {
     self.app.buttons["Press \n to begin."].tap()
     snapshot("01Receptive")
 
-    let instructions = self.app.staticTexts["Enter the word you saw."]
+    let instructions = self.app.buttons["Enter the word you saw."]
     self.waitForElement(instructions)
 
     self.app.typeText("turkey")
