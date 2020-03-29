@@ -44,9 +44,15 @@ Run the screenshots:
 fastlane screenshots
 ```
 
+## Regenerating words list
+
+```
+./scripts/gen_words.sh
+```
+
 ## Bumping version and build number
 
-Replacy `X` with release number.
+Replace `X` with release number.
 
 ```
 ./scripts/bump.sh 2020.X

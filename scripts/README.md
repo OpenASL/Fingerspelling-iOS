@@ -9,7 +9,7 @@ Runs tests.
 ```
 
 
-## `gen_words.py`
+## `gen_words.sh`
 
 Generates Words.swift file with the words lists.
 
@@ -19,5 +19,5 @@ List of naughty words comes from https://github.com/LDNOOBW/List-of-Dirty-Naught
 To generate words file:
 
 ```
-python scripts/gen_words.py
+./scripts/gen_words.sh
 ```
