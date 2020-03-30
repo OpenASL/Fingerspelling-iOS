@@ -27,9 +27,14 @@ class FingerspellingUITests: XCTestCase {
     self.waitForElement(self.app.staticTexts["TURKEY"])
   }
 
+  func testStatsReceptive() {
+    self.app.buttons["28\n3"].tap()
+    self.waitForElement(self.app.staticTexts["Stats (Receptive)"])
+    snapshot("03Stats")
+  }
+
   func testExpressive() {
     self.app.buttons["line.horizontal.3\neyeglasses"].tap()
-    snapshot("04Menu")
     self.app.buttons["Expressive"].tap()
 
     snapshot("05Expressive")
@@ -37,17 +42,15 @@ class FingerspellingUITests: XCTestCase {
     self.app.buttons["Reveal"].tap()
 
     snapshot("06Expressive")
-  }
 
-  func testStatsReceptive() {
-    self.app.buttons["28\n3"].tap()
-    self.waitForElement(self.app.staticTexts["Stats (Receptive)"])
-    snapshot("07Stats")
+    self.app.buttons["Next word"].tap()
+
+    self.app.buttons["line.horizontal.3\nhand.raised"].tap()
+    snapshot("04Menu")
   }
 
   func testOpenCloseSettings() {
     self.app.buttons["gear"].tap()
-//    snapshot("07Settings")
     let settingsNavigationBar = self.app.navigationBars["Settings"]
     settingsNavigationBar.buttons["Done"].tap()
   }
