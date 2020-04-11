@@ -38,10 +38,10 @@ Install fastlane:
 brew install fastlane
 ```
 
-Run the screenshots:
+Run the screenshots script:
 
 ```
-fastlane screenshots
+./scripts/screenshots.sh
 ```
 
 ## Regenerating words list

@@ -4,7 +4,7 @@ import SwiftUI
 struct FeedbackView: View {
   @Environment(\.colorScheme) var colorScheme
 
-  static let feedbackEmail = "sloria1+Fingerspelling@gmail.com"
+  static let feedbackEmail = "sloria1+fingerspelling@gmail.com"
 
   var content: NSAttributedString {
     let attributedString = makeContentString(
