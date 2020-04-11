@@ -6,6 +6,8 @@ import urllib.request
 HERE = pathlib.Path(__file__).parent
 OUTPUT = HERE.parent / "Fingerspelling" / "Data" / "Words.swift"
 BLACKLIST = HERE / "blacklist.db"
+MIN_LENGTH = 3
+MAX_LENGTH = 12
 
 WORDS_URL = "https://raw.githubusercontent.com/derekchuank/high-frequency-vocabulary/master/10k.txt"
 NAUGHTY_WORDS_URL = "https://raw.githubusercontent.com/sloria/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words/en/en"
@@ -41,10 +43,10 @@ def main():
     words = []
     for line in words_resp.readlines():
         word = line.decode("utf-8").lower().strip()
-        if len(word) > 2 and word not in blacklisted_words:
+        if MAX_LENGTH >= len(word) >= MIN_LENGTH and word not in blacklisted_words:
             words.append(word)
 
-    print(f"Writing to {OUTPUT}...")
+    print(f"Writing {len(words)} words to {OUTPUT}...")
     content = TEMPLATE.format(words=json.dumps(words))
     with OUTPUT.open("w") as out_fp:
         out_fp.write(content)
