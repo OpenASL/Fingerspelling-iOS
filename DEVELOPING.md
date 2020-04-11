@@ -65,5 +65,5 @@ Replace `X` with release number.
 1. In Xcode, choose the "Fingerspelling" scheme and "Generic iOS Device" as the device.
 1. Click Product > Archive and wait for the build to finish (this takes a while).
 1. Click "Distribute app". Hit Next through the following Menus.
-1. Add a new version on App Store Connect. If necessary, regenerate snapshots (see above) and upload them.
+1. Add a new version on [App Store Connect](https://appstoreconnect.apple.com/). If necessary, regenerate snapshots (see above) and upload them.
 1. Submit the new version.
