@@ -102,11 +102,19 @@ struct FocusableTextField: UIViewRepresentable {
   class Coordinator: NSObject, UITextFieldDelegate {
     @Binding var text: String
     var didBecomeFirstResponder = false
+    var maxLength: Int
     var _textFieldShouldReturn: (_ textField: UITextField) -> Bool
 
-    init(text: Binding<String>, textFieldShouldReturn: @escaping (_ textField: UITextField) -> Bool) {
+    init(text: Binding<String>, maxLength: Int, textFieldShouldReturn: @escaping (_ textField: UITextField) -> Bool) {
       self._text = text
+      self.maxLength = maxLength
       self._textFieldShouldReturn = textFieldShouldReturn
+    }
+
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+      guard let text = textField.text else { return true }
+      let newLength = text.count + string.count - range.length
+      return newLength <= self.maxLength
     }
 
     func textFieldDidChangeSelection(_ textField: UITextField) {
@@ -126,6 +134,7 @@ struct FocusableTextField: UIViewRepresentable {
   var textFieldShouldReturn: (_ textField: UITextField) -> Bool = { _ in true }
   var modifyTextField: (_ textField: UITextField) -> UITextField = { (_ textField) in textField }
   var onUpdate: (_ textField: UITextField) -> Void = { _ in }
+  var maxLength = 14
 
   func makeUIView(context: UIViewRepresentableContext<FocusableTextField>) -> UITextField {
     let textField = UITextField(frame: .zero)
@@ -135,7 +144,11 @@ struct FocusableTextField: UIViewRepresentable {
   }
 
   func makeCoordinator() -> FocusableTextField.Coordinator {
-    Coordinator(text: $text, textFieldShouldReturn: self.textFieldShouldReturn)
+    Coordinator(
+      text: self.$text,
+      maxLength: self.maxLength,
+      textFieldShouldReturn: self.textFieldShouldReturn
+    )
   }
 
   func updateUIView(_ uiView: UITextField, context: UIViewRepresentableContext<FocusableTextField>) {
